@@ -1,0 +1,16 @@
+
+- contruir VPC
+* Lançar Internet Gateway
+* Lançar Nat
+
+
+- contruir Subnets
+- configurar tabelas de roteamento
+- configurar peerings
+- configurar NACL
+- configurar SecurityGroup
+
+- configurar auto scaling
+
+- configurar ELBs (importar certificados, etc, ELB Classico)
+* internet-facing and internal
