@@ -1,5 +1,8 @@
 IFS = ("\n")
 
-import common
+import tag
 import vpc
+import subnet
 import igw
+import eip
+import nat
