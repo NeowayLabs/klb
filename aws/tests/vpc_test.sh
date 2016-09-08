@@ -37,7 +37,7 @@ fn test_vpc() {
 		echo "Failed to tag the vpc"
                 echo "Found tags: " $tagKeys
                 destroy($vpcId)
-                return
+		abort
 	}
 
         tagValues <= echo $vpcInfo | jq ".Vpcs[].Tags[].Value"
@@ -47,7 +47,7 @@ fn test_vpc() {
 		echo "Failed to tag the VPC"
                 echo "Found tag values: " $tagValues
 		destroy($vpcId)
-                return
+                abort
 	}
 
 	destroy($vpcId)

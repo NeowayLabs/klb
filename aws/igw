@@ -16,3 +16,13 @@ fn aws_igw_attach(igwId, vpcId) {
 	(aws ec2 attach-internet-gateway 	--internet-gateway-id $igwId
 						--vpc-id $vpcId)
 }
+
+fn aws_igw_info(igwId) {
+	IFS = ()
+	info <= (
+		aws ec2 describe-internet-gateways
+                --internet-gateway-ids $igwId
+	)
+
+	return $info
+}
