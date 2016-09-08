@@ -17,6 +17,12 @@ fn aws_igw_attach(igwId, vpcId) {
 						--vpc-id $vpcId)
 }
 
+fn aws_igw_detach(igwId, vpcId) {
+	(aws ec2 detach-internet-gateway
+		--internet-gateway-id $igwId
+		--vpc-id $vpcId)
+}
+
 fn aws_igw_info(igwId) {
 	IFS = ()
 	info <= (

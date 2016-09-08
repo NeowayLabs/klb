@@ -7,6 +7,11 @@ igwTags = (
 	(Env TEST)
 )
 
+vpcTags = (
+	(Name klb-vpc-igw-tests)
+        (Env TEST)
+)
+
 fn create() {
 	igwId <= aws_igw_create($igwTags)
 	echo "Internet gateway created: " $igwId
@@ -28,7 +33,7 @@ fn test_igw() {
                 abort
 	}
 
-	vpcId <= aws_vpc_create()
+	vpcId <= aws_vpc_create("10.0.0.1/16", $vpcTags)
         aws_igw_attach($igwId, $vpcId)
 
 	vpcAttached <= aws_igw_info($igwId)
@@ -43,8 +48,10 @@ fn test_igw() {
 		error = "1"
 	}
 
-	aws_igw_delete($igwId)
+	# this order matters
+        aws_igw_detach($igwId, $vpcId)
 	aws_vpc_delete($vpcId)
+	aws_igw_delete($igwId)
 
 	if $error != "0" {
 		abort
