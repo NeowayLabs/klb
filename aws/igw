@@ -1,0 +1,18 @@
+# Internet gateway related functions
+
+fn aws_igw_create(tags) {
+	igwId <= (	aws ec2 create-internet-gateway |
+			jq ".InternetGateway.InternetGatewayId" |
+			xargs echo -n)
+	aws_tag($igwId, $tags)
+	return $igwId
+}
+
+fn aws_igw_delete(igwId) {
+	aws ec2 delete-internet-gateway --internet-gateway $igwId
+}
+
+fn aws_igw_attach(igwId, vpcId) {
+	(aws ec2 attach-internet-gateway 	--internet-gateway-id $igwId
+						--vpc-id $vpcId)
+}
