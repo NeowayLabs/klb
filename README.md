@@ -12,7 +12,7 @@ Ok, just kidding, use `klb` to automate the creation of your infrastructure on A
 
 ## Testing
 
-Take careful... Running `make test` will invoke the `aws cli` to create resources on your aws account (if correctly set up)
+Be careful... Running `make test` will invoke the `aws cli` to create resources on your aws account (if correctly set up)
 
 P.S.: 
 - barefoot running is not implemented.
