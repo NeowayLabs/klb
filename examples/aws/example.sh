@@ -12,7 +12,7 @@ igwTags = (
 
 routeTblTags = (
 	(Name klb-rtbl-example)
-        (ENV testing)
+	(Env testing)
 )
 
 appSubnetTags = (
@@ -35,8 +35,6 @@ fn create_prod() {
 	aws_igw_attach($igwid, $vpcid)
         aws_route2igw(tblid, "0.0.0.0/0", $igwid)
 
-	machine-up ./machines/app.yml
-	machine-up ./machines/db.yml
 
 	# TODO
 }
