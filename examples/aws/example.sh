@@ -15,6 +15,16 @@ routeTblTags = (
         (ENV testing)
 )
 
+appSubnetTags = (
+	(Name klb-app-subnet-example)
+        (Env testing)
+)
+
+dbSubnetTags = (
+	(Name klb-db-subnet-example)
+        (Env testing)
+)
+
 fn create_prod() {
 	vpcid	<= aws_vpc_create("10.0.0.1/16", $vpcTags)
 	appnet	<= aws_subnet_create("10.0.1.0/24", $appSubnetTags)
