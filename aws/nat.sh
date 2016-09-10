@@ -6,7 +6,7 @@ fn aws_nat_create(subnetId, eipId, tags) {
 		aws ec2 create-nat-gateway
 				--subnet-id $subnetId
 				--allocation-id $eipId |
-		jq ".NatGateway.NatGatewayId"
+		jq ".NatGateway.NatGatewayId" | xargs echo -n
 	)
 
         aws_tags($natId, $tags)

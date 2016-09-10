@@ -2,7 +2,7 @@
 
 # Create a security group on EC2-Classic or EC2-VPC if argument
 # vpcid is not empty.
-fn aws_secgroup_create(name, desc, vpcid) {
+fn aws_secgroup_create(name, desc, vpcid, tags) {
 	vpcarg = ()
 
 	if $vpcid != "" {
@@ -13,12 +13,13 @@ fn aws_secgroup_create(name, desc, vpcid) {
 	}
 
         grpid <= (
-		aws ec2 create-security-group	--group-name $name
-						--description $desc
-						$vpcarg |
+		aws ec2 create-security-group
+			--group-name $name
+			--description $desc $vpcarg |
 		jq ".GroupId" | xargs echo -n
 	)
 
+	aws_tag($grpid, $tags)
 	return $grpid
 }
 

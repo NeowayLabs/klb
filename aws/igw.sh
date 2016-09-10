@@ -14,13 +14,13 @@ fn aws_igw_delete(igwId) {
 
 fn aws_igw_attach(igwId, vpcId) {
 	(aws ec2 attach-internet-gateway 	--internet-gateway-id $igwId
-						--vpc-id $vpcId)
+						--vpc-id $vpcId >[1=])
 }
 
 fn aws_igw_detach(igwId, vpcId) {
 	(aws ec2 detach-internet-gateway
 		--internet-gateway-id $igwId
-		--vpc-id $vpcId)
+		--vpc-id $vpcId >[1=])
 }
 
 fn aws_igw_info(igwId) {
