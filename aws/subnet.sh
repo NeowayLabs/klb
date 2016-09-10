@@ -1,15 +1,16 @@
 # Subnet related functions
 
-fn aws_subnet_create(vpcId, cidr, tags) {
-	netId <= (
-		aws ec2 create-subnet	--vpc-id $vpcId
+fn aws_subnet_create(vpcid, cidr, tags) {
+	netid <= (
+		aws ec2 create-subnet	--vpc-id $vpcid
 					--cidr-block $cidr |
-		jq ".Subnet.SubnetId"
+		jq ".Subnet.SubnetId" | xargs echo -n
 	)
 
-	return $netId
+        aws_tag($netid, $tags)
+	return $netid
 }
 
-fn aws_subnet_delete(netId) {
-	aws ec2 delete-subnet --subnet $netId
+fn aws_subnet_delete(netid) {
+	aws ec2 delete-subnet --subnet $netid >[1=]
 }

@@ -1,4 +1,4 @@
-IFS = ("\n")
+IFS = ()
 
 import tag
 import vpc
@@ -7,3 +7,4 @@ import igw
 import eip
 import nat
 import route
+import sg

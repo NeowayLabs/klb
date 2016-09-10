@@ -4,7 +4,7 @@
 fn aws_eip_create(tags) {
 	eipId <= (
 		aws ec2 allocate-address --domain vpc |
-		jq ".AllocationId"
+		jq ".AllocationId" | xargs echo -n
 	)
 
         aws_tags($eipId, $tags)
@@ -17,7 +17,7 @@ fn aws_eip_associate(eipid, instanceId) {
 		aws ec2 associate-address
 				--instance-id $instanceId
 				--public-ip $eipId |
-		jq ".AssociationId"
+		jq ".AssociationId" | xargs echo -n
 	)
 
         return $assocId
