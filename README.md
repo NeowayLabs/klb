@@ -4,6 +4,10 @@ Nash library to mimic the life of [@lborguetti](https://github.com/lborguetti) (
 
 Ok, just kidding, use `klb` to automate the creation of your infrastructure on AWS.
 
+## Demo
+
+[![asciicast](https://asciinema.org/a/48b1ghj6tli1w0wm3wylqnpyk.png)](https://asciinema.org/a/48b1ghj6tli1w0wm3wylqnpyk)
+
 ## Dependencies
 
 - [nash](https://github.com/NeowayLabs/nash)
