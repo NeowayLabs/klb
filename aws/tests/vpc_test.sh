@@ -2,15 +2,13 @@
 
 import klb/aws/all
 
-vpcTags = (
-	(Name klb-test-vpc)
-	(Env TEST)
-)
+vpcTags = ((Name klb-test-vpc) (Env TEST))
 
 fn create() {
 	vpcId <= aws_vpc_create("10.0.0.1/16", $vpcTags)
 
 	echo "VPC ID created: " $vpcId
+
 	return $vpcId
 }
 
@@ -19,7 +17,7 @@ fn destroy(vpcId) {
 }
 
 fn test_vpc() {
-	vpcId   <= create()
+	vpcId <= create()
 	vpcInfo <= aws_vpc_info($vpcId)
 
 	if $vpcInfo == "" {
@@ -28,26 +26,31 @@ fn test_vpc() {
 	}
 
 	IFS = ("\n")
+
 	tagKeys <= echo $vpcInfo | jq ".Vpcs[].Tags[].Key"
-        keyslen <= len($tagKeys)
+	keyslen <= len($tagKeys)
 
 	echo "Tag keys: " $tagKeys
 
 	if $keyslen != "2" {
 		echo "Failed to tag the vpc"
-                echo "Found tags: " $tagKeys
-                destroy($vpcId)
+		echo "Found tags: " $tagKeys
+
+		destroy($vpcId)
+
 		abort
 	}
 
-        tagValues <= echo $vpcInfo | jq ".Vpcs[].Tags[].Value"
-        valueslen <= len($tagValues)
+	tagValues <= echo $vpcInfo | jq ".Vpcs[].Tags[].Value"
+	valueslen <= len($tagValues)
 
-        if $valueslen != "2" {
+	if $valueslen != "2" {
 		echo "Failed to tag the VPC"
-                echo "Found tag values: " $tagValues
+		echo "Found tag values: " $tagValues
+
 		destroy($vpcId)
-                abort
+
+		abort
 	}
 
 	destroy($vpcId)

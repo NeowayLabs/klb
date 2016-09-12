@@ -3,14 +3,15 @@
 # Creates a vpc setting its name, cidr and tags
 fn aws_vpc_create(cidr, tags) {
 	vpcid <= (
-		aws ec2 create-vpc --cidr-block $cidr |
+		aws ec2 create-vpc
+				--cidr-block $cidr |
 		jq ".Vpc.VpcId" |
 		xargs echo -n
 	)
 
 	aws_tag($vpcid, $tags)
 
-        return $vpcid
+	return $vpcid
 }
 
 # Delete a vpc
@@ -20,7 +21,21 @@ fn aws_vpc_delete(vpcid) {
 
 fn aws_vpc_info(vpcid) {
 	IFS = ()
-   	json <= -aws ec2 describe-vpcs --vpc-id $vpcid >[2=]
 
-        return $json
+	json <= -aws ec2 describe-vpcs --vpc-id $vpcid >[2=]
+
+	return $json
+}
+
+fn aws_vpc_enabledns(vpcid) {
+	(
+		aws ec2 modify-vpc-attribute
+					--vpc-id $vpcid
+					--enable-dns-support "{\"Value\": true}"
+	)
+	(
+		aws ec2 modify-vpc-attribute
+					--vpc-id $vpcid
+					--enable-dns-hostnames "{\"Value\": true}"
+	)
 }
