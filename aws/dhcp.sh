@@ -1,11 +1,10 @@
 # DHCP related functions
+
 fn aws_dhcp_createopt(domain, domainServers, tags) {
 	dhcpOptId <= (
 		aws ec2 create-dhcp-options
-					--dhcp-configuration "Key=domain-name,Values="+$domain
-					"Key=domain-name-servers,Values="+$domainServers
-					 |
-		jq ".DhcpOptions.DhcpOptionsId"  |
+					--dhcp-configuration "Key=domain-name,Values="+$domain "Key=domain-name-servers,Values="+$domainServers |
+		jq ".DhcpOptions.DhcpOptionsId" |
 		xargs echo -n
 	)
 

@@ -3,8 +3,7 @@
 # Creates a vpc setting its name, cidr and tags
 fn aws_vpc_create(cidr, tags) {
 	vpcid <= (
-		aws ec2 create-vpc
-				--cidr-block $cidr |
+		aws ec2 create-vpc |
 		jq ".Vpc.VpcId" |
 		xargs echo -n
 	)

@@ -1,4 +1,5 @@
 # Internet gateway related functions
+
 fn aws_igw_create(tags) {
 	igwId <= (
 		aws ec2 create-internet-gateway |
@@ -34,10 +35,14 @@ fn aws_igw_detach(igwId, vpcId) {
 fn aws_igw_info(igwId) {
 	IFS = ()
 
-	info <= (
-		aws ec2 describe-internet-gateways
-						--internet-gateway-ids $igwId
-	)
+	info <= (aws ec2 describe-internet-gateways)
 
 	return $info
 }
+
+dhcpOptId <= (
+	aws ec2 create-dhcp-options
+				--dhcp-configuration "Key=domain-name,Values="+$domain "Key=domain-name-servers,Values="+$domainServers |
+	jq ".DhcpOptions.DhcpOptionsId" |
+	xargs echo -n
+)
