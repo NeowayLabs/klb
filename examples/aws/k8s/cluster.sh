@@ -9,10 +9,27 @@ tags = (
 	(Name klb-kubernetes)
 )
 
+# Ubuntu Amazon EC2
+imageid = "ami-746aba14"
+
+fn setup_ssh() {
+	keyPairPath = $HOME+"/.ssh/k8s"
+
+	-test -f $keyPairPath
+
+	if $status != "0" {
+		keyPair <= aws_keypair_create("kubernetes")
+
+		echo $keyPair > $keyPairPath
+		chmod 600 $keyPairPath
+		ssh-add $keyPairPath
+	}
+}
+
 fn create_network() {
 	vpcid    <= aws_vpc_create("10.240.0.0/16", $tags)
 	dhcpid   <= aws_dhcp_createopt("us-west-2.compute.internal", "AmazonProvidedDNS", $tags)
-	subnetid <= aws_subnet_create("10.240.0.0/24", $vpcid, $tags)
+	subnetid <= aws.subnet_create("10.240.0.0/24", $vpcid, $tags)
 	igwid    <= aws_igw_create($tags)
 	rtblid   <= aws_routetbl_create($vpcid, $tags)
 
@@ -45,6 +62,7 @@ fn create_network() {
 	printf "Kubernetes network created successfully\n"
 }
 
+setup_ssh()
 create_network()
 
 #create_instances()
