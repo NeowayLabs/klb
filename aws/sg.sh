@@ -25,3 +25,13 @@ fn aws_secgroup_create(name, desc, vpcid, tags) {
 fn aws_secgroup_delete(grpid) {
 	aws ec2 delete-security-group --group-id $grpid
 }
+
+fn aws_secgroup_ingress(grpid, proto, port, cidr) {
+	(
+		aws ec2 authorize-security-group-ingress
+							--group-id $grpid
+							--protocol $proto
+							--port $port
+							--cidr $cidr
+	)
+}
