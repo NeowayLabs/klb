@@ -14,12 +14,7 @@ fn aws_routetbl_create(vpcid, tags) {
 }
 
 fn aws_route2igw(tblid, cidr, igwid) {
-	(
-		aws ec2 create-route
-				--route-table-id $tblid
-				--destination-cidr-block $cidr
-				--gateway-id $igwid
-	)
+	aws ec2 create-route --route-table-id $tblid --destination-cidr-block $cidr --gateway-id $igwid >[1=]
 }
 
 fn aws_route2vpcpeer(tblid, cidr, peerid) {
@@ -59,5 +54,5 @@ fn aws_route2instance(tblid, cidr, instid) {
 }
 
 fn aws_routetbl_assoc(rtblid, netid) {
-	aws ec2 associate-route-table --route-table-id $rtblid --subnet-id $netid
+	aws ec2 associate-route-table --route-table-id $rtblid --subnet-id $netid >[1=]
 }

@@ -1,13 +1,12 @@
 # ELB related functions
 
-fn aws_elb_create(name, listeners, subnetid, secgrps, tags) {
+fn aws_elb_create(name, listeners, subnetid, secgrps) {
 	dnsName <= (
 		aws elb create-load-balancer
 					--load-balancer-name $name
 					--listeners $listeners
 					--subnets $subnetid
-					--security-groups $secgrps
-					--tags $tags |
+					--security-groups $secgrps |
 		jq ".DNSName" |
 		xargs echo -n
 	)
@@ -16,5 +15,5 @@ fn aws_elb_create(name, listeners, subnetid, secgrps, tags) {
 }
 
 fn aws_elb_delete(name) {
-	aws elb delete-load-balancer --load-balancer-name $name
+	aws elb delete-load-balancer --load-balancer-name $name >[1=]
 }

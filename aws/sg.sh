@@ -1,6 +1,6 @@
 # security groups related functions
 
-# Create a security group on EC2-Classic or EC2-VPC if argument
+# Create a security group on EC2Classic or EC2VPC
 # vpcid is not empty.
 fn aws_secgroup_create(name, desc, vpcid, tags) {
 	vpcarg = ()
@@ -27,11 +27,5 @@ fn aws_secgroup_delete(grpid) {
 }
 
 fn aws_secgroup_ingress(grpid, proto, port, cidr) {
-	(
-		aws ec2 authorize-security-group-ingress
-							--group-id $grpid
-							--protocol $proto
-							--port $port
-							--cidr $cidr
-	)
+	aws ec2 authorize-security-group-ingress --group-id $grpid --protocol $proto --port $port --cidr $cidr >[1=]
 }

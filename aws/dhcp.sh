@@ -6,18 +6,18 @@ fn aws_dhcp_createopt(domain, domainServers, tags) {
 		"Key=domain-name-servers,Values="+$domainServers
 	)
 
-	OptId <= (
+	optid <= (
 		aws ec2 create-dhcp-options
 					--dhcp-configuration $config |
 		jq ".DhcpOptions.DhcpOptionsId" |
 		xargs echo -n
 	)
 
-	aws_tag($optId, $tags)
+	aws_tag($optid, $tags)
 
-	return $optId
+	return $optid
 }
 
 fn aws_dhcp_assoc(optid, vpcid) {
-	aws ec2 associate-dhcp-options --dhcp-options-id $optid --vpc-id $vpcid
+	aws ec2 associate-dhcp-options --dhcp-options-id $optid --vpc-id $vpcid >[1=]
 }

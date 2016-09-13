@@ -17,11 +17,7 @@ fn aws_igw_delete(igwId) {
 }
 
 fn aws_igw_attach(igwId, vpcId) {
-	(
-		aws ec2 attach-internet-gateway
-					--internet-gateway-id $igwId
-					--vpc-id $vpcId
-	)
+	aws ec2 attach-internet-gateway --internet-gateway-id $igwId --vpc-id $vpcId >[1=]
 }
 
 fn aws_igw_detach(igwId, vpcId) {
@@ -39,10 +35,3 @@ fn aws_igw_info(igwId) {
 
 	return $info
 }
-
-dhcpOptId <= (
-	aws ec2 create-dhcp-options
-				--dhcp-configuration "Key=domain-name,Values="+$domain "Key=domain-name-servers,Values="+$domainServers |
-	jq ".DhcpOptions.DhcpOptionsId" |
-	xargs echo -n
-)
