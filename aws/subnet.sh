@@ -1,6 +1,6 @@
 # Subnet related functions
 
-fn aws_subnet_create(vpcid, cidr, tags) {
+fn aws_subnet_create(cidr, vpcid, tags) {
 	netid <= (
 		aws ec2 create-subnet	--vpc-id $vpcid
 					--cidr-block $cidr |

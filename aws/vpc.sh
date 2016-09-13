@@ -26,15 +26,12 @@ fn aws_vpc_info(vpcid) {
 	return $json
 }
 
-fn aws_vpc_enabledns(vpcid) {
-	(
-		aws ec2 modify-vpc-attribute
-					--vpc-id $vpcid
-					--enable-dns-support "{\"Value\": true}"
-	)
-	(
-		aws ec2 modify-vpc-attribute
-					--vpc-id $vpcid
-					--enable-dns-hostnames "{\"Value\": true}"
-	)
+fn aws_vpc_enabledns(vpcid, enableHostname) {
+	paramStr = "{\"Value\": true}"
+
+	aws ec2 modify-vpc-attribute --vpc-id $vpcid --enable-dns-support $paramStr
+
+	if $enableHostname != "" {
+		aws ec2 modify-vpc-attribute --vpc-id $vpcid --enable-dns-hostnames $paramStr
+	}
 }

@@ -6,20 +6,19 @@ fn aws_secgroup_create(name, desc, vpcid, tags) {
 	vpcarg = ()
 
 	if $vpcid != "" {
-		vpcarg = (
-			"--vpc-id"
-                        $vpcid
-		)
+		vpcarg = ("--vpc-id" $vpcid)
 	}
 
-        grpid <= (
+	grpid <= (
 		aws ec2 create-security-group
-			--group-name $name
-			--description $desc $vpcarg |
-		jq ".GroupId" | xargs echo -n
+					--group-name $name
+					--description $desc $vpcarg |
+		jq ".GroupId" |
+		xargs echo -n
 	)
 
 	aws_tag($grpid, $tags)
+
 	return $grpid
 }
 
