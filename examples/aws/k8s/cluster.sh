@@ -41,8 +41,8 @@ fn create_network() {
 
 	dnsName   <= aws_elb_create("kubernetes", $listeners, $subnetid, $secgrpid)
 
-	printf "Kubernetes Public DNS: %s" $dnsName
-	printf "Kubernetes network created successfully"
+	printf "Kubernetes Public DNS: %s\n" $dnsName
+	printf "Kubernetes network created successfully\n"
 }
 
 create_network()
