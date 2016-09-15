@@ -10,3 +10,9 @@ fn aws_keypair_create(name) {
 
 	return $keyPair
 }
+
+fn aws_keypair_delete(name) {
+	-aws ec2 delete-key-pair --key-name $name
+
+	return $status
+}
