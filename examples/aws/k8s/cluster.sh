@@ -2,34 +2,77 @@
 
 # Based on documentation of Kelsey Hightower - Kubernetes The Hard Way
 # https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/01-infrastructure-aws.md
+#
+# Dependencies: nash, nashlib, awscli, jq, openssl
 
 import klb/aws/all
 
+# Key pair name
+keyName = "kubernetes"
+
+# Ubuntu Amazon EC2
+imageid = "ami-746aba14"
 tags = (
 	(Name klb-kubernetes)
 )
 
-# Ubuntu Amazon EC2
-imageid = "ami-746aba14"
+fn start_ssh_agent() {
+	sshenv <= ssh-agent -s
+
+	(
+		echo $sshenv |
+		sed "s/export/setenv/g" |
+		sed "s/=/=\"/g" |
+		sed "s/SSH_AUTH_SOCK;/SSH_AUTH_SOCK\\n/g" |
+		sed "s/SSH_AGENT_PID;/SSH_AGENT_PID\\n/g" |
+		sed "s/echo.*//g" |
+		sed "s/;/\"\\n/g"
+				> /tmp/ssh.env
+	)
+}
+
+fn extract_public_key(pubKeyPath) {
+	pubKey <= cat $pubKeyPath | grep -v " KEY" | xargs echo -n | sed "s/ //g"
+
+	return $pubKey
+}
 
 fn setup_ssh() {
-	keyPairPath = $HOME+"/.ssh/k8s"
+	privKeyPath = $HOME+"/.ssh/"+$keyName
+	pubKeyPath  = $privKeyPath+".pub"
 
 	-test -f $keyPairPath
 
 	if $status != "0" {
-		keyPair <= aws_keypair_create("kubernetes")
+		aws_keypair_delete($keyName)
 
-		echo $keyPair > $keyPairPath
-		chmod 600 $keyPairPath
-		ssh-add $keyPairPath
+		openssl genrsa -out $privKeyPath 2048
+		openssl rsa -in $privKeyPath -pubout > $pubKeyPath
+
+		pubKey  <= extract_public_key($pubKeyPath)
+		fingerp <= aws_keypair_import($keyName, $pubKey)
+
+		printf "Pubkey %s imported\n" $fingerp
+		chmod 600 $privKeyPath
 	}
+
+	# Check env var exists
+	-echo $SSH_AUTH_SOCK >[1=]
+
+	if $status != "0" {
+		start_ssh_agent()
+
+		# load agent environment vars
+		import "/tmp/ssh.env"
+	}
+
+	ssh-add $privKeyPath
 }
 
 fn create_network() {
 	vpcid    <= aws_vpc_create("10.240.0.0/16", $tags)
 	dhcpid   <= aws_dhcp_createopt("us-west-2.compute.internal", "AmazonProvidedDNS", $tags)
-	subnetid <= aws.subnet_create("10.240.0.0/24", $vpcid, $tags)
+	subnetid <= aws_subnet_create("10.240.0.0/24", $vpcid, $tags)
 	igwid    <= aws_igw_create($tags)
 	rtblid   <= aws_routetbl_create($vpcid, $tags)
 
@@ -60,9 +103,22 @@ fn create_network() {
 
 	printf "Kubernetes Public DNS: %s\n" $dnsName
 	printf "Kubernetes network created successfully\n"
+
+	setenv secgrpid
+	setenv subnetid
+	setenv vpcid
+	setenv dhcpid
+	setenv igwid
+	setenv rtblid
+	setenv dnsName
+}
+
+fn create_instances() {
+	etcd0 <= aws_instance_create($imageid, $keyName, $secgrpid, "t2.small", "10.240.0.10", $subnetid, $tags)
+
+	printf "ETCD machine created: %s\n" $etcd0
 }
 
 setup_ssh()
 create_network()
-
-#create_instances()
+create_instances()

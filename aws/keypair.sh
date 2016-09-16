@@ -16,3 +16,15 @@ fn aws_keypair_delete(name) {
 
 	return $status
 }
+
+fn aws_keypair_import(name, pubkey) {
+	fprint <= (
+		aws ec2 import-key-pair
+				--key-name $name
+				--public-key-material $pubkey |
+		jq ".KeyFingerprint" |
+		xargs echo -n
+	)
+
+	return $fprint
+}
