@@ -16,6 +16,16 @@ tags = (
 	(Name klb-kubernetes)
 )
 
+fn clone(list) {
+	other = ()
+
+	for l in $list {
+		other <= append($other, $l)
+	}
+
+	return $other
+}
+
 fn start_ssh_agent() {
 	sshenv <= ssh-agent -s
 
@@ -30,7 +40,7 @@ fn start_ssh_agent() {
 				> /tmp/ssh.env
 	)
 
-        cat /tmp/ssh.env
+	cat /tmp/ssh.env
 }
 
 fn extract_public_key(pubKeyPath) {
@@ -115,12 +125,149 @@ fn create_network() {
 	setenv dnsName
 }
 
-fn create_instances() {
-	etcd0 <= aws_instance_create($imageid, $keyName, $secgrpid, "t2.small", "10.240.0.10", $subnetid, $tags)
+fn create_iam_policies() {
+	aws_iam_deleterole("kubernetes")
+	aws_iam_deleteprofile("kubernetes")
 
-	printf "ETCD machine created: %s\n" $etcd0
+	roleid <= aws_iam_create("kubernetes", "kubernetes-iam-role.json")
+
+	aws_iam_putpolicy("kubernetes", "kubernetes", "kubernetes-iam-policy.json")
+	aws_iam_profile("kubernetes")
+	aws_iam_addrole2profile("kubernetes", "kubernetes")
+}
+
+fn create_etcdcluster() {
+	etcd0Tags = (
+		(Name "etcd0")
+	)
+
+	etcd1Tags = (
+		(Name "etcd1")
+	)
+
+	etcd2Tags = (
+		(Name "etcd2")
+	)
+
+	# Base configuration of all etcd instances
+	etcdbase <= aws_instance_new($imageid, $keyName, "t2.small")
+	etcdbase <= aws_instance_setsecgrps($etcdbase, $secgrpid)
+	etcdbase <= aws_instance_setpubip($etcdbase)
+	etcdbase <= aws_instance_setsubnet($etcdbase, $subnetid)
+	etcdbase <= aws_instance_setcount($etcdbase, "1")
+	etcd0    <= clone($etcdbase)
+	etcd1    <= clone($etcdbase)
+	etcd2    <= clone($etcdbase)
+
+	# Configure network address of each etcd
+	etcd0 <= aws_instance_setprivip($etcd0, "10.240.0.10")
+	etcd1 <= aws_instance_setprivip($etcd1, "10.240.0.11")
+	etcd2 <= aws_instance_setprivip($etcd2, "10.240.0.12")
+
+	# Run ETCD cluster
+	etcd0id <= aws_instance_run($etcd0, $etcd0Tags)
+	etcd1id <= aws_instance_run($etcd1, $etcd1Tags)
+	etcd2id <= aws_instance_run($etcd2, $etcd2Tags)
+}
+
+fn create_controllers() {
+	# Kubernetes controllers
+	ctl0Tags = (
+		(Name controller0)
+	)
+
+	ctl1Tags = (
+		(Name controller1)
+	)
+
+	ctl2Tags = (
+		(Name controller2)
+	)
+
+	# Setup base controller instance
+	ctlbase <= aws_instance_new($imageid, $keyName, "t2.small")
+	ctlbase <= aws_instance_setpubip($ctlbase)
+	ctlbase <= aws_instance_setcount($ctlbase, "1")
+	ctlbase <= aws_instance_setprofile($ctlbase, "Name=kubernetes")
+	ctlbase <= aws_instance_setsecgrps($ctlbase, $secgrpid)
+	ctlbase <= aws_instance_setsubnet($ctlbase, $subnetid)
+	ctl0    <= clone($ctlbase)
+	ctl1    <= clone($ctlbase)
+	ctl2    <= clone($ctlbase)
+
+	# Set specific controller config
+	ctl0 <= aws_instance_setprivip($ctl0, "10.240.0.20")
+	ctl1 <= aws_instance_setprivip($ctl0, "10.240.0.21")
+	ctl2 <= aws_instance_setprivip($ctl0, "10.240.0.22")
+
+	# Start controllers
+	ctl0id <= aws_instance_run($ctl0, $ctl0Tags)
+	ctl1id <= aws_instance_run($ctl1, $ctl1Tags)
+	ctl2id <= aws_instance_run($ctl2, $ctl2Tags)
+
+	# Modify attributes
+	aws_instance_modify($ctl0id, "sourceDestCheck", "false")
+	aws_instance_modify($ctl1id, "sourceDestCheck", "false")
+	aws_instance_modify($ctl2id, "sourceDestCheck", "false")
+}
+
+fn create_workers() {
+	worker0Tags = (
+		(Name worker0)
+	)
+
+	worker1tags = (
+		(Name worker1)
+	)
+
+	worker2Tags = (
+		(Name worker2)
+	)
+
+	# base worker setup
+	workerbase <= aws_instance_new($imageid, $keyName, "t2.small")
+	workerbase <= aws_instance_setpubip($workerbase)
+	workerbase <= aws_instance_setprofile($workerbase, "Name=kubernetes")
+	workerbase <= aws_instance_setcount($workerbase, "1")
+	workerbase <= aws_instance_setsecgrps($workerbase, $secgrpid)
+	workerbase <= aws_instance_setsubnet($workerbase, $subnetid)
+
+	# workers
+	worker0 <= clone($workerbase)
+	worker1 <= clone($workerbase)
+	worker2 <= clone($workerbase)
+	worker0 <= aws_instance_setprivip($worker0, "10.240.0.30")
+	worker1 <= aws_instance_setprivip($worker1, "10.240.0.31")
+	worker2 <= aws_instance_setprivip($worker2, "10.240.0.32")
+
+	# Run
+	worker0id <= aws_instance_run($worker0, $worker0Tags)
+	worker1id <= aws_instance_run($worker1, $worker1Tags)
+	worker2id <= aws_instance_run($worker2, $worker2Tags)
+
+	# modify
+	aws_instance_modify($worker0id, "sourceDestCheck", "false")
+	aws_instance_modify($worker1id, "sourceDestCheck", "false")
+	aws_instance_modify($worker2id, "sourceDestCheck", "false")
+}
+
+fn create_instances() {
+	create_etcdcluster()
+	create_controllers()
+	create_workers()
+
+	filters = (
+		("instance-state-name" "running")
+	)
+
+	instances <= aws_instance_describe($filters)
+
+	for instance in $instances {
+		printf "%s%s%s\n" $NASH_GREEN $instance $NASH_RESET
+	}
 }
 
 setup_ssh()
 create_network()
+create_iam_policies()
 create_instances()
