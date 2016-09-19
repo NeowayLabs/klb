@@ -8,9 +8,7 @@ fn aws_tag(resource, tags) {
 			echo "Invalid tag: " $tag
 			abort
 		} else {
-			-aws ec2 create-tags --resources $resource --tags "Key="+$tag[0]+",Value="+$tag[1] >[2=]
+			aws ec2 create-tags --resources $resource --tags "Key="+$tag[0]+",Value="+$tag[1] >[1=]
 		}
 	}
-
-	return $status
 }

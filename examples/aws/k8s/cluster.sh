@@ -29,6 +29,8 @@ fn start_ssh_agent() {
 		sed "s/;/\"\\n/g"
 				> /tmp/ssh.env
 	)
+
+        cat /tmp/ssh.env
 }
 
 fn extract_public_key(pubKeyPath) {
