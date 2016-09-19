@@ -38,3 +38,7 @@ fn aws_iam_deleteprofile(name) {
 fn aws_iam_addrole2profile(profile, role) {
 	aws iam add-role-to-instance-profile --instance-profile-name $profile --role-name $role >[1=]
 }
+
+fn aws_iam_delete_rolefromprofile(role, profile) {
+	-aws iam remove-role-from-instance-profile --instance-profile-name $profile --role-name $role
+}

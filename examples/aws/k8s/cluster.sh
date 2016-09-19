@@ -126,8 +126,10 @@ fn create_network() {
 }
 
 fn create_iam_policies() {
-	aws_iam_deleterole("kubernetes")
+	aws_iam_delete_rolefromprofile("kubernetes", "kubernetes")
 	aws_iam_deleteprofile("kubernetes")
+	aws_iam_detachpolicy("kubernetes", "kubernetes")
+	aws_iam_deleterole("kubernetes")
 
 	roleid <= aws_iam_create("kubernetes", "kubernetes-iam-role.json")
 
