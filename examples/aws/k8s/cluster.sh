@@ -12,8 +12,14 @@ keyName = "kubernetes"
 
 # Ubuntu Amazon EC2
 imageid = "ami-746aba14"
-tags = (
-	(Name klb-kubernetes)
+
+# Default AWS tag used in all resources created
+defTag = (environment KLB-kubernetes)
+
+# AWS Tag used in network devices
+netTags = (
+	(Name "KLB-network")
+	$defTag
 )
 
 fn clone(list) {
@@ -82,11 +88,11 @@ fn setup_ssh() {
 }
 
 fn create_network() {
-	vpcid    <= aws_vpc_create("10.240.0.0/16", $tags)
-	dhcpid   <= aws_dhcp_createopt("us-west-2.compute.internal", "AmazonProvidedDNS", $tags)
-	subnetid <= aws_subnet_create("10.240.0.0/24", $vpcid, $tags)
-	igwid    <= aws_igw_create($tags)
-	rtblid   <= aws_routetbl_create($vpcid, $tags)
+	vpcid    <= aws_vpc_create("10.240.0.0/16", $netTags)
+	dhcpid   <= aws_dhcp_createopt("us-west-2.compute.internal", "AmazonProvidedDNS", $netTags)
+	subnetid <= aws_subnet_create("10.240.0.0/24", $vpcid, $netTags)
+	igwid    <= aws_igw_create($netTags)
+	rtblid   <= aws_routetbl_create($vpcid, $netTags)
 
 	aws_vpc_enabledns($vpcid, "enable-hostnames")
 	aws_dhcp_assoc($dhcpid, $vpcid)
@@ -98,7 +104,7 @@ fn create_network() {
 	secgrpName = "kubernetes"
 	secgrpDesc = "Kubernetes security group"
 
-	secgrpid   <= aws_secgroup_create($secgrpName, $secgrpDesc, $vpcid, $tags)
+	secgrpid   <= aws_secgroup_create($secgrpName, $secgrpDesc, $vpcid, $netTags)
 
 	aws_secgroup_ingress($secgrpid, "all", "0-65535", "10.240.0.0/16")
 	aws_secgroup_ingress($secgrpid, "tcp", "22", "0.0.0.0/0")
@@ -126,29 +132,28 @@ fn create_network() {
 }
 
 fn create_iam_policies() {
-	aws_iam_delete_rolefromprofile("kubernetes", "kubernetes")
-	aws_iam_deleteprofile("kubernetes")
-	aws_iam_detachpolicy("kubernetes", "kubernetes")
-	aws_iam_deleterole("kubernetes")
+	roleid    <= aws_iam_create("kubernetes", "kubernetes-iam-role.json")
+	policyArn <= aws_iam_createpolicy("kubernetes", "kubernetes-iam-policy.json")
 
-	roleid <= aws_iam_create("kubernetes", "kubernetes-iam-role.json")
-
-	aws_iam_putpolicy("kubernetes", "kubernetes", "kubernetes-iam-policy.json")
+	aws_iam_attachpolicy("kubernetes", $policyArn)
 	aws_iam_profile("kubernetes")
 	aws_iam_addrole2profile("kubernetes", "kubernetes")
 }
 
 fn create_etcdcluster() {
 	etcd0Tags = (
-		(Name "etcd0")
+		(Name "KLB-etcd0")
+		$defTag
 	)
 
 	etcd1Tags = (
-		(Name "etcd1")
+		(Name "KLB-etcd1")
+		$defTag
 	)
 
 	etcd2Tags = (
-		(Name "etcd2")
+		(Name "KLB-etcd2")
+		$defTag
 	)
 
 	# Base configuration of all etcd instances
@@ -175,15 +180,18 @@ fn create_etcdcluster() {
 fn create_controllers() {
 	# Kubernetes controllers
 	ctl0Tags = (
-		(Name controller0)
+		(Name "KLB-controller0")
+		$defTag
 	)
 
 	ctl1Tags = (
-		(Name controller1)
+		(Name "KLB-controller1")
+		$defTag
 	)
 
 	ctl2Tags = (
-		(Name controller2)
+		(Name "KLB-controller2")
+		$defTag
 	)
 
 	# Setup base controller instance
@@ -199,8 +207,8 @@ fn create_controllers() {
 
 	# Set specific controller config
 	ctl0 <= aws_instance_setprivip($ctl0, "10.240.0.20")
-	ctl1 <= aws_instance_setprivip($ctl0, "10.240.0.21")
-	ctl2 <= aws_instance_setprivip($ctl0, "10.240.0.22")
+	ctl1 <= aws_instance_setprivip($ctl1, "10.240.0.21")
+	ctl2 <= aws_instance_setprivip($ctl2, "10.240.0.22")
 
 	# Start controllers
 	ctl0id <= aws_instance_run($ctl0, $ctl0Tags)
@@ -215,15 +223,18 @@ fn create_controllers() {
 
 fn create_workers() {
 	worker0Tags = (
-		(Name worker0)
+		(Name "KLB-worker0")
+		$defTag
 	)
 
-	worker1tags = (
-		(Name worker1)
+	worker1Tags = (
+		(Name "KLB-worker1")
+		$defTag
 	)
 
 	worker2Tags = (
-		(Name worker2)
+		(Name "KLB-worker2")
+		$defTag
 	)
 
 	# base worker setup
@@ -259,7 +270,7 @@ fn create_instances() {
 	create_workers()
 
 	filters = (
-		("instance-state-name" "running")
+		("tag:environment" "KLB-kubernetes")
 	)
 
 	instances <= aws_instance_describe($filters)

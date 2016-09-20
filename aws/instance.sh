@@ -88,7 +88,7 @@ fn aws_instance_create(imgid, kname, secgrps, type, privip, subnetid, tags) {
 }
 
 fn aws_instance_modify(resource, attr, value) {
-	aws ec2 modify-instance-attribute --attribute $attr --value $value >[1=]
+	aws ec2 modify-instance-attribute --instance-id $resource --attribute $attr --value $value >[1=]
 }
 
 fn aws_instance_describe(filters) {

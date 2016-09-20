@@ -16,6 +16,26 @@ fn aws_iam_deleterole(name) {
 	-aws iam delete-role --role-name $name
 }
 
+fn aws_iam_createpolicy(name, path) {
+	arn <= (
+		aws iam create-policy
+				--policy-name $name
+				--policy-document "file://"+$path |
+		jq -r ".Policy.Arn" |
+		xargs echo -n
+	)
+
+	return $arn
+}
+
+fn aws_iam_deletepolicy(policyArn) {
+	-aws iam delete-policy --policy-arn $policyArn
+}
+
+fn aws_iam_attachpolicy(roleName, policyArn) {
+	aws iam attach-role-policy --policy-arn $policyArn --role-name $roleName
+}
+
 fn aws_iam_putpolicy(roleName, policyName, policyFile) {
 	aws iam put-role-policy --role-name $roleName --policy-name $policyName --policy-document "file://"+$policyFile >[1=]
 }
