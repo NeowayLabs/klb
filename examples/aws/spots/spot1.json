@@ -1,0 +1,5 @@
+{
+  "ImageId": "ami-ff334acf",
+  "KeyName": "KLB-default",
+  "InstanceType": "t1.micro"
+}
