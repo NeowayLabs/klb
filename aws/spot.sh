@@ -1,6 +1,6 @@
 # Spot request related functions
 
-fn aws_spot_request_instance(price, type, count, instancejson, tags) {
+fn aws_spot_request_instance(price, type, count, instancejson) {
 	requestid <= (
 		aws ec2 request-spot-instances
 					--spot-price $price
@@ -10,8 +10,6 @@ fn aws_spot_request_instance(price, type, count, instancejson, tags) {
 		jq -r ".SpotInstanceRequests[].SpotInstanceRequestId" |
 		xargs echo -n
 	)
-
-	#	aws_tag($requestid, $tags)
 
 	return $requestid
 }

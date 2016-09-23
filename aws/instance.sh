@@ -66,6 +66,10 @@ fn aws_instance_run(instance, tags) {
 	return $instid
 }
 
+fn aws_instance_terminate(instanceid) {
+	aws ec2 terminate-instances --instance-ids $instanceid >[1=]
+}
+
 fn aws_instance_create(imgid, kname, secgrps, type, privip, subnetid, tags) {
 	instid <= (
 		aws ec2 run-instances
@@ -108,6 +112,28 @@ fn aws_instance_describe(filters) {
 		aws ec2 describe-instances
 					--filters $filterStr |
 		jq -j ".Reservations[].Instances[] | .InstanceId, \"  \", .Placement.AvailabilityZone, \"  \", .PrivateIpAddress, \"  \", .PublicIpAddress, \"\n\""
+	)
+
+	return $instances
+}
+
+fn aws_instance_getlist(filters) {
+	filterStr = ""
+
+	for f in $filters {
+		if $filterStr == "" {
+			filterStr = "Name="+$f[0]+",Values="+$f[1]
+		} else {
+			filterStr = $filterStr+",Name="+$f[0]+",Values="+$f[1]
+		}
+	}
+
+	IFS = ("\n")
+
+	instances <= (
+		aws ec2 describe-instances
+					--filters $filterStr |
+		jq -j ".Reservations[]"
 	)
 
 	return $instances

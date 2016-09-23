@@ -14,3 +14,4 @@ import keypair
 import instance
 import iam
 import spot
+import ami
