@@ -124,21 +124,17 @@ fn aws_instance_describe(filters) {
 }
 
 fn aws_instance_getlist(filters) {
-	filterStr = ""
+	awsFilters = ()
 
 	for f in $filters {
-		if $filterStr == "" {
-			filterStr = "Name="+$f[0]+",Values="+$f[1]
-		} else {
-			filterStr = $filterStr+",Name="+$f[0]+",Values="+$f[1]
-		}
+		awsFilters <= append($awsFilters, "Name="+$f[0]+",Values="+$f[1])
 	}
 
 	IFS = ("\n")
 
 	instances <= (
 		aws ec2 describe-instances
-					--filters $filterStr |
+					--filters $awsFilters |
 		jq -j ".Reservations[]"
 	)
 
