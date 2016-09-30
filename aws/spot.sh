@@ -28,6 +28,16 @@ fn aws_spot_request_describe_all() {
 	return $requests
 }
 
+fn aws_spot_request_get(requestid) {
+	json <= (
+		aws ec2 describe-spot-instance-requests
+						--spot-instance-request-ids $requestid |
+		jq ".SpotInstanceRequests[0]"
+	)
+
+	return $json
+}
+
 fn aws_spot_request_describe(requestid, filters) {
 	requests  = ()
 	filteropt = ()

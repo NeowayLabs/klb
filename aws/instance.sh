@@ -95,6 +95,12 @@ fn aws_instance_modify(resource, attr, value) {
 	aws ec2 modify-instance-attribute --instance-id $resource --attribute $attr --value $value >[1=]
 }
 
+fn aws_instance_get(instid) {
+	json <= aws ec2 describe-instances --instance-ids $instid | jq ".Reservations[0].Instances[0]"
+
+	return $json
+}
+
 fn aws_instance_describe(filters) {
 	filterStr = ""
 
