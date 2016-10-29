@@ -6,7 +6,7 @@ Ok, just kidding, use `klb` to automate the creation of your infrastructure on A
 
 ## Demo
 
-[![asciicast](https://asciinema.org/a/48b1ghj6tli1w0wm3wylqnpyk.png)](https://asciinema.org/a/48b1ghj6tli1w0wm3wylqnpyk)
+[![asciicast](https://asciinema.org/a/48b1ghj6tli1w0wm3wylqnpyk.png)](https://asciinema.org/a/48b1ghj6tli1w0wm3wylqnpyk?autoplay=true&speed=2)
 
 ## Dependencies
 
