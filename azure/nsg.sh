@@ -2,7 +2,7 @@
 
 fn azure_nsg_create(name, group, location) {
 	(
-		azure network nsg create 
+		azure network nsg create
 			--name $name
 			--resource-group $group
 			--location $location
@@ -11,19 +11,19 @@ fn azure_nsg_create(name, group, location) {
 
 fn azure_nsg_delete(name, group) {
 	(
-		azure network nsg delete 
+		azure network nsg delete
 			--name $name
 			--resource-group $group
 	)
 }
 
-fn azure_nsg_add_rule(name, group, nsgname, direction, priority, protocol, address, port, access) {
+fn azure_nsg_add_inbound_rule(name, group, nsgname, priority, protocol, address, port, access) {
 	(
-		azure network nsg rule create 
+		azure network nsg rule create
 		    --name $name
-			--resource-group $group
-			--nsg-name $nsgname
-		    --direction $direction
+		    --resource-group $group
+		    --nsg-name $nsgname
+		    --direction Inbound
 		    --priority $priority
 		    --protocol $protocol
 		    --source-address-prefix $address
@@ -32,11 +32,26 @@ fn azure_nsg_add_rule(name, group, nsgname, direction, priority, protocol, addre
 	)
 }
 
+fn azure_nsg_add_outbound_rule(name, group, nsgname, priority, protocol, address, port, access) {
+	(
+		azure network nsg rule create
+		    --name $name
+		    --resource-group $group
+		    --nsg-name $nsgname
+		    --direction Outbound
+		    --priority $priority
+		    --protocol $protocol
+		    --destination-address-prefix $address
+		    --destination-port-range $port
+		    --access $access
+	)
+}
+
 fn azure_nsg_delete_rule(name, group, nsgname) {
 	(
-		azure network nsg rule delete 
+		azure network nsg rule delete
 		    --name $name
-			--resource-group $group
-			--nsg-name $nsgname
+		    --resource-group $group
+		    --nsg-name $nsgname
 	)
 }
