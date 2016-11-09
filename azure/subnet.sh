@@ -6,7 +6,7 @@ fn azure_subnet_create(name, group, vnet, address, securitygroup) {
 			--name $name
 			--resource-group $group
 			--vnet-name $vnet
-			--address-prefixes $address
+			--address-prefix $address
 			--network-security-group-name $securitygroup
 	)
 }

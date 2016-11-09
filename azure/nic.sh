@@ -13,28 +13,35 @@ fn azure_nic_new(name, group, location) {
 	return $instance
 }
 
-fn azure_vm_set_vnet(instance, vnet) {
-	instance <= append($instance, "--subnet-vnet")
+fn azure_nic_set_vnet(instance, vnet) {
+	instance <= append($instance, "--subnet-vnet-name")
 	instance <= append($instance, $vnet)
 
 	return $instance
 }
 
-fn azure_vm_set_subnet(instance, subnet) {
+fn azure_nic_set_subnet(instance, subnet) {
 	instance <= append($instance, "--subnet-name")
 	instance <= append($instance, $subnet)
 
 	return $instance
 }
 
-fn azure_vm_set_secgrp(instance, secgrp) {
+fn azure_nic_set_publicip(instance, publicip) {
+	instance <= append($instance, "--public-ip-name")
+	instance <= append($instance, $publicip)
+
+	return $instance
+}
+
+fn azure_nic_set_secgrp(instance, secgrp) {
 	instance <= append($instance, "--network-security-group-name")
 	instance <= append($instance, $secgrp)
 
 	return $instance
 }
 
-fn azure_vm_set_ipfw(instance, ipfw) {
+fn azure_nic_set_ipfw(instance, ipfw) {
 	instance <= append($instance, "--enable-ip-forwarding")
 	instance <= append($instance, $ipfw)
 

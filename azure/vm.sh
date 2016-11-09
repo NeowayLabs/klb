@@ -1,6 +1,6 @@
 # Machine related functions
 
-fn azure_vm_new(imgid, kname, type) {
+fn azure_vm_new(name, group, location, ostype) {
 	instance = (
 		"--name"
 		$name
