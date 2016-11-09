@@ -12,7 +12,5 @@ fn azure_storage_account_create(name, group, location, sku, kind) {
 }
 
 fn azure_storage_account_delete(name, group) {
-	(
-		azure storage account delete $name
-	)
+	azure storage account delete $name
 }
