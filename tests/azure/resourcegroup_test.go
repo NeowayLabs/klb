@@ -10,6 +10,7 @@ func TestHandleResourceGroupLifeCycle(t *testing.T) {
 	// TODO: call nash stuff
 	session := azure.NewSession(t)
 	t.Log(session)
-	resgroup := azure.NewResourceGroup(t, session)
-	t.Log(resgroup)
+	resources := azure.NewResources(t, session)
+	t.Log(resources)
+	t.Log(resources.List(t))
 }
