@@ -106,7 +106,7 @@ fn azure_vm_set_imageurn(instance, imageurn) {
 	return $instance
 }
 
-fn azure_vm_create(instance, tags) {
+fn azure_vm_create(instance) {
 	azure vm create $instance
 }
 
