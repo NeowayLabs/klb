@@ -65,7 +65,7 @@ fn azure_vm_set_subnet(instance, subnet) {
 }
 
 fn azure_vm_set_nic(instance, nic) {
-	instance <= append($instance, "--vnet-nic-name")
+	instance <= append($instance, "--nic-name")
 	instance <= append($instance, $nic)
 
 	return $instance
