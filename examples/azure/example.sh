@@ -23,19 +23,22 @@ ROUTE_TABLE_PUBLIC_NAME      = $RESOURCE_GROUP_NAME+"-route-table-public"
 ROUTE_TABLE_PRIVATE_NAME     = $RESOURCE_GROUP_NAME+"-route-table-private"
 
 # VMs Settings
-VM_NAT_NAME                  = "nat"
+VM_NAT_NAME                  = $RESOURCE_GROUP_NAME+"-vm-nat"
 VM_NAT_ADDRESS               = "192.168.1.100"
 VM_NAT_IMAGE_URN             = "CoreOS:CoreOS:Stable:899.17.0"
+VM_NAT_KEY_FILE              = $HOME+"/.ssh/id_rsa.pub"
 VM_NAT_AVAILSET_NAME         = $RESOURCE_GROUP_NAME+"-availset-nat"
-VM_NAT_STORAGE_ACCOUNT_NAME  = $RESOURCE_GROUP_NAME+"-storage-account-nat"
+VM_NAT_STORAGE_ACCOUNT_NAME  = "103storagevmnat"
 VM_NAT_OS_DISK_VHD_NAME      = $RESOURCE_GROUP_NAME+"-nat-root.vhd"
 VM_NAT_NIC_NAME              = $RESOURCE_GROUP_NAME+"-nic-nat"
 VM_NAT_PUBLIC_IP_NAME        = $RESOURCE_GROUP_NAME+"-public-ip-nat"
 
-fn create_prod() {
+fn create_resource_group() {
 	# GROUP
 	azure_group_create($RESOURCE_GROUP_NAME, $LOCATION)
+}
 
+fn create_virtual_network() {
 	# VNET
 	azure_vnet_create($VNET_NAME, $RESOURCE_GROUP_NAME, $LOCATION, $VNET_ADDRESS_SPACE)
 
@@ -59,8 +62,7 @@ fn create_prod() {
 	azure_route_table_add_route($ROUTE_TABLE_PRIVATE_NAME, $RESOURCE_GROUP_NAME, $ROUTE_TABLE_PRIVATE_NAME, "0.0.0.0/0", "VirtualAppliance", $VM_NAT_ADDRESS)
 }
 
-### WIP
-fn create_nat_node() {
+fn create_vm_nat() {
 	# PUBLIC IP
 	azure_public_ip_create($VM_NAT_PUBLIC_IP_NAME, $RESOURCE_GROUP_NAME, $LOCATION, "Static")
 
@@ -68,12 +70,13 @@ fn create_nat_node() {
 	azure_availset_create($VM_NAT_AVAILSET_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
 
 	# NIC
-	nic <= azure_nic_new($VM_NAT_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
+	nic <= azure_nic_new($VM_NAT_NIC_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
 	nic <= azure_nic_set_vnet($nic, $VNET_NAME)
 	nic <= azure_nic_set_subnet($nic, $SUBNET_PUBLIC_NAME)
 	nic <= azure_nic_set_secgrp($nic, $NSG_PUBLIC_NAME)
 	nic <= azure_nic_set_ipfw($nic, "true")
 	nic <= azure_nic_set_publicip($nic, $VM_NAT_PUBLIC_IP_NAME)
+	nic <= azure_nic_set_privateip($nic, $VM_NAT_ADDRESS)
 	azure_nic_create($nic)
 
 	# STORAGE ACCOUNT
@@ -83,9 +86,9 @@ fn create_nat_node() {
 	vm <= azure_vm_new($VM_NAT_NAME, $RESOURCE_GROUP_NAME, $LOCATION, "Linux")
 	vm <= azure_vm_set_vmsize($vm, "Basic_A2")
 	vm <= azure_vm_set_username($vm, "core")
-	vm <= azure_vm_set_availset($vm, $VM_NAT_NAME)
-	vm <= azure_vm_set_vnet($vm, $VNET)
-	vm <= azure_vm_set_subnet($vm, $SUBNETPUBLIC)
+	vm <= azure_vm_set_availset($vm, $VM_NAT_AVAILSET_NAME)
+	vm <= azure_vm_set_vnet($vm, $VNET_NAME)
+	vm <= azure_vm_set_subnet($vm, $SUBNET_PUBLIC_NAME)
 	vm <= azure_vm_set_nic($vm, $VM_NAT_NIC_NAME)
 	vm <= azure_vm_set_storageaccount($vm, $VM_NAT_STORAGE_ACCOUNT_NAME)
 	vm <= azure_vm_set_osdiskvhd($vm, $VM_NAT_OS_DISK_VHD_NAME)
@@ -93,13 +96,15 @@ fn create_nat_node() {
 	# vm <= azure_vm_set_datadiskvhd($vm, datadiskvhd)
 	# vm <= azure_vm_set_datadisksize($vm, datadisksize)
 	# vm <= azure_vm_set_customdata($vm, customdata)
-	# vm <= azure_vm_set_publickeyfile($vm, publickeyfile)
+	vm <= azure_vm_set_publickeyfile($vm, $VM_NAT_KEY_FILE)
 	azure_vm_create($vm)
 }
 
-fn delete_prod() {
+fn delete_resource_group() {
 	azure_group_delete($RESOURCE_GROUP_NAME)
 }
 
-create_prod()
-delete_prod()
+create_resource_group()
+create_virtual_network()
+create_vm_nat()
+delete_resource_group()
