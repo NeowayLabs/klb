@@ -7,5 +7,7 @@ import (
 )
 
 func TestHandleResourceGroupLifeCycle(t *testing.T) {
-	azure.Hi()
+	// TODO: call nash stuff
+	session := azure.NewSession(t)
+	t.Log(session)
 }

@@ -8,10 +8,10 @@ deps:
 
 depsdev:
 	@echo "Getting dependencies for dev"
-	go get -u github.com/Azure/azure-sdk-for-go
+	go get -d ./tests/...
 
 test:
 	cd aws/tests && make test
 
-testazure:
+testazure: depsdev
 	cd tests/azure && go test ./...
