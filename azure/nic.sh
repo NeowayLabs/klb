@@ -27,6 +27,13 @@ fn azure_nic_set_subnet(instance, subnet) {
 	return $instance
 }
 
+fn azure_nic_set_privateip(instance, privateip) {
+	instance <= append($instance, "--private-ip-address")
+	instance <= append($instance, $privateip)
+
+	return $instance
+}
+
 fn azure_nic_set_publicip(instance, publicip) {
 	instance <= append($instance, "--public-ip-name")
 	instance <= append($instance, $publicip)
@@ -54,7 +61,7 @@ fn azure_nic_create(instance) {
 
 fn azure_nic_delete(name, group) {
 	(
-		azure network nic delete 
+		azure network nic delete
 			--name $name
 			--resource-group $group
 	)
