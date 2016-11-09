@@ -26,6 +26,8 @@ ROUTE_TABLE_PRIVATE_NAME     = $RESOURCE_GROUP_NAME+"-route-table-private"
 VM_NAT_NAME                  = $RESOURCE_GROUP_NAME+"-vm-nat"
 VM_NAT_ADDRESS               = "192.168.1.100"
 VM_NAT_IMAGE_URN             = "CoreOS:CoreOS:Stable:899.17.0"
+VM_NAT_SIZE                  = "Basic_A2"
+VM_NAT_USERNAME              = "core"
 VM_NAT_KEY_FILE              = $HOME+"/.ssh/id_rsa.pub"
 VM_NAT_AVAILSET_NAME         = $RESOURCE_GROUP_NAME+"-availset-nat"
 VM_NAT_STORAGE_ACCOUNT_NAME  = "103storagevmnat"
@@ -84,8 +86,8 @@ fn create_vm_nat() {
 
 	# VM
 	vm <= azure_vm_new($VM_NAT_NAME, $RESOURCE_GROUP_NAME, $LOCATION, "Linux")
-	vm <= azure_vm_set_vmsize($vm, "Basic_A2")
-	vm <= azure_vm_set_username($vm, "core")
+	vm <= azure_vm_set_vmsize($vm, $VM_NAT_SIZE)
+	vm <= azure_vm_set_username($vm, $VM_NAT_USERNAME)
 	vm <= azure_vm_set_availset($vm, $VM_NAT_AVAILSET_NAME)
 	vm <= azure_vm_set_vnet($vm, $VNET_NAME)
 	vm <= azure_vm_set_subnet($vm, $SUBNET_PUBLIC_NAME)
