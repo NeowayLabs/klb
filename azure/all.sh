@@ -11,5 +11,6 @@ import vm
 import vnet
 import app
 import provider
+import public-ip
 
 azure config mode arm
