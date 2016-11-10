@@ -71,7 +71,7 @@ get this value, run the command below and look for the service name
 And then issue the command below to grant permissions to the `klb-sp-tests`:
 
 ```sh
-λ> azure role assignment create --objectId <klb-sp-tests object id> -o Reader -c /subscriptions/{AZURE_SUBSCRIPTION_ID}/
+λ> azure role assignment create --objectId <klb-sp-tests object id> -o Owner -c /subscriptions/{AZURE_SUBSCRIPTION_ID}/
 ```
 
 To get the `AZURE_CLIENT_ID` env var value run:
