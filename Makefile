@@ -5,3 +5,13 @@ deps:
 	@echo "Downloading jq..."
 	sudo wget "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O /usr/bin/jq
 	sudo chmod "+x" /usr/bin/jq
+
+depsdev:
+	@echo "Getting dependencies for dev"
+	go get -d ./tests/...
+
+test:
+	cd aws/tests && make test
+
+testazure: depsdev
+	cd tests/azure && go test ./...

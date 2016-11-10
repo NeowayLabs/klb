@@ -1,8 +1,9 @@
-# klb 
+# klb
 
 Nash library to mimic the life of [@lborguetti](https://github.com/lborguetti) (aka `klb`).
 
-Ok, just kidding, use `klb` to automate the creation of your infrastructure on AWS.
+Ok, just kidding, use `klb` to automate the creation of your
+infrastructure on AWS or Azure.
 
 ## Demo
 
@@ -16,7 +17,71 @@ Ok, just kidding, use `klb` to automate the creation of your infrastructure on A
 
 ## Testing
 
-Be careful... Running `make test` will invoke the `aws cli` to create resources on your aws account (if correctly set up)
+To run `make testazure` you'll need the environment variables below:
 
-P.S.: 
+`
+AZURE_SUBSCRIPTION_ID=<subscription id>
+AZURE_TENANT_ID=<tenant id>
+AZURE_CLIENT_ID=<AppId of service principal>
+AZURE_CLIENT_SECRET=<password of service principal>
+`
+
+The values of `AZURE_SUBSCRIPTION_ID` and `AZURE_TENANT_ID` could be
+obtained from the command below:
+
+```sh
+λ> azure account show
+info:    Executing command account show
+data:    Name                        : <SUBSCRIPTION NAME>
+data:    ID                          : <AZURE_SUBSCRIPTION_ID>
+data:    State                       : Enabled
+data:    Tenant ID                   : <AZURE_TENANT_ID>
+data:    Is Default                  : true
+data:    Environment                 : AzureCloud
+data:    Has Certificate             : No
+data:    Has Access Token            : Yes
+data:    User name                   : <your email address>
+data:
+info:    account show command OK
+
+```
+
+In the output above, `ID` is the `AZURE_SUBSCRIPTION_ID` and `Tenant ID`
+is the `AZURE_TENANT_ID`. The values of `AZURE_CLIENT_ID` and
+`AZURE_CLIENT_SECRET` came from a previously created service principal.
+To create a simple service principal to authenticate in the API,
+follow the steps below:
+
+The command below create a service principal called `klb-sp-tests`
+with a password of your choice. This password will be the value of
+`AZURE_CLIENT_SECRET` environment variable.
+
+```sh
+λ> azure ad sp create -n klb-sp-tests -p <your password>
+```
+
+You'll need to grant permissions to the service principal authenticate
+on behalf of your subscription id.
+You'll need the Object ID of the just created `service principal`. To
+get this value, run the command below and look for the service name
+`klb-sp-tests`:
+
+```sh
+λ> azure ad sp list
+```
+
+And then issue the command below to grant permissions to the `klb-sp-tests`:
+
+```sh
+azure role assignment create --objectId <klb-sp-tests object id> -o Reader -c /subscriptions/{AZURE_SUBSCRIPTION_ID}/
+```
+
+If everything worked as expected, then export the required environment
+variables and run:
+
+```
+λ> make testazure
+```
+
+P.S.:
 - barefoot running is not implemented.
