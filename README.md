@@ -41,16 +41,15 @@ data:    Has Access Token            : Yes
 data:    User name                   : <your email address>
 data:
 info:    account show command OK
-
 ```
 
 In the output above, `ID` is the `AZURE_SUBSCRIPTION_ID` and `Tenant ID`
 is the `AZURE_TENANT_ID`. The values of `AZURE_CLIENT_ID` and
 `AZURE_CLIENT_SECRET` came from a previously created service principal.
 To create a simple service principal to authenticate in the API,
-follow the steps below:
+follow these steps below.
 
-The command below create a service principal called `klb-sp-tests`
+The following command will create a service principal called `klb-sp-tests`
 with a password of your choice. This password will be the value of
 `AZURE_CLIENT_SECRET` environment variable.
 
@@ -58,8 +57,9 @@ with a password of your choice. This password will be the value of
 λ> azure ad sp create -n klb-sp-tests -p <your password>
 ```
 
-You'll need to grant permissions to the service principal authenticate
-on behalf of your subscription id.
+You'll need to grant permissions to the service principal to
+authenticate on behalf of your subscription id.
+
 You'll need the Object ID of the just created `service principal`. To
 get this value, run the command below and look for the service name
 `klb-sp-tests`:
@@ -71,7 +71,25 @@ get this value, run the command below and look for the service name
 And then issue the command below to grant permissions to the `klb-sp-tests`:
 
 ```sh
-azure role assignment create --objectId <klb-sp-tests object id> -o Reader -c /subscriptions/{AZURE_SUBSCRIPTION_ID}/
+λ> azure role assignment create --objectId <klb-sp-tests object id> -o Reader -c /subscriptions/{AZURE_SUBSCRIPTION_ID}/
+```
+
+To get the `AZURE_CLIENT_ID` env var value run:
+
+```sh
+azure ad app list
+```
+
+And get the `AppId`. For example:
+
+```
+data:    AppId:                   (AZURE_CLIENT_ID)
+data:    ObjectId:                f957-4fb2-ae73-dcfbbf994aa5
+data:    DisplayName:             klb-sp-tests
+data:    IdentifierUris:          0=http://klb-sp-tests
+data:    ReplyUrls:
+data:    AvailableToOtherTenants: False
+data:    HomePage:                http://klb-sp-tests
 ```
 
 If everything worked as expected, then export the required environment
