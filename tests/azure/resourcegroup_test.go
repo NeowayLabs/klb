@@ -15,8 +15,9 @@ func TestHandleResourceGroupLifeCycle(t *testing.T) {
 	session := azure.NewSession(t)
 
 	nash.Exec(t, "TestHandleResourceGroupLifeCycle", `
-             import ../../azure/all
              azure login -u `+session.ClientID+` --service-principal --tenant `+session.TenantID+` -p `+session.ClientSecret+`
+
+             import ../../azure/all
              azure_group_create("`+ResourceGroupName+`", "eastus")
         `)
 
