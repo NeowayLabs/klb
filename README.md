@@ -19,7 +19,7 @@ infrastructure on AWS or Azure.
 
 To run `make testazure` you'll need the environment variables below:
 
-- AZURE_SUBSCRIPTION_ID=<subscription id>
+- AZURE_SUBSCRIPTION_ID=&lt;subscription id&gt;
 - AZURE_TENANT_ID=<tenant id>
 - AZURE_CLIENT_ID=<AppId of service principal>
 - AZURE_CLIENT_SECRET=<password of service principal>
