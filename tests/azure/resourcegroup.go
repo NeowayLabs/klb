@@ -37,7 +37,7 @@ func (r *Resources) Delete(t *testing.T, resourceName string) {
 
 func NewResources(t *testing.T, s *Session) *Resources {
 	rg := &Resources{
-		client: resources.NewGroupsClient(s.subscriptionID),
+		client: resources.NewGroupsClient(s.SubscriptionID),
 	}
 	rg.client.Authorizer = s.token
 	return rg
