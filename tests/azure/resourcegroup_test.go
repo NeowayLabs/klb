@@ -13,7 +13,7 @@ const (
 func TestHandleResourceGroupLifeCycle(t *testing.T) {
 	// TODO: call nash stuff
 	session := azure.NewSession(t)
-	azure.NewResources(t, session)
-	defer resources.Delete(t, ResourceGroupName)
+	resources := azure.NewResources(t, session)
+	//defer resources.Delete(t, ResourceGroupName)
 	resources.Check(t, ResourceGroupName)
 }
