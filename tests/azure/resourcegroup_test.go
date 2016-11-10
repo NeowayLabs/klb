@@ -6,11 +6,14 @@ import (
 	"github.com/NeowayLabs/klb/tests/azure"
 )
 
+const (
+	ResourceGroupName = "klb-resource-group-test"
+)
+
 func TestHandleResourceGroupLifeCycle(t *testing.T) {
 	// TODO: call nash stuff
 	session := azure.NewSession(t)
-	t.Log(session)
-	resources := azure.NewResources(t, session)
-	t.Log(resources)
-	t.Log(resources.List(t))
+	azure.NewResources(t, session)
+	defer resources.Delete(t, ResourceGroupName)
+	resources.Check(t, ResourceGroupName)
 }
