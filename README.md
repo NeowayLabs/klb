@@ -30,8 +30,8 @@ If you already have a `service principal` configured, you can setup
 the environment variables using the `getenvvars.sh` script:
 
 ```sh
-λ> ./getenvvars.sh
-Usage:  ./getenvvars.sh <service principal name> <service secret>
+λ> ./tools/azure/getenvvars.sh
+Usage:  ./tools/azure/getenvvars.sh <service principal name> <service secret>
 λ> ./getenvvars.sh klb-sp-tests 123456
 AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 setenv AZURE_SUBSCRIPTION_ID
@@ -48,7 +48,7 @@ setenv AZURE_CLIENT_SECRET
 Redirect the output above to a file and import into your nash session:
 
 ```sh
-λ> ./getenvvars.sh > env
+λ> ./tools/azure/getenvvars.sh > env
 λ> import ./env
 ```
 
