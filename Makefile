@@ -4,7 +4,7 @@ all:
 deps: aws-deps azure-deps jq-dep
 
 aws-deps:
-	pip install awscli
+	pip install --user awscli
 
 azure-deps: jq-dep
 	npm install -g azure-cli
