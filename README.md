@@ -24,6 +24,37 @@ To run `make testazure` you'll need the environment variables below:
 - AZURE_CLIENT_ID=&lt;AppId of service principal&gt;
 - AZURE_CLIENT_SECRET=&lt;password of service principal&gt;
 
+If you already have a `service principal` configured, you can setup
+the environment variables using the `getenvvars.sh` script:
+
+```sh
+λ> ./getenvvars.sh
+Usage:  ./getenvvars.sh <service principal name> <service secret>
+λ> ./getenvvars.sh klb-sp-tests 123456
+AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
+setenv AZURE_SUBSCRIPTION_ID
+AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
+setenv AZURE_SUBSCRIPTION_NAME
+AZURE_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
+setenv AZURE_TENANT_ID
+AZURE_CLIENT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
+setenv AZURE_CLIENT_ID
+AZURE_CLIENT_SECRET="123456"
+setenv AZURE_CLIENT_SECRET
+```
+
+Redirect the output above to a file and import into your nash session:
+
+```sh
+λ> ./getenvvars.sh > env
+λ> import ./env
+```
+
+If you have not configured the service principal yet, then the
+following section could be helpful.
+
+### Setting up the service principal
+
 The values of `AZURE_SUBSCRIPTION_ID` and `AZURE_TENANT_ID` could be
 obtained from the command below:
 
@@ -84,7 +115,7 @@ And get the `AppId`. For example:
 
 ```
 data:    AppId:                   (AZURE_CLIENT_ID)
-data:    ObjectId:                f957-4fb2-ae73-dcfbbf994aa5
+data:    ObjectId:                XXXX-XXXX-XXXX-XXXXXXXXX
 data:    DisplayName:             klb-sp-tests
 data:    IdentifierUris:          0=http://klb-sp-tests
 data:    ReplyUrls:
