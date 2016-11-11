@@ -1,5 +1,7 @@
 # klb
 
+[![Build Status](https://travis-ci.org/NeowayLabs/klb.svg?branch=master)](https://travis-ci.org/NeowayLabs/klb)
+
 Nash library to mimic the life of [@lborguetti](https://github.com/lborguetti) (aka `klb`).
 
 Ok, just kidding, use `klb` to automate the creation of your
