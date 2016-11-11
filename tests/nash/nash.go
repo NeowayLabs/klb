@@ -16,6 +16,9 @@ func Exec(t *testing.T, testname string, script string) {
 
 	sh.SetStdout(os.Stdout)
 	sh.SetStderr(os.Stderr)
+	nashPath := os.Getenv("HOME") + "/.nash"
+	os.MkdirAll(nashPath, 0655)
+	sh.SetDotDir(nashPath)
 
 	err = sh.Exec(testname, script)
 	if err != nil {
