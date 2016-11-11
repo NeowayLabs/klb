@@ -11,8 +11,8 @@ azure-deps: jq-dep
 
 jq-dep:
 	@echo "Downloading jq..."
-	wget "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O $GOPATH/bin/jq
-	chmod "+x" $GOPATH/bin/jq
+	wget "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O $(GOPATH)/bin/jq
+	chmod "+x" $(GOPATH)/bin/jq
 depsdev:
 	@echo "Getting dependencies for dev"
 	go get -d ./tests/...
