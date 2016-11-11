@@ -14,3 +14,5 @@ import provider
 import public-ip
 
 azure config mode arm
+
+azure login -q -u $AZURE_CLIENT_ID --service-principal --tenant $AZURE_TENANT_ID -p $AZURE_CLIENT_SECRET
