@@ -7,21 +7,18 @@ import (
 	"github.com/NeowayLabs/nash"
 )
 
-func Exec(t *testing.T, testname string, script string) {
-	sh, err := nash.New()
+func Setup(t *testing.T) *nash.Shell {
+	shell, err := nash.New()
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sh.SetStdout(os.Stdout)
-	sh.SetStderr(os.Stderr)
+	shell.SetStdout(os.Stdout)
+	shell.SetStderr(os.Stderr)
 	nashPath := os.Getenv("HOME") + "/.nash"
 	os.MkdirAll(nashPath, 0655)
-	sh.SetDotDir(nashPath)
+	shell.SetDotDir(nashPath)
 
-	err = sh.Exec(testname, script)
-	if err != nil {
-		t.Fatal(err)
-	}
+	return shell
 }
