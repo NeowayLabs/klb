@@ -1,9 +1,9 @@
 all:
 	@echo "did you mean 'make test' ?"
 
-deps: aws-deps azure-deps
+deps: aws-deps azure-deps jq-dep
 
-aws-deps: jq-dep
+aws-deps:
 	sudo pip install awscli
 
 azure-deps: jq-dep
