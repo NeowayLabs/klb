@@ -1,14 +1,17 @@
 package azure_test
 
 import (
+	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/azure"
 	"github.com/NeowayLabs/klb/tests/nash"
 )
 
-const (
-	ResourceGroupName = "klb-resource-group-test"
+var (
+	ResourceGroupName = fmt.Sprintf("klb-resgroup-test-%d",
+		rand.Intn(1000))
 )
 
 func TestHandleResourceGroupLifeCycle(t *testing.T) {
