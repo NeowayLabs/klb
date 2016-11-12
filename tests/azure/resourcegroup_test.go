@@ -10,18 +10,20 @@ import (
 	"github.com/NeowayLabs/nash/sh"
 )
 
-var (
-	ResourceGroupName = fmt.Sprintf("klb-resgroup-test-%d",
-		rand.Intn(1000))
-)
+func genResourceGroupName() string {
+	return fmt.Sprintf("klb-resgroup-tests-%d", rand.Intn(1000))
+}
 
-func TestHandleResourceGroupLifeCycle(t *testing.T) {
+func TestResourceGroupCreation(t *testing.T) {
 	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
-	shell.Setvar("ResourceGroup", sh.NewStrObj(ResourceGroupName))
 
-	err := shell.Exec("TestHandleResourceGroupLifeCycle", `
+	resgroup := genResourceGroupName()
+
+	shell.Setvar("ResourceGroup", sh.NewStrObj(resgroup))
+
+	err := shell.Exec("TestResourceGroupCreation", `
              import ../../azure/all
              azure_group_create($ResourceGroup, "eastus")
         `)
@@ -31,6 +33,39 @@ func TestHandleResourceGroupLifeCycle(t *testing.T) {
 	}
 
 	resources := azure.NewResources(t, session)
-	defer resources.Delete(t, ResourceGroupName)
-	resources.Check(t, ResourceGroupName)
+	defer resources.Delete(t, resgroup)
+	resources.Check(t, resgroup)
+}
+
+func TestResourceGroupDeletion(t *testing.T) {
+	session := azure.NewSession(t)
+
+	shell := nash.Setup(t)
+
+	resgroup := genResourceGroupName()
+
+	shell.Setvar("ResourceGroup", sh.NewStrObj(resgroup))
+
+	err := shell.Exec("TestResourceGroupDeletion", `
+             import ../../azure/all
+             azure_group_create($ResourceGroup, "eastus")
+        `)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resources := azure.NewResources(t, session)
+
+	resources.Check(t, resgroup)
+
+	err = shell.Exec("TestResourceGroupDeletion2", `
+            azure_group_delete($ResourceGroup)
+        `)
+
+	if err != nil {
+		t.Error(err)
+
+		resources.CheckDelete(t, resgroup)
+	}
 }

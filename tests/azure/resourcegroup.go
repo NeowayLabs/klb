@@ -17,14 +17,20 @@ func aborterr(t *testing.T, err error) {
 }
 
 func (r *Resources) Check(t *testing.T, resourceName string) {
-	resp, err := r.client.CheckExistence(resourceName)
+	_, err := r.client.CheckExistence(resourceName)
 
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
+}
 
-	t.Log(resp)
+func (r *Resources) CheckDelete(t *testing.T, resourceName string) {
+	_, err := r.client.CheckExistence(resourceName)
+
+	if err == nil {
+		r.Delete(t, resourceName)
+	}
 }
 
 func (r *Resources) Delete(t *testing.T, resourceName string) {
