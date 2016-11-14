@@ -14,7 +14,7 @@ func genResourceGroupName() string {
 	return fmt.Sprintf("klb-resgroup-tests-%d", rand.Intn(1000))
 }
 
-func TestResourceGroupCreation(t *testing.T) {
+func testResourceGroupCreation(t *testing.T) {
 	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
@@ -34,10 +34,10 @@ func TestResourceGroupCreation(t *testing.T) {
 
 	resources := azure.NewResources(t, session)
 	defer resources.Delete(t, resgroup)
-	resources.Check(t, resgroup)
+	resources.AssertExists(t, resgroup)
 }
 
-func TestResourceGroupDeletion(t *testing.T) {
+func testResourceGroupDeletion(t *testing.T) {
 	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
@@ -57,7 +57,7 @@ func TestResourceGroupDeletion(t *testing.T) {
 
 	resources := azure.NewResources(t, session)
 
-	resources.Check(t, resgroup)
+	resources.AssertExists(t, resgroup)
 
 	err = shell.Exec("TestResourceGroupDeletion2", `
             azure_group_delete($ResourceGroup)
@@ -65,7 +65,7 @@ func TestResourceGroupDeletion(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-
-		resources.CheckDelete(t, resgroup)
 	}
+
+	resources.AssertDeleted(t, resgroup)
 }

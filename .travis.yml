@@ -4,8 +4,13 @@ go:
   - 1.7
   - tip
 
+env:
+  matrix:
+    - TESTRUN="AzureResGroup/.*"
+    - TESTRUN="AzureAvailSet/.*"
+
 install:
   - make deps
 
 script:
-  - make testazure
+  - make test

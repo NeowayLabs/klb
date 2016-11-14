@@ -16,7 +16,7 @@ func aborterr(t *testing.T, err error) {
 	}
 }
 
-func (r *Resources) Check(t *testing.T, resourceName string) {
+func (r *Resources) AssertExists(t *testing.T, resourceName string) {
 	_, err := r.client.CheckExistence(resourceName)
 
 	if err != nil {
@@ -25,10 +25,12 @@ func (r *Resources) Check(t *testing.T, resourceName string) {
 	}
 }
 
-func (r *Resources) CheckDelete(t *testing.T, resourceName string) {
-	_, err := r.client.CheckExistence(resourceName)
+func (r *Resources) AssertDeleted(t *testing.T, resourceName string) {
+	res, err := r.client.Get(resourceName)
 
 	if err == nil {
+		t.Errorf("AssertDeleted: ResourceGroup '%s' should not exists", resourceName)
+		t.Log(res)
 		r.Delete(t, resourceName)
 	}
 }

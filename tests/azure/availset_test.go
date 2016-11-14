@@ -15,7 +15,7 @@ func genAvailSetName() string {
 	return fmt.Sprintf("klb-availset-tests-%d", rand.Intn(1000))
 }
 
-func TestAvailSetCreation(t *testing.T) {
+func testAvailSetCreation(t *testing.T) {
 	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
@@ -40,10 +40,10 @@ func TestAvailSetCreation(t *testing.T) {
 	resources := azure.NewResources(t, session)
 
 	defer resources.Delete(t, resgroup)
-	availSets.Check(t, availset, resgroup)
+	availSets.AssertExists(t, availset, resgroup)
 }
 
-func TestAvailSetDeletion(t *testing.T) {
+func testAvailSetDeletion(t *testing.T) {
 	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
@@ -69,11 +69,11 @@ func TestAvailSetDeletion(t *testing.T) {
 
 	defer resources.Delete(t, resgroup)
 
-	availSets.Check(t, availset, resgroup)
+	availSets.AssertExists(t, availset, resgroup)
 
 	err = shell.Exec("TestAvailSetCreation", `
              azure_availset_delete($AvailSet, $ResourceGroup)
         `)
 
-	availSets.CheckDelete(t, availset, resgroup)
+	availSets.AssertDeleted(t, availset, resgroup)
 }
