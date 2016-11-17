@@ -12,6 +12,7 @@ import vnet
 import app
 import provider
 import public-ip
+import disk
 
 azure config mode arm
 
