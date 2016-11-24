@@ -60,12 +60,12 @@ fn aws_spot_request_describe(requestid, filters) {
 		filteropt = ("--filters" $filterStr)
 	}
 
-	IFS = ("\n")
-
 	requests <= (
 		aws ec2 describe-spot-instance-requests $requests $filteropt |
 		jq -j ".SpotInstanceRequests[] | .InstanceId, \" \", .Status.UpdateTime, \" \", .Status.Code, \" \", .Status.State, \"\n\""
 	)
+
+	requests <= split($requests, "\n")
 
 	return $requests
 }

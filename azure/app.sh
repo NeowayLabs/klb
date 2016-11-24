@@ -1,6 +1,4 @@
 fn azure_app_create(name, homepage, uri) {
-	IFS = ()
-
 	out   <= (
 		azure ad app create --json
 					--name $name

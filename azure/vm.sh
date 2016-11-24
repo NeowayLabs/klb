@@ -4,12 +4,12 @@ fn azure_vm_new(name, group, location, ostype) {
 	instance = (
 		"--name"
 		$name
-	    "--resource-group"
-	    $group
-	    "--location"
-	    $location
-	    "--os-type"
-	    $ostype
+		"--resource-group"
+		$group
+		"--location"
+		$location
+		"--os-type"
+		$ostype
 	)
 
 	return $instance

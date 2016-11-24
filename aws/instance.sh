@@ -112,13 +112,13 @@ fn aws_instance_describe(filters) {
 		}
 	}
 
-	IFS = ("\n")
-
 	instances <= (
 		aws ec2 describe-instances
 					--filters $filterStr |
 		jq -j ".Reservations[].Instances[] | .InstanceId, \"  \", .Placement.AvailabilityZone, \"  \", .PrivateIpAddress, \"  \", .PublicIpAddress, \"\n\""
 	)
+
+	instances <= split($instances, "\n")
 
 	return $instances
 }
@@ -130,13 +130,13 @@ fn aws_instance_getlist(filters) {
 		awsFilters <= append($awsFilters, "Name="+$f[0]+",Values="+$f[1])
 	}
 
-	IFS = ("\n")
-
 	instances <= (
 		aws ec2 describe-instances
 					--filters $awsFilters |
 		jq -j ".Reservations[]"
 	)
+
+	instances <= split($instances, "\n")
 
 	return $instances
 }

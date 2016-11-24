@@ -1,5 +1,3 @@
-IFS = ()
-
 import tag
 import vpc
 import dhcp

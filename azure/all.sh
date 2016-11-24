@@ -1,5 +1,3 @@
-IFS = ()
-
 import availset
 import group
 import nic

@@ -27,5 +27,12 @@ fn aws_secgroup_delete(grpid) {
 }
 
 fn aws_secgroup_ingress(grpid, proto, port, cidr) {
-	aws ec2 authorize-security-group-ingress --group-id $grpid --protocol $proto --port $port --cidr $cidr >[1=]
+	(
+		aws ec2 authorize-security-group-ingress
+							--group-id $grpid
+							--protocol $proto
+							--port $port
+							--cidr $cidr
+							>[1=]
+	)
 }

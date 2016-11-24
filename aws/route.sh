@@ -14,7 +14,13 @@ fn aws_routetbl_create(vpcid, tags) {
 }
 
 fn aws_route2igw(tblid, cidr, igwid) {
-	aws ec2 create-route --route-table-id $tblid --destination-cidr-block $cidr --gateway-id $igwid >[1=]
+	(
+		aws ec2 create-route
+				--route-table-id $tblid
+				--destination-cidr-block $cidr
+				--gateway-id $igwid
+				>[1=]
+	)
 }
 
 fn aws_route2vpcpeer(tblid, cidr, peerid) {
