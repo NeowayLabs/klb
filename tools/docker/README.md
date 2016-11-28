@@ -7,7 +7,7 @@ Docker image with [nash][1] and [klb][2]
 
 ## Run with AWS
 
-        docker run --rm -ti
+        docker run --rm -ti \
             -e "AWS_ACCESS_KEY_ID=xxxxxxxxxx" \
             -e "AWS_SECRET_ACCESS_KEY=xxxxxx" \
             -e "AWS_DEFAULT_REGION=us-west-2"
@@ -19,7 +19,7 @@ Docker image with [nash][1] and [klb][2]
 
 ## Run with Azure
 
-        docker run --rm -ti
+        docker run --rm -ti \
             -e "AZURE_SUBSCRIPTION_ID=xxxxxx" \
             -e "AZURE_SUBSCRIPTION_NAME=xxxx" \
             -e "AZURE_TENANT_ID=xxxxxxxxxxxx" \
