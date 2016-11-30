@@ -30,7 +30,7 @@ VM_NAT_SIZE                  = "Basic_A2"
 VM_NAT_USERNAME              = "core"
 VM_NAT_KEY_FILE              = $HOME+"/.ssh/id_rsa.pub"
 VM_NAT_AVAILSET_NAME         = $RESOURCE_GROUP_NAME+"-availset-nat"
-VM_NAT_STORAGE_ACCOUNT_NAME  = "103storagevmnat"
+VM_NAT_STORAGE_ACCOUNT_NAME  = "storagevmnat"
 VM_NAT_OS_DISK_VHD_NAME      = $RESOURCE_GROUP_NAME+"-nat-root.vhd"
 VM_NAT_NIC_NAME              = $RESOURCE_GROUP_NAME+"-nic-nat"
 VM_NAT_PUBLIC_IP_NAME        = $RESOURCE_GROUP_NAME+"-public-ip-nat"
@@ -82,7 +82,7 @@ fn create_vm_nat() {
 	azure_nic_create($nic)
 
 	# STORAGE ACCOUNT
-	azure_storage_account_create($VM_NAT_STORAGE_ACCOUNT_NAME, $RESOURCE_GROUP_NAME, $LOCATION, "LRS", "Storage")
+	storage <= azure_storage_account_create($VM_NAT_STORAGE_ACCOUNT_NAME, $RESOURCE_GROUP_NAME, $LOCATION, "LRS", "Storage")
 
 	# VM
 	vm <= azure_vm_new($VM_NAT_NAME, $RESOURCE_GROUP_NAME, $LOCATION, "Linux")
@@ -92,7 +92,7 @@ fn create_vm_nat() {
 	vm <= azure_vm_set_vnet($vm, $VNET_NAME)
 	vm <= azure_vm_set_subnet($vm, $SUBNET_PUBLIC_NAME)
 	vm <= azure_vm_set_nic($vm, $VM_NAT_NIC_NAME)
-	vm <= azure_vm_set_storageaccount($vm, $VM_NAT_STORAGE_ACCOUNT_NAME)
+    vm <= azure_vm_set_storageaccount($vm, $storage)
 	vm <= azure_vm_set_osdiskvhd($vm, $VM_NAT_OS_DISK_VHD_NAME)
 	vm <= azure_vm_set_imageurn($vm, $VM_NAT_IMAGE_URN)
 	# vm <= azure_vm_set_datadiskvhd($vm, datadiskvhd)
