@@ -22,6 +22,9 @@ fn azure_storage_account_create(name, group, location, sku, kind) {
 	return $storagename
 }
 
+# azure_store_account_delete deletes a exit `storage account`.
+# `name` is the storage account name
+# `group` is the resource group name
 fn azure_storage_account_delete(name, group) {
 	azure storage account delete $name
 }
