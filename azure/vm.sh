@@ -106,6 +106,25 @@ fn azure_vm_set_imageurn(instance, imageurn) {
 	return $instance
 }
 
+# azure_vm_set_disablebootdiagnostic switch parameter to disable
+# the boot diagnostics (by default enabled) for VM.
+# `instance` is the instance of vm.
+fn azure_vm_set_disablebootdiagnostics(instance) {
+	instance <= append($instance, "--disable-boot-diagnostics")
+
+	return $instance
+}
+
+# azure_vm_set_bootdiagnosticsstorageuri specify storage account for boot diagnostics.
+# `instance` is the instance of vm.
+# `storageaccount` is the name of storage account.
+fn azure_vm_set_bootdiagnosticsstorage(instance, storageaccount) {
+	instance <= append($instance, "--boot-diagnostics-storage-uri")
+	instance <= append($instance, "https://"+$storageaccount+".blob.core.windows.net/")
+
+	return $instance
+}
+
 fn azure_vm_create(instance) {
 	azure vm create $instance
 }
