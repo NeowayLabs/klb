@@ -106,6 +106,14 @@ fn azure_vm_set_imageurn(instance, imageurn) {
 	return $instance
 }
 
+# azure_vm_set_disablebootdiagnostic
+# The switch parameter to disable the boot diagnostics (by default enabled) for VM.
+fn azure_vm_set_disablebootdiagnostics() {
+	instance <= append($instance, "--disable-boot-diagnostics")
+
+	return $instance
+}
+
 fn azure_vm_create(instance) {
 	azure vm create $instance
 }
