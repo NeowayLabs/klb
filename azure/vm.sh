@@ -120,7 +120,7 @@ fn azure_vm_set_disablebootdiagnostics(instance) {
 # `storageaccount` is the name of storage account.
 fn azure_vm_set_bootdiagnosticsstorage(instance, storageaccount) {
 	instance <= append($instance, "--boot-diagnostics-storage-uri")
-	instance <= append($instance, "https://"+$storageuri+".blob.core.windows.net/")
+	instance <= append($instance, "https://"+$storageaccount+".blob.core.windows.net/")
 
 	return $instance
 }
