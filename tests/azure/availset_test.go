@@ -16,7 +16,6 @@ func genAvailSetName() string {
 }
 
 func testAvailSetCreation(t *testing.T) {
-	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
 
@@ -36,6 +35,7 @@ func testAvailSetCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	session := azure.NewSession(t)
 	availSets := azure.NewAvailSet(t, session)
 	resources := azure.NewResources(t, session)
 
@@ -44,7 +44,6 @@ func testAvailSetCreation(t *testing.T) {
 }
 
 func testAvailSetDeletion(t *testing.T) {
-	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
 
@@ -64,6 +63,7 @@ func testAvailSetDeletion(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	session := azure.NewSession(t)
 	availSets := azure.NewAvailSet(t, session)
 	resources := azure.NewResources(t, session)
 

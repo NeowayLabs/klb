@@ -15,7 +15,6 @@ func genResourceGroupName() string {
 }
 
 func testResourceGroupCreation(t *testing.T) {
-	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
 
@@ -32,13 +31,13 @@ func testResourceGroupCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	session := azure.NewSession(t)
 	resources := azure.NewResources(t, session)
 	defer resources.Delete(t, resgroup)
 	resources.AssertExists(t, resgroup)
 }
 
 func testResourceGroupDeletion(t *testing.T) {
-	session := azure.NewSession(t)
 
 	shell := nash.Setup(t)
 
@@ -55,6 +54,7 @@ func testResourceGroupDeletion(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	session := azure.NewSession(t)
 	resources := azure.NewResources(t, session)
 
 	resources.AssertExists(t, resgroup)

@@ -34,7 +34,7 @@ the environment variables using the `getenvvars.sh` script:
 ```sh
 λ> ./tools/azure/getenvvars.sh
 Usage:  ./tools/azure/getenvvars.sh <service principal name> <service secret>
-λ> ./getenvvars.sh klb-sp-tests 123456
+λ> ./tools/azure/getenvvars.sh klb-sp-tests 123456
 AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 setenv AZURE_SUBSCRIPTION_ID
 AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
