@@ -19,6 +19,8 @@ infrastructure on AWS or Azure.
 
 ## Testing
 
+### Azure
+
 To run `make testazure` you'll need the environment variables below:
 
 - AZURE_SUBSCRIPTION_ID=&lt;subscription id&gt;
@@ -55,7 +57,8 @@ Redirect the output above to a file and import into your nash session:
 If you have not configured the service principal yet, then the
 following section could be helpful.
 
-### Setting up the service principal
+
+#### Setting up the service principal
 
 The values of `AZURE_SUBSCRIPTION_ID` and `AZURE_TENANT_ID` could be
 obtained from the command below:
