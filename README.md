@@ -54,6 +54,15 @@ Redirect the output above to a file and import into your nash session:
 λ> import ./credentials
 ```
 
+Besides the credential your subscription must also be registered
+on some resource provider namespaces, since we will be creating resources.
+
+To register on the required providers you can run:
+
+```sh
+λ> ./tools/azure/registerproviders.sh
+```
+
 If you have not configured the service principal yet, then the
 following section could be helpful.
 
