@@ -35,6 +35,15 @@ func (r *Resources) AssertDeleted(t *testing.T, resourceName string) {
 	}
 }
 
+func (r *Resources) Create(t *testing.T, resourceName string, location string) {
+	_, err := r.client.CreateOrUpdate(resourceName, resources.ResourceGroup{
+		Location: &location,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func (r *Resources) Delete(t *testing.T, resourceName string) {
 	_, err := r.client.Delete(resourceName, nil)
 

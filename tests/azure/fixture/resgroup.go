@@ -8,9 +8,13 @@ import (
 	"github.com/NeowayLabs/klb/tests/azure"
 )
 
+// Fixture provides you the basic data to write your tests, enjoy :-)
 type Fixture struct {
+	//ResGroupName is the resource group name where
+	//all resources will be created
 	ResGroupName string
-	Session      azure.Session
+	//Session used to interact with the API
+	Session *azure.Session
 }
 
 type Test func(*testing.T, Fixture)
@@ -23,14 +27,23 @@ type Test func(*testing.T, Fixture)
 // the resource group will be destroyed when testfunc exits.
 // It is a programming error to reference the created resource group
 // after returning from testfunc (just like Go http handlers).
-func Run(t *testing.T, testname string, testfunc Test) {
-
+func Run(
+	t *testing.T,
+	testname string,
+	location string,
+	testfunc Test,
+) {
 	session := azure.NewSession(t)
 	resgroup := fmt.Sprintf("klb-test-%s-%d", testname, rand.Intn(1000))
 
 	resources := azure.NewResources(t, session)
 	defer resources.Delete(t, resgroup)
 
-	//TODO: Create the resource group
+	resources.Create(t, resgroup, location)
 	resources.AssertExists(t, resgroup)
+
+	testfunc(t, Fixture{
+		ResGroupName: resgroup,
+		Session:      session,
+	})
 }

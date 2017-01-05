@@ -11,7 +11,7 @@ import (
 )
 
 func genResourceGroupName() string {
-	return fmt.Sprintf("klb-resgroup-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-resgroup-tests-%d", rand.Intn(999999))
 }
 
 func testResourceGroupCreation(t *testing.T) {
