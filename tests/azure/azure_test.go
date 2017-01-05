@@ -1,6 +1,12 @@
 package azure_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/NeowayLabs/klb/tests/azure/fixture"
+)
+
+const location = "eastus"
 
 func TestAzureResGroup(t *testing.T) {
 	t.Run("Creation", testResourceGroupCreation)
@@ -8,6 +14,6 @@ func TestAzureResGroup(t *testing.T) {
 }
 
 func TestAzureAvailSet(t *testing.T) {
-	t.Run("Creation", testAvailSetCreation)
+	fixture.Run(t, "AvailSetCreation", location, testAvailSetCreation)
 	t.Run("Deletion", testAvailSetDeletion)
 }

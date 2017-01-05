@@ -16,29 +16,24 @@ func genAvailSetName() string {
 	return fmt.Sprintf("klb-availset-tests-%d", rand.Intn(1000))
 }
 
-const location = "eastus"
+func testAvailSetCreation(t *testing.T, f fixture.Fixture) {
+	shell := nash.Setup(t)
 
-func testAvailSetCreation(t *testing.T) {
+	availset := genAvailSetName()
+	shell.Setvar("resgroup", sh.NewStrObj(f.ResGroupName))
+	shell.Setvar("availset", sh.NewStrObj(availset))
+	shell.Setvar("location", sh.NewStrObj(f.Location))
 
-	fixture.Run(t, "AvailSetCreation", location, func(t *testing.T, f fixture.Fixture) {
-		shell := nash.Setup(t)
-
-		availset := genAvailSetName()
-		shell.Setvar("resgroup", sh.NewStrObj(f.ResGroupName))
-		shell.Setvar("availset", sh.NewStrObj(availset))
-		shell.Setvar("location", sh.NewStrObj(location))
-
-		err := shell.Exec("TestAvailSetCreation", `
+	err := shell.Exec("TestAvailSetCreation", `
 		     import ../../azure/all
 		     azure_availset_create($availset, $resgroup, $location)
 		`)
-		if err != nil {
-			t.Fatal(err)
-		}
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		availSets := azure.NewAvailSet(t, f.Session)
-		availSets.AssertExists(t, availset, f.ResGroupName)
-	})
+	availSets := azure.NewAvailSet(t, f.Session)
+	availSets.AssertExists(t, availset, f.ResGroupName)
 }
 
 func testAvailSetDeletion(t *testing.T) {

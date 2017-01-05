@@ -15,6 +15,8 @@ type Fixture struct {
 	ResGroupName string
 	//Session used to interact with the API
 	Session *azure.Session
+	//Location where resources are created
+	Location string
 }
 
 type Test func(*testing.T, Fixture)
@@ -45,5 +47,6 @@ func Run(
 	testfunc(t, Fixture{
 		ResGroupName: resgroup,
 		Session:      session,
+		Location:     location,
 	})
 }
