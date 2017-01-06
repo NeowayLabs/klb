@@ -17,21 +17,14 @@ func genAvailSetName() string {
 }
 
 func testAvailSetCreation(t *testing.T, f fixture.Fixture) {
-	shell := nash.Setup(t)
-
 	availset := genAvailSetName()
-	shell.Setvar("resgroup", sh.NewStrObj(f.ResGroupName))
-	shell.Setvar("availset", sh.NewStrObj(availset))
-	shell.Setvar("location", sh.NewStrObj(f.Location))
-
-	err := shell.Exec("TestAvailSetCreation", `
-		     import ../../azure/all
-		     azure_availset_create($availset, $resgroup, $location)
-		`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	nash.Run(
+		t,
+		"./testdata/create_avail_set.sh",
+		f.ResGroupName,
+		availset,
+		f.Location,
+	)
 	availSets := azure.NewAvailSet(t, f.Session)
 	availSets.AssertExists(t, availset, f.ResGroupName)
 }
