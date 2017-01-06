@@ -14,6 +14,6 @@ func TestAzureResGroup(t *testing.T) {
 }
 
 func TestAzureAvailSet(t *testing.T) {
-	fixture.Run(t, "AvailSetCreation", location, testAvailSetCreation)
-	t.Run("Deletion", testAvailSetDeletion)
+	fixture.Run(t, "Create", location, testAvailSetCreation)
+	fixture.Run(t, "Delete", location, testAvailSetDeletion)
 }

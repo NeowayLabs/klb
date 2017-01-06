@@ -8,8 +8,6 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 	"github.com/NeowayLabs/klb/tests/lib/nash"
-
-	"github.com/NeowayLabs/nash/sh"
 )
 
 func genAvailSetName() string {
@@ -29,37 +27,25 @@ func testAvailSetCreation(t *testing.T, f fixture.Fixture) {
 	availSets.AssertExists(t, availset, f.ResGroupName)
 }
 
-func testAvailSetDeletion(t *testing.T) {
+func testAvailSetDeletion(t *testing.T, f fixture.Fixture) {
 
-	shell := nash.Setup(t)
-
-	resgroup := genResourceGroupName()
 	availset := genAvailSetName()
+	nash.Run(
+		t,
+		"./testdata/create_avail_set.sh",
+		f.ResGroupName,
+		availset,
+		f.Location,
+	)
 
-	shell.Setvar("ResourceGroup", sh.NewStrObj(resgroup))
-	shell.Setvar("AvailSet", sh.NewStrObj(availset))
+	availSets := azure.NewAvailSet(t, f.Session)
+	availSets.AssertExists(t, availset, f.ResGroupName)
 
-	err := shell.Exec("TestAvailSetCreation", `
-             import ../../azure/all
-             azure_group_create($ResourceGroup, "eastus")
-             azure_availset_create($AvailSet, $ResourceGroup, "eastus")
-        `)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	session := azure.NewSession(t)
-	availSets := azure.NewAvailSet(t, session)
-	resources := azure.NewResources(t, session)
-
-	defer resources.Delete(t, resgroup)
-
-	availSets.AssertExists(t, availset, resgroup)
-
-	err = shell.Exec("TestAvailSetCreation", `
-             azure_availset_delete($AvailSet, $ResourceGroup)
-        `)
-
-	availSets.AssertDeleted(t, availset, resgroup)
+	nash.Run(
+		t,
+		"./testdata/delete_avail_set.sh",
+		f.ResGroupName,
+		availset,
+	)
+	availSets.AssertDeleted(t, availset, f.ResGroupName)
 }
