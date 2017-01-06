@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/NeowayLabs/klb/tests/azure"
-	"github.com/NeowayLabs/klb/tests/nash"
+	"github.com/NeowayLabs/klb/tests/lib/azure"
+	"github.com/NeowayLabs/klb/tests/lib/nash"
 	"github.com/NeowayLabs/nash/sh"
 )
 

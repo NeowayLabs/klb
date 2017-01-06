@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/NeowayLabs/klb/tests/azure"
+	"github.com/NeowayLabs/klb/tests/lib/azure"
 )
 
 // Fixture provides you the basic data to write your tests, enjoy :-)

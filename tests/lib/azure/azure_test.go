@@ -3,7 +3,7 @@ package azure_test
 import (
 	"testing"
 
-	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
+	"github.com/NeowayLabs/klb/tests/azure/fixture"
 )
 
 const location = "eastus"
