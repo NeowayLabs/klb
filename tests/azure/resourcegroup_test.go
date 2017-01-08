@@ -15,6 +15,7 @@ func genResourceGroupName() string {
 }
 
 func testResourceGroupCreation(t *testing.T) {
+	t.Parallel()
 
 	shell := nash.Setup(t)
 
@@ -38,6 +39,7 @@ func testResourceGroupCreation(t *testing.T) {
 }
 
 func testResourceGroupDeletion(t *testing.T) {
+	t.Parallel()
 
 	shell := nash.Setup(t)
 
