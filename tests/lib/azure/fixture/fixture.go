@@ -29,24 +29,32 @@ type Test func(*testing.T, F)
 // the resource group will be destroyed when testfunc exits.
 // It is a programming error to reference the created resource group
 // after returning from testfunc (just like Go http handlers).
+//
+// Since testing is pretty slow and the fixture guarantee unique named
+// resource groups it will also run the your test in parallel with others
+// so you don't have to die waiting for a result.
 func Run(
 	t *testing.T,
 	testname string,
 	location string,
 	testfunc Test,
 ) {
-	session := azure.NewSession(t)
-	resgroup := fmt.Sprintf("klb-test-%s-%d", testname, rand.Intn(1000))
+	t.Run(testname, func(t *testing.T) {
+		t.Parallel()
 
-	resources := azure.NewResources(t, session)
-	defer resources.Delete(t, resgroup)
+		session := azure.NewSession(t)
+		resgroup := fmt.Sprintf("klb-test-%s-%d", testname, rand.Intn(9999999))
 
-	resources.Create(t, resgroup, location)
-	resources.AssertExists(t, resgroup)
+		resources := azure.NewResources(t, session)
+		defer resources.Delete(t, resgroup)
 
-	testfunc(t, F{
-		ResGroupName: resgroup,
-		Session:      session,
-		Location:     location,
+		resources.Create(t, resgroup, location)
+		resources.AssertExists(t, resgroup)
+
+		testfunc(t, F{
+			ResGroupName: resgroup,
+			Session:      session,
+			Location:     location,
+		})
 	})
 }
