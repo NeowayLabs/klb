@@ -9,7 +9,7 @@ import (
 const location = "eastus"
 
 func TestAzureResGroup(t *testing.T) {
-	t.Run("Creation", testResourceGroupCreation)
+	t.Run("Create", testResourceGroupCreation)
 	t.Run("Deletion", testResourceGroupDeletion)
 }
 
