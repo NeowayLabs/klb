@@ -9,7 +9,7 @@ import (
 )
 
 // Fixture provides you the basic data to write your tests, enjoy :-)
-type Fixture struct {
+type F struct {
 	//ResGroupName is the resource group name where
 	//all resources will be created
 	ResGroupName string
@@ -19,7 +19,7 @@ type Fixture struct {
 	Location string
 }
 
-type Test func(*testing.T, Fixture)
+type Test func(*testing.T, F)
 
 // Run creates a unique resource group based on testname and calls
 // the given testfunc passing as argument all the resources required
@@ -44,7 +44,7 @@ func Run(
 	resources.Create(t, resgroup, location)
 	resources.AssertExists(t, resgroup)
 
-	testfunc(t, Fixture{
+	testfunc(t, F{
 		ResGroupName: resgroup,
 		Session:      session,
 		Location:     location,

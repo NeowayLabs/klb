@@ -14,7 +14,7 @@ func genAvailSetName() string {
 	return fmt.Sprintf("klb-availset-tests-%d", rand.Intn(1000))
 }
 
-func testAvailSetCreation(t *testing.T, f fixture.Fixture) {
+func testAvailSetCreation(t *testing.T, f fixture.F) {
 	availset := genAvailSetName()
 	nash.Run(
 		t,
@@ -27,7 +27,7 @@ func testAvailSetCreation(t *testing.T, f fixture.Fixture) {
 	availSets.AssertExists(t, availset, f.ResGroupName)
 }
 
-func testAvailSetDeletion(t *testing.T, f fixture.Fixture) {
+func testAvailSetDeletion(t *testing.T, f fixture.F) {
 
 	availset := genAvailSetName()
 	nash.Run(
