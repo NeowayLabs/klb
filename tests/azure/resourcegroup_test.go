@@ -32,7 +32,7 @@ func testResourceGroupCreation(t *testing.T) {
 	}
 
 	session := azure.NewSession(t)
-	resources := azure.NewResources(t, session)
+	resources := azure.NewResourceGroup(t, session)
 	defer resources.Delete(t, resgroup)
 	resources.AssertExists(t, resgroup)
 }
@@ -55,7 +55,7 @@ func testResourceGroupDeletion(t *testing.T) {
 	}
 
 	session := azure.NewSession(t)
-	resources := azure.NewResources(t, session)
+	resources := azure.NewResourceGroup(t, session)
 
 	resources.AssertExists(t, resgroup)
 

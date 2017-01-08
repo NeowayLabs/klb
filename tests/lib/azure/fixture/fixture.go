@@ -45,7 +45,7 @@ func Run(
 		session := azure.NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-%s-%d", testname, rand.Intn(9999999))
 
-		resources := azure.NewResources(t, session)
+		resources := azure.NewResourceGroup(t, session)
 		defer resources.Delete(t, resgroup)
 
 		resources.Create(t, resgroup, location)

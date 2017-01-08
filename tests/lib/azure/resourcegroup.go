@@ -6,7 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/arm/resources/resources"
 )
 
-type Resources struct {
+type ResourceGroup struct {
 	client resources.GroupsClient
 }
 
@@ -16,8 +16,8 @@ func aborterr(t *testing.T, err error) {
 	}
 }
 
-func (r *Resources) AssertExists(t *testing.T, resourceName string) {
-	_, err := r.client.CheckExistence(resourceName)
+func (r *ResourceGroup) AssertExists(t *testing.T, name string) {
+	_, err := r.client.CheckExistence(name)
 
 	if err != nil {
 		t.Fatal(err)
@@ -25,18 +25,18 @@ func (r *Resources) AssertExists(t *testing.T, resourceName string) {
 	}
 }
 
-func (r *Resources) AssertDeleted(t *testing.T, resourceName string) {
-	res, err := r.client.Get(resourceName)
+func (r *ResourceGroup) AssertDeleted(t *testing.T, name string) {
+	res, err := r.client.Get(name)
 
 	if err == nil {
-		t.Errorf("AssertDeleted: ResourceGroup '%s' should not exists", resourceName)
+		t.Errorf("AssertDeleted: ResourceGroup '%s' should not exists", name)
 		t.Log(res)
-		r.Delete(t, resourceName)
+		r.Delete(t, name)
 	}
 }
 
-func (r *Resources) Create(t *testing.T, resourceName string, location string) {
-	_, err := r.client.CreateOrUpdate(resourceName, resources.ResourceGroup{
+func (r *ResourceGroup) Create(t *testing.T, name string, location string) {
+	_, err := r.client.CreateOrUpdate(name, resources.ResourceGroup{
 		Location: &location,
 	})
 	if err != nil {
@@ -44,16 +44,16 @@ func (r *Resources) Create(t *testing.T, resourceName string, location string) {
 	}
 }
 
-func (r *Resources) Delete(t *testing.T, resourceName string) {
-	_, err := r.client.Delete(resourceName, nil)
+func (r *ResourceGroup) Delete(t *testing.T, name string) {
+	_, err := r.client.Delete(name, nil)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
-func NewResources(t *testing.T, s *Session) *Resources {
-	rg := &Resources{
+func NewResourceGroup(t *testing.T, s *Session) *ResourceGroup {
+	rg := &ResourceGroup{
 		client: resources.NewGroupsClient(s.SubscriptionID),
 	}
 	rg.client.Authorizer = s.token
