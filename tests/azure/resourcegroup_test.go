@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
@@ -17,10 +18,15 @@ func genResourceGroupName() string {
 func testResourceGroupCreation(t *testing.T) {
 	t.Parallel()
 
-	shell := nash.Setup(t)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	resgroup := genResourceGroupName()
+	session := azure.NewSession(t)
+	resources := azure.NewResourceGroup(ctx, t, session)
+	defer resources.Delete(t, resgroup)
 
+	shell := nash.Setup(t)
 	shell.Setvar("ResourceGroup", sh.NewStrObj(resgroup))
 
 	err := shell.Exec("TestResourceGroupCreation", `
@@ -32,19 +38,20 @@ func testResourceGroupCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	session := azure.NewSession(t)
-	resources := azure.NewResourceGroup(t, session)
-	defer resources.Delete(t, resgroup)
 	resources.AssertExists(t, resgroup)
 }
 
 func testResourceGroupDeletion(t *testing.T) {
 	t.Parallel()
 
-	shell := nash.Setup(t)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	resgroup := genResourceGroupName()
+	session := azure.NewSession(t)
+	resources := azure.NewResourceGroup(ctx, t, session)
 
+	shell := nash.Setup(t)
 	shell.Setvar("ResourceGroup", sh.NewStrObj(resgroup))
 
 	err := shell.Exec("TestResourceGroupDeletion", `
@@ -55,9 +62,6 @@ func testResourceGroupDeletion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	session := azure.NewSession(t)
-	resources := azure.NewResourceGroup(t, session)
 
 	resources.AssertExists(t, resgroup)
 

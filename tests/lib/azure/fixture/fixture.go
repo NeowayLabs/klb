@@ -1,9 +1,11 @@
 package fixture
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 )
@@ -36,16 +38,19 @@ type Test func(*testing.T, F)
 func Run(
 	t *testing.T,
 	testname string,
+	timeout time.Duration,
 	location string,
 	testfunc Test,
 ) {
 	t.Run(testname, func(t *testing.T) {
 		t.Parallel()
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
 
 		session := azure.NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-%s-%d", testname, rand.Intn(9999999))
 
-		resources := azure.NewResourceGroup(t, session)
+		resources := azure.NewResourceGroup(ctx, t, session)
 		defer resources.Delete(t, resgroup)
 
 		resources.Create(t, resgroup, location)

@@ -2,11 +2,15 @@ package azure_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
-const location = "eastus"
+const (
+	location = "eastus"
+	timeout  = 5 * time.Minute
+)
 
 func TestAzureResGroup(t *testing.T) {
 	t.Parallel()
@@ -16,6 +20,6 @@ func TestAzureResGroup(t *testing.T) {
 
 func TestAzureAvailSet(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "Create", location, testAvailSetCreation)
-	fixture.Run(t, "Delete", location, testAvailSetDeletion)
+	fixture.Run(t, "Create", timeout, location, testAvailSetCreation)
+	fixture.Run(t, "Delete", timeout, location, testAvailSetDeletion)
 }

@@ -37,6 +37,7 @@ func Run(
 			)
 		}
 
+		// FIXME: What if a deferred call this and we call Fatal again ?
 		t.Fatal(t, strings.Join(errmsgs, "\n"))
 	}
 }
