@@ -14,6 +14,19 @@ type ResourceGroup struct {
 	ctx    context.Context
 }
 
+func NewResourceGroup(
+	ctx context.Context,
+	t *testing.T,
+	s *Session,
+) *ResourceGroup {
+	rg := &ResourceGroup{
+		client: resources.NewGroupsClient(s.SubscriptionID),
+		ctx:    ctx,
+	}
+	rg.client.Authorizer = s.token
+	return rg
+}
+
 func (r *ResourceGroup) AssertExists(t *testing.T, name string) {
 	retrier.Run(r.ctx, t, "ResourceGroup.AssertExists", func() error {
 		_, err := r.client.CheckExistence(name)
@@ -45,17 +58,4 @@ func (r *ResourceGroup) Delete(t *testing.T, name string) {
 		_, err := r.client.Delete(name, nil)
 		return err
 	})
-}
-
-func NewResourceGroup(
-	ctx context.Context,
-	t *testing.T,
-	s *Session,
-) *ResourceGroup {
-	rg := &ResourceGroup{
-		client: resources.NewGroupsClient(s.SubscriptionID),
-		ctx:    ctx,
-	}
-	rg.client.Authorizer = s.token
-	return rg
 }

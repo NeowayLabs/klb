@@ -24,7 +24,7 @@ func testAvailSetCreate(t *testing.T, f fixture.F) {
 		availset,
 		f.Location,
 	)
-	availSets := azure.NewAvailSet(t, f.Session)
+	availSets := azure.NewAvailSet(f.Ctx, t, f.Session)
 	availSets.AssertExists(t, availset, f.ResGroupName)
 }
 
@@ -40,7 +40,7 @@ func testAvailSetDelete(t *testing.T, f fixture.F) {
 		f.Location,
 	)
 
-	availSets := azure.NewAvailSet(t, f.Session)
+	availSets := azure.NewAvailSet(f.Ctx, t, f.Session)
 	availSets.AssertExists(t, availset, f.ResGroupName)
 
 	nash.Run(

@@ -60,8 +60,7 @@ func Run(
 
 		resources := azure.NewResourceGroup(ctx, t, session)
 		defer func() {
-			// We cant use an expired context when cleaning up
-			// state from Azure.
+			// We cant use an expired context when cleaning up state from Azure.
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 			resources := azure.NewResourceGroup(ctx, t, session)
