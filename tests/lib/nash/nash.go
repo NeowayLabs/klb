@@ -23,7 +23,11 @@ func Setup(t *testing.T) *nash.Shell {
 	return shell
 }
 
-func Run(t *testing.T, scriptpath string, args ...string) {
+func Run(
+	t *testing.T,
+	scriptpath string,
+	args ...string,
+) {
 	shell := Setup(t)
 	err := shell.ExecFile(scriptpath, args...)
 	if err != nil {

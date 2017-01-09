@@ -17,19 +17,19 @@ type WorkFunc func() error
 // Run executes the given work function trying again if something
 // goes wrong. On success it just returns, if the context gets
 // cancelled it will call testing.T.Fatal with all the accumulated errors.
+// The name parameter is used to aid the error messages.
 func Run(
 	ctx context.Context,
 	t *testing.T,
+	name string,
 	work WorkFunc,
 ) {
 	errs := retryUntilDone(ctx, work)
-
 	if len(errs) > 0 {
 		errmsgs := []string{
 			"\n",
-			"Test failed, errors in order:",
+			fmt.Sprintf("Work %q failed, errors in order:", name),
 		}
-
 		for i, err := range errs {
 			errmsgs = append(
 				errmsgs,
