@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 )
 
 type WorkFunc func() error
@@ -40,6 +41,8 @@ func Run(
 	}
 }
 
+const backoff = 10 * time.Second
+
 func retryUntilDone(ctx context.Context, work WorkFunc) []error {
 	var errs []error
 	for {
@@ -66,5 +69,11 @@ func retryUntilDone(ctx context.Context, work WorkFunc) []error {
 				)
 			}
 		}
+		// Sometimes we geet an error like: Number of write requests
+		// for subscription 'x'
+		// exceeded the limit of '1200' for time interval '01:00:00'.
+		// Please try again after '5' minutes
+		// Before trying again lets backoff a little.
+		time.Sleep(backoff)
 	}
 }

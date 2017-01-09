@@ -1,9 +1,11 @@
 package nash
 
 import (
+	"context"
 	"os"
 	"testing"
 
+	"github.com/NeowayLabs/klb/tests/lib/retrier"
 	"github.com/NeowayLabs/nash"
 )
 
@@ -24,13 +26,13 @@ func Setup(t *testing.T) *nash.Shell {
 }
 
 func Run(
+	ctx context.Context,
 	t *testing.T,
 	scriptpath string,
 	args ...string,
 ) {
-	shell := Setup(t)
-	err := shell.ExecFile(scriptpath, args...)
-	if err != nil {
-		t.Fatal(err)
-	}
+	retrier.Run(ctx, t, "nash.Run:"+scriptpath, func() error {
+		shell := Setup(t)
+		return shell.ExecFile(scriptpath, args...)
+	})
 }

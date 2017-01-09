@@ -19,6 +19,9 @@ type F struct {
 	Session *azure.Session
 	//Location where resources are created
 	Location string
+	//Ctx created with the timeout provided for this test.
+	//Use it to properly timeout your tests
+	Ctx context.Context
 }
 
 type Test func(*testing.T, F)
@@ -72,6 +75,7 @@ func Run(
 			ResGroupName: resgroup,
 			Session:      session,
 			Location:     location,
+			Ctx:          ctx,
 		})
 	})
 }
