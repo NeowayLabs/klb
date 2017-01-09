@@ -29,12 +29,17 @@ type Test func(*testing.T, F)
 //
 // It's main purpose is to make your life easier and guarantee that
 // the resource group will be destroyed when testfunc exits.
-// It is a programming error to reference the created resource group
-// after returning from testfunc (just like Go http handlers).
+//
+// When a resource group is destroyed all resources inside it are
+// destroyed too, so you don't need to worry with any cleanup inside your
+// tests, just have fun.
 //
 // Since testing is pretty slow and the fixture guarantee unique named
 // resource groups it will also run the your test in parallel with others
 // so you don't have to die waiting for a result.
+//
+// It is a programming error to reference the created resource group
+// after returning from testfunc (just like Go http handlers).
 func Run(
 	t *testing.T,
 	testname string,
@@ -51,7 +56,14 @@ func Run(
 		resgroup := fmt.Sprintf("klb-test-%s-%d", testname, rand.Intn(9999999))
 
 		resources := azure.NewResourceGroup(ctx, t, session)
-		defer resources.Delete(t, resgroup)
+		defer func() {
+			// We cant use an expired context when cleaning up
+			// state from Azure.
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			resources := azure.NewResourceGroup(ctx, t, session)
+			resources.Delete(t, resgroup)
+		}()
 
 		resources.Create(t, resgroup, location)
 		resources.AssertExists(t, resgroup)

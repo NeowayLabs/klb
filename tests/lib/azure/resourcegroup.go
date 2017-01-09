@@ -41,8 +41,6 @@ func (r *ResourceGroup) Create(t *testing.T, name string, location string) {
 }
 
 func (r *ResourceGroup) Delete(t *testing.T, name string) {
-	//FIXME: Delete cant use the same context, or when a timeout happens
-	//It will try to cleanup with a already cancelled context
 	retrier.Run(r.ctx, t, func() error {
 		_, err := r.client.Delete(name, nil)
 		return err

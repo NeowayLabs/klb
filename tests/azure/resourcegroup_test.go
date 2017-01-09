@@ -24,7 +24,12 @@ func testResourceGroupCreate(t *testing.T) {
 	resgroup := genResourceGroupName()
 	session := azure.NewSession(t)
 	resources := azure.NewResourceGroup(ctx, t, session)
-	defer resources.Delete(t, resgroup)
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		resources := azure.NewResourceGroup(ctx, t, session)
+		resources.Delete(t, resgroup)
+	}()
 
 	shell := nash.Setup(t)
 	shell.Setvar("ResourceGroup", sh.NewStrObj(resgroup))
