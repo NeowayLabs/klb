@@ -15,7 +15,7 @@ func genResourceGroupName() string {
 	return fmt.Sprintf("klb-resgroup-tests-%d", rand.Intn(999999))
 }
 
-func testResourceGroupCreation(t *testing.T) {
+func testResourceGroupCreate(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -41,7 +41,7 @@ func testResourceGroupCreation(t *testing.T) {
 	resources.AssertExists(t, resgroup)
 }
 
-func testResourceGroupDeletion(t *testing.T) {
+func testResourceGroupDelete(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
