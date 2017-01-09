@@ -36,8 +36,6 @@ func Run(
 				fmt.Sprintf("error[%d]: %s", i, err),
 			)
 		}
-
-		// FIXME: What if a deferred call this and we call Fatal again ?
 		t.Fatal(t, strings.Join(errmsgs, "\n"))
 	}
 }
