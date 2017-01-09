@@ -56,7 +56,7 @@ func Run(
 		defer cancel()
 
 		session := azure.NewSession(t)
-		resgroup := fmt.Sprintf("klb-test-%s-%d", testname, rand.Intn(9999999))
+		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
 
 		resources := azure.NewResourceGroup(ctx, t, session)
 		defer func() {

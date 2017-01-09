@@ -41,36 +41,30 @@ func testResourceGroupCreate(t *testing.T) {
 }
 
 func testResourceGroupDelete(t *testing.T) {
-	//t.Parallel()
+	t.Parallel()
 
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
-	//resgroup := genResourceGroupName()
-	//session := azure.NewSession(t)
-	//resources := azure.NewResourceGroup(ctx, t, session)
+	resgroup := genResourceGroupName()
+	session := azure.NewSession(t)
+	resources := azure.NewResourceGroup(ctx, t, session)
 
-	//shell := nash.New(t)
-	//shell.Setvar("ResourceGroup", resgroup)
+	nash.Run(
+		ctx,
+		t,
+		"./testdata/create_resource_group.sh",
+		resgroup,
+		location,
+	)
+	resources.AssertExists(t, resgroup)
 
-	//err := shell.Exec("TestResourceGroupDeletion", `
-	//import ../../azure/all
-	//azure_group_create($ResourceGroup, "eastus")
-	//`)
-
-	//if err != nil {
-	//t.Fatal(err)
-	//}
-
-	//resources.AssertExists(t, resgroup)
-
-	//err = shell.Exec("TestResourceGroupDeletion2", `
-	//azure_group_delete($ResourceGroup)
-	//`)
-
-	//if err != nil {
-	//t.Error(err)
-	//}
-
-	//resources.AssertDeleted(t, resgroup)
+	nash.Run(
+		ctx,
+		t,
+		"./testdata/delete_resource_group.sh",
+		resgroup,
+		location,
+	)
+	resources.AssertDeleted(t, resgroup)
 }

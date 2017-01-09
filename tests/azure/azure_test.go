@@ -20,6 +20,6 @@ func TestResourceGroup(t *testing.T) {
 
 func TestAvailabilitySet(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "Create", timeout, location, testAvailSetCreate)
-	fixture.Run(t, "Delete", timeout, location, testAvailSetDelete)
+	fixture.Run(t, "AvailabilitySet_Create", timeout, location, testAvailSetCreate)
+	fixture.Run(t, "AvailabilitySet_Delete", timeout, location, testAvailSetDelete)
 }
