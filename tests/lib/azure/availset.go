@@ -10,48 +10,54 @@ import (
 )
 
 type AvailSet struct {
-	client compute.AvailabilitySetsClient
-	ctx    context.Context
+	client   compute.AvailabilitySetsClient
+	ctx      context.Context
+	resgroup string
 }
 
-func NewAvailSet(ctx context.Context, t *testing.T, s *Session) *AvailSet {
+func NewAvailSet(
+	ctx context.Context,
+	t *testing.T,
+	s *Session,
+	resgroup string,
+) *AvailSet {
 	as := &AvailSet{
-		client: compute.NewAvailabilitySetsClient(s.SubscriptionID),
-		ctx:    ctx,
+		client:   compute.NewAvailabilitySetsClient(s.SubscriptionID),
+		ctx:      ctx,
+		resgroup: resgroup,
 	}
 	as.client.Authorizer = s.token
 	return as
 }
 
-func getID(method string, resgroup string) string {
-	return fmt.Sprintf("AvailSet.%s:%s", method, resgroup)
-}
-
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
-func (availSet *AvailSet) AssertExists(t *testing.T, name, resgroup string) {
+func (availSet *AvailSet) AssertExists(t *testing.T, name string) {
 	retrier.Run(availSet.ctx, t, getID("AssertExists", name), func() error {
-		_, err := availSet.client.Get(resgroup, name)
+		_, err := availSet.client.Get(availSet.resgroup, name)
 		return err
 	})
 }
 
 // AssertDeleted checks if resource was correctly deleted.
-func (availSet *AvailSet) AssertDeleted(t *testing.T, name, resgroup string) {
-	_, err := availSet.client.Get(resgroup, name)
-
-	if err == nil {
-		// resource exists
-		availSet.Delete(t, name, resgroup)
-		t.Fatalf("AssertDeleted: Resource %s should not exists", name)
-	}
+func (availSet *AvailSet) AssertDeleted(t *testing.T, name string) {
+	retrier.Run(availSet.ctx, t, getID("AssertDeleted", name), func() error {
+		_, err := availSet.client.Get(availSet.resgroup, name)
+		if err == nil {
+			return fmt.Errorf("resource %s should not exist", name)
+		}
+		return nil
+	})
 }
 
 // Delete the availability set
-func (availSet *AvailSet) Delete(t *testing.T, name, resgroup string) {
-	_, err := availSet.client.Delete(resgroup, name)
+func (availSet *AvailSet) Delete(t *testing.T, name string) {
+	retrier.Run(availSet.ctx, t, getID("Delete", name), func() error {
+		_, err := availSet.client.Delete(availSet.resgroup, name)
+		return err
+	})
+}
 
-	if err != nil {
-		t.Fatal(err)
-	}
+func getID(method string, name string) string {
+	return fmt.Sprintf("AvailSet.%s:%s", method, name)
 }
