@@ -5,17 +5,17 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/NeowayLabs/klb/tests/azure"
-	"github.com/NeowayLabs/klb/tests/nash"
+	"github.com/NeowayLabs/klb/tests/lib/azure"
+	"github.com/NeowayLabs/klb/tests/lib/nash"
 	"github.com/NeowayLabs/nash/sh"
 )
 
 func genResourceGroupName() string {
-	return fmt.Sprintf("klb-resgroup-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-resgroup-tests-%d", rand.Intn(999999))
 }
 
 func testResourceGroupCreation(t *testing.T) {
-	session := azure.NewSession(t)
+	t.Parallel()
 
 	shell := nash.Setup(t)
 
@@ -32,13 +32,14 @@ func testResourceGroupCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resources := azure.NewResources(t, session)
+	session := azure.NewSession(t)
+	resources := azure.NewResourceGroup(t, session)
 	defer resources.Delete(t, resgroup)
 	resources.AssertExists(t, resgroup)
 }
 
 func testResourceGroupDeletion(t *testing.T) {
-	session := azure.NewSession(t)
+	t.Parallel()
 
 	shell := nash.Setup(t)
 
@@ -55,7 +56,8 @@ func testResourceGroupDeletion(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resources := azure.NewResources(t, session)
+	session := azure.NewSession(t)
+	resources := azure.NewResourceGroup(t, session)
 
 	resources.AssertExists(t, resgroup)
 

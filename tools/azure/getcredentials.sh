@@ -1,6 +1,5 @@
 #!/usr/bin/env nash
 
-IFS = ()
 
 if len($ARGS) != "3" {
 	echo "Usage: " $ARGS[0] "<service principal name>" "<service secret>"

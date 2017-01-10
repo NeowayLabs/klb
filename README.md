@@ -19,6 +19,8 @@ infrastructure on AWS or Azure.
 
 ## Testing
 
+### Azure
+
 To run `make testazure` you'll need the environment variables below:
 
 - AZURE_SUBSCRIPTION_ID=&lt;subscription id&gt;
@@ -27,12 +29,12 @@ To run `make testazure` you'll need the environment variables below:
 - AZURE_CLIENT_SECRET=&lt;password of service principal&gt;
 
 If you already have a `service principal` configured, you can setup
-the environment variables using the `getenvvars.sh` script:
+the environment variables using the `getcredentials.sh` script:
 
 ```sh
-λ> ./tools/azure/getenvvars.sh
-Usage:  ./tools/azure/getenvvars.sh <service principal name> <service secret>
-λ> ./getenvvars.sh klb-sp-tests 123456
+λ> ./tools/azure/getcredentials.sh
+Usage:  ./tools/azure/getcredentials.sh <service principal name> <service secret>
+λ> ./tools/azure/getcredentials.sh klb-sp-tests 123456
 AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 setenv AZURE_SUBSCRIPTION_ID
 AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
@@ -48,14 +50,24 @@ setenv AZURE_CLIENT_SECRET
 Redirect the output above to a file and import into your nash session:
 
 ```sh
-λ> ./tools/azure/getenvvars.sh > env
-λ> import ./env
+λ> ./tools/azure/getcredentials.sh > credentials
+λ> import ./credentials
+```
+
+Besides the credential your subscription must also be registered
+on some resource provider namespaces, since we will be creating resources.
+
+To register on the required providers you can run:
+
+```sh
+λ> ./tools/azure/registerproviders.sh
 ```
 
 If you have not configured the service principal yet, then the
 following section could be helpful.
 
-### Setting up the service principal
+
+#### Setting up the service principal
 
 The values of `AZURE_SUBSCRIPTION_ID` and `AZURE_TENANT_ID` could be
 obtained from the command below:

@@ -14,9 +14,7 @@ func NewAvailSet(t *testing.T, s *Session) *AvailSet {
 	as := &AvailSet{
 		client: compute.NewAvailabilitySetsClient(s.SubscriptionID),
 	}
-
 	as.client.Authorizer = s.token
-
 	return as
 }
 
