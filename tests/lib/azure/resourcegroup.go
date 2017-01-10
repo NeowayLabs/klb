@@ -1,61 +1,61 @@
 package azure
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/resources/resources"
+	"github.com/NeowayLabs/klb/tests/lib/retrier"
 )
 
 type ResourceGroup struct {
 	client resources.GroupsClient
+	ctx    context.Context
 }
 
-func aborterr(t *testing.T, err error) {
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func (r *ResourceGroup) AssertExists(t *testing.T, name string) {
-	_, err := r.client.CheckExistence(name)
-
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-}
-
-func (r *ResourceGroup) AssertDeleted(t *testing.T, name string) {
-	res, err := r.client.Get(name)
-
-	if err == nil {
-		t.Errorf("AssertDeleted: ResourceGroup '%s' should not exists", name)
-		t.Log(res)
-		r.Delete(t, name)
-	}
-}
-
-func (r *ResourceGroup) Create(t *testing.T, name string, location string) {
-	_, err := r.client.CreateOrUpdate(name, resources.ResourceGroup{
-		Location: &location,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func (r *ResourceGroup) Delete(t *testing.T, name string) {
-	_, err := r.client.Delete(name, nil)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func NewResourceGroup(t *testing.T, s *Session) *ResourceGroup {
+func NewResourceGroup(
+	ctx context.Context,
+	t *testing.T,
+	s *Session,
+) *ResourceGroup {
 	rg := &ResourceGroup{
 		client: resources.NewGroupsClient(s.SubscriptionID),
+		ctx:    ctx,
 	}
 	rg.client.Authorizer = s.token
 	return rg
+}
+
+func (r *ResourceGroup) AssertExists(t *testing.T, name string) {
+	retrier.Run(r.ctx, t, "ResourceGroup.AssertExists", func() error {
+		_, err := r.client.CheckExistence(name)
+		return err
+	})
+}
+
+func (r *ResourceGroup) AssertDeleted(t *testing.T, name string) {
+	retrier.Run(r.ctx, t, "ResourceGroup.AssertDeleted", func() error {
+		_, err := r.client.Get(name)
+		if err == nil {
+			return fmt.Errorf("resource group: %q still exists", name)
+		}
+		return nil
+	})
+}
+
+func (r *ResourceGroup) Create(t *testing.T, name string, location string) {
+	retrier.Run(r.ctx, t, "ResourceGroup.Create", func() error {
+		_, err := r.client.CreateOrUpdate(name, resources.ResourceGroup{
+			Location: &location,
+		})
+		return err
+	})
+}
+
+func (r *ResourceGroup) Delete(t *testing.T, name string) {
+	retrier.Run(r.ctx, t, "ResourceGroup.Delete", func() error {
+		_, err := r.client.Delete(name, nil)
+		return err
+	})
 }

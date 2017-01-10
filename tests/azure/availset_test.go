@@ -14,23 +14,25 @@ func genAvailSetName() string {
 	return fmt.Sprintf("klb-availset-tests-%d", rand.Intn(1000))
 }
 
-func testAvailSetCreation(t *testing.T, f fixture.F) {
+func testAvailSetCreate(t *testing.T, f fixture.F) {
 	availset := genAvailSetName()
 	nash.Run(
+		f.Ctx,
 		t,
 		"./testdata/create_avail_set.sh",
 		f.ResGroupName,
 		availset,
 		f.Location,
 	)
-	availSets := azure.NewAvailSet(t, f.Session)
-	availSets.AssertExists(t, availset, f.ResGroupName)
+	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName)
+	availSets.AssertExists(t, availset)
 }
 
-func testAvailSetDeletion(t *testing.T, f fixture.F) {
+func testAvailSetDelete(t *testing.T, f fixture.F) {
 
 	availset := genAvailSetName()
 	nash.Run(
+		f.Ctx,
 		t,
 		"./testdata/create_avail_set.sh",
 		f.ResGroupName,
@@ -38,14 +40,15 @@ func testAvailSetDeletion(t *testing.T, f fixture.F) {
 		f.Location,
 	)
 
-	availSets := azure.NewAvailSet(t, f.Session)
-	availSets.AssertExists(t, availset, f.ResGroupName)
+	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName)
+	availSets.AssertExists(t, availset)
 
 	nash.Run(
+		f.Ctx,
 		t,
 		"./testdata/delete_avail_set.sh",
 		f.ResGroupName,
 		availset,
 	)
-	availSets.AssertDeleted(t, availset, f.ResGroupName)
+	availSets.AssertDeleted(t, availset)
 }

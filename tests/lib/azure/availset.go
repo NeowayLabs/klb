@@ -1,18 +1,30 @@
 package azure
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/compute"
+	"github.com/NeowayLabs/klb/tests/lib/retrier"
 )
 
 type AvailSet struct {
-	client compute.AvailabilitySetsClient
+	client   compute.AvailabilitySetsClient
+	ctx      context.Context
+	resgroup string
 }
 
-func NewAvailSet(t *testing.T, s *Session) *AvailSet {
+func NewAvailSet(
+	ctx context.Context,
+	t *testing.T,
+	s *Session,
+	resgroup string,
+) *AvailSet {
 	as := &AvailSet{
-		client: compute.NewAvailabilitySetsClient(s.SubscriptionID),
+		client:   compute.NewAvailabilitySetsClient(s.SubscriptionID),
+		ctx:      ctx,
+		resgroup: resgroup,
 	}
 	as.client.Authorizer = s.token
 	return as
@@ -20,31 +32,32 @@ func NewAvailSet(t *testing.T, s *Session) *AvailSet {
 
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
-func (availSet *AvailSet) AssertExists(t *testing.T, name, resgroup string) {
-	_, err := availSet.client.Get(resgroup, name)
-
-	if err != nil {
-		t.Fatal(err)
-	}
+func (availSet *AvailSet) AssertExists(t *testing.T, name string) {
+	retrier.Run(availSet.ctx, t, getID("AssertExists", name), func() error {
+		_, err := availSet.client.Get(availSet.resgroup, name)
+		return err
+	})
 }
 
-// AssertDeleted checks if resource was correctly deleted. Delete it and
-// throw an error otherwise.
-func (availSet *AvailSet) AssertDeleted(t *testing.T, name, resgroup string) {
-	_, err := availSet.client.Get(resgroup, name)
-
-	if err == nil {
-		// resource exists
-		availSet.Delete(t, name, resgroup)
-		t.Fatalf("AssertDeleted: Resource %s should not exists", name)
-	}
+// AssertDeleted checks if resource was correctly deleted.
+func (availSet *AvailSet) AssertDeleted(t *testing.T, name string) {
+	retrier.Run(availSet.ctx, t, getID("AssertDeleted", name), func() error {
+		_, err := availSet.client.Get(availSet.resgroup, name)
+		if err == nil {
+			return fmt.Errorf("resource %s should not exist", name)
+		}
+		return nil
+	})
 }
 
 // Delete the availability set
-func (availSet *AvailSet) Delete(t *testing.T, name, resgroup string) {
-	_, err := availSet.client.Delete(resgroup, name)
+func (availSet *AvailSet) Delete(t *testing.T, name string) {
+	retrier.Run(availSet.ctx, t, getID("Delete", name), func() error {
+		_, err := availSet.client.Delete(availSet.resgroup, name)
+		return err
+	})
+}
 
-	if err != nil {
-		t.Fatal(err)
-	}
+func getID(method string, name string) string {
+	return fmt.Sprintf("AvailSet.%s:%s", method, name)
 }
