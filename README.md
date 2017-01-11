@@ -50,7 +50,7 @@ setenv AZURE_CLIENT_SECRET
 Redirect the output above to a file and import into your nash session:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh > credentials
+λ> ./tools/azure/getcredentials.sh <service principal name> <service secret> > credentials
 λ> import ./credentials
 ```
 
