@@ -28,10 +28,7 @@ func New(t *testing.T, output io.Writer) *Shell {
 	os.MkdirAll(nashPath, 0655)
 	shell.SetDotDir(nashPath)
 
-	return &Shell{
-		shell: shell,
-		logs:  stdout,
-	}
+	return &Shell{shell: shell}
 }
 
 func Run(
@@ -46,9 +43,9 @@ func Run(
 		err := s.shell.ExecFile(scriptpath, args...)
 		if err != nil {
 			return fmt.Errorf(
-				"error: %s, nash exec logs at: %s\n",
+				"error: %s, executing script: %s",
 				err,
-				logspath,
+				scriptpath,
 			)
 		}
 		return nil

@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -8,6 +9,7 @@ import (
 
 type Logger struct {
 	file *os.File
+	t    *testing.T
 }
 
 const logsdir = "./testdata/logs"
@@ -23,12 +25,20 @@ func New(t *testing.T, testname string) *Logger {
 		t.Fatalf("creating test logs dir: %s:", err)
 	}
 	logspath := strings.Join([]string{logsdir, testname + ".logs"}, "/")
-	file, err := os.Create(logfilepath)
+	file, err := os.Create(logspath)
 	if err != nil {
 		t.Fatalf("error opening log file: %s", err)
 	}
 	return &Logger{
-		logs: file,
+		t:    t,
+		file: file,
+	}
+}
+
+func (l *Logger) Log(msg string, args ...interface{}) {
+	_, err := l.Write([]byte(fmt.Sprintf(msg, args...)))
+	if err != nil {
+		l.t.Fatalf("error logging msg: %s", err)
 	}
 }
 
@@ -36,4 +46,8 @@ func (l *Logger) Write(b []byte) (n int, err error) {
 	res, err := l.file.Write(b)
 	l.file.Sync()
 	return res, err
+}
+
+func (l *Logger) Close() {
+	l.file.Close()
 }

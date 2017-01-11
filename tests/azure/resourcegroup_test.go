@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
+	"github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
 
@@ -19,6 +20,9 @@ func testResourceGroupCreate(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
+
+	logger := log.New(t, "testResourceGroupCreate")
+	defer logger.Close()
 
 	resgroup := genResourceGroupName()
 	session := azure.NewSession(t)
@@ -33,6 +37,7 @@ func testResourceGroupCreate(t *testing.T) {
 	nash.Run(
 		ctx,
 		t,
+		logger,
 		"testResourceGroupCreate",
 		"./testdata/create_resource_group.sh",
 		resgroup,
@@ -47,6 +52,9 @@ func testResourceGroupDelete(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
+	logger := log.New(t, "testResourceGroupDelete")
+	defer logger.Close()
+
 	resgroup := genResourceGroupName()
 	session := azure.NewSession(t)
 	resources := azure.NewResourceGroup(ctx, t, session)
@@ -54,6 +62,7 @@ func testResourceGroupDelete(t *testing.T) {
 	nash.Run(
 		ctx,
 		t,
+		logger,
 		"testResourceGroupDelete",
 		"./testdata/create_resource_group.sh",
 		resgroup,
@@ -64,6 +73,7 @@ func testResourceGroupDelete(t *testing.T) {
 	nash.Run(
 		ctx,
 		t,
+		logger,
 		"testResourceGroupDelete",
 		"./testdata/delete_resource_group.sh",
 		resgroup,

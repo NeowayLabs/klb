@@ -25,6 +25,8 @@ type F struct {
 	Location string
 	//Name is the test name
 	Name string
+	//Logger useful to log on your tests, bypass go test default
+	Logger *log.Logger
 }
 
 type Test func(*testing.T, F)
@@ -59,7 +61,7 @@ func Run(
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		logger := log.New(testname)
+		logger := log.New(t, testname)
 		defer logger.Close()
 
 		session := azure.NewSession(t)
@@ -83,6 +85,7 @@ func Run(
 			ResGroupName: resgroup,
 			Session:      session,
 			Location:     location,
+			Logger:       logger,
 		})
 	})
 }
