@@ -11,7 +11,7 @@ import (
 )
 
 func genStorageAccountName() string {
-	return fmt.Sprintf("klb-availset-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-storageaccount-tests-%d", rand.Intn(1000))
 }
 
 func testStorageAccountCreate(t *testing.T, f fixture.F) {
@@ -21,11 +21,11 @@ func testStorageAccountCreate(t *testing.T, f fixture.F) {
 		t,
 		"./testdata/create_storage_account.sh",
 		f.ResGroupName,
-		availset,
+		storage,
 		f.Location,
 	)
-	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName, "LSR", "Storage")
-	availSets.AssertExists(t, availset)
+	storage := azure.NewStorageAccount(f.Ctx, t, f.Session, f.ResGroupName, "LSR", "Storage")
+	storage.AssertExists(t, storage)
 }
 
 /*
