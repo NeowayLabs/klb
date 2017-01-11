@@ -23,3 +23,9 @@ func TestAvailabilitySet(t *testing.T) {
 	fixture.Run(t, "AvailabilitySet_Create", timeout, location, testAvailSetCreate)
 	fixture.Run(t, "AvailabilitySet_Delete", timeout, location, testAvailSetDelete)
 }
+
+func TestVnetSet(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "Vnet_Create", timeout, location, testVnetCreate)
+	// fixture.Run(t, "Vnet_Delete", timeout, location, testVnetDelete)
+}

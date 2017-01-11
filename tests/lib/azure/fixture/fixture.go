@@ -67,6 +67,8 @@ func Run(
 			resources.Delete(t, resgroup)
 		}()
 
+		fmt.Println("NOME", resgroup)
+
 		resources.Create(t, resgroup, location)
 		resources.AssertExists(t, resgroup)
 

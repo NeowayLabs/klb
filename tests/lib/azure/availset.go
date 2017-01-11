@@ -33,7 +33,7 @@ func NewAvailSet(
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
 func (availSet *AvailSet) AssertExists(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, getID("AssertExists", name), func() error {
+	retrier.Run(availSet.ctx, t, getID("AvailSet", "AssertExists", name), func() error {
 		_, err := availSet.client.Get(availSet.resgroup, name)
 		return err
 	})
@@ -41,7 +41,7 @@ func (availSet *AvailSet) AssertExists(t *testing.T, name string) {
 
 // AssertDeleted checks if resource was correctly deleted.
 func (availSet *AvailSet) AssertDeleted(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, getID("AssertDeleted", name), func() error {
+	retrier.Run(availSet.ctx, t, getID("AvailSet", "AssertDeleted", name), func() error {
 		_, err := availSet.client.Get(availSet.resgroup, name)
 		if err == nil {
 			return fmt.Errorf("resource %s should not exist", name)
@@ -52,12 +52,8 @@ func (availSet *AvailSet) AssertDeleted(t *testing.T, name string) {
 
 // Delete the availability set
 func (availSet *AvailSet) Delete(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, getID("Delete", name), func() error {
+	retrier.Run(availSet.ctx, t, getID("AvailSet", "Delete", name), func() error {
 		_, err := availSet.client.Delete(availSet.resgroup, name)
 		return err
 	})
-}
-
-func getID(method string, name string) string {
-	return fmt.Sprintf("AvailSet.%s:%s", method, name)
 }
