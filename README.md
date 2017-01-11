@@ -17,6 +17,12 @@ infrastructure on AWS or Azure.
 - [jq](https://stedolan.github.io/jq/)
 - [awscli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
 
+You can run the following command to install deps:
+
+```sh
+make deps
+```
+
 ## Testing
 
 ### Azure
