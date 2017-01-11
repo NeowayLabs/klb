@@ -3,6 +3,7 @@ package azure
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/storage"
@@ -53,7 +54,7 @@ func (storageAccount *StorageAccount) AssertDeleted(t *testing.T, name string) {
 // Delete the availability set
 func (storageAccount *StorageAccount) Delete(t *testing.T, name string) {
 	retrier.Run(storageAccount.ctx, t, getIDStorageAccount("Delete", name), func() error {
-		_, err := storageAccount.client.Delete(storageAccount.resgroup, name)
+		_, err := storageAccount.client.Delete(storageAccount.resgroup, os.Getenv("STORAGE_ACCOUNT_NAME"))
 		return err
 	})
 }

@@ -26,6 +26,6 @@ func TestAvailabilitySet(t *testing.T) {
 
 func TestStorageAccount(t *testing.T) {
 	t.Parallel()
-	storageAccoutTimeout := 100 * time.Second
+	storageAccoutTimeout := 150 * time.Second
 	fixture.Run(t, "StorageAccount_Create", storageAccoutTimeout, location, testStorageAccountCreate)
 }
