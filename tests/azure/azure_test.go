@@ -23,3 +23,9 @@ func TestAvailabilitySet(t *testing.T) {
 	fixture.Run(t, "AvailabilitySet_Create", timeout, location, testAvailSetCreate)
 	fixture.Run(t, "AvailabilitySet_Delete", timeout, location, testAvailSetDelete)
 }
+
+func TestStorageAccount(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "StorageAccount_Create", timeout, location, testStorageAccountCreate)
+	//fixture.Run(t, "AvailabilitySet_Delete", timeout, location, testAvailSetDelete)
+}

@@ -32,17 +32,17 @@ func NewStorageAccount(
 
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
-func (availSet *StorageAccount) AssertExists(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, getID("AssertExists", name), func() error {
-		_, err := availSet.client.Get(availSet.resgroup, name)
+func (storageAccount *StorageAccount) AssertExists(t *testing.T, name string) {
+	retrier.Run(storageAccount.ctx, t, getIDStorageAccount("AssertExists", name), func() error {
+		_, err := storageAccount.client.GetProperties(storageAccount.resgroup, name)
 		return err
 	})
 }
 
 // AssertDeleted checks if resource was correctly deleted.
-func (availSet *StorageAccount) AssertDeleted(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, getID("AssertDeleted", name), func() error {
-		_, err := availSet.client.Get(availSet.resgroup, name)
+func (storageAccount *StorageAccount) AssertDeleted(t *testing.T, name string) {
+	retrier.Run(storageAccount.ctx, t, getIDStorageAccount("AssertDeleted", name), func() error {
+		_, err := storageAccount.client.GetProperties(storageAccount.resgroup, name)
 		if err == nil {
 			return fmt.Errorf("resource %s should not exist", name)
 		}
@@ -51,13 +51,13 @@ func (availSet *StorageAccount) AssertDeleted(t *testing.T, name string) {
 }
 
 // Delete the availability set
-func (availSet *StorageAccount) Delete(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, getID("Delete", name), func() error {
-		_, err := availSet.client.Delete(availSet.resgroup, name)
+func (storageAccount *StorageAccount) Delete(t *testing.T, name string) {
+	retrier.Run(storageAccount.ctx, t, getIDStorageAccount("Delete", name), func() error {
+		_, err := storageAccount.client.Delete(storageAccount.resgroup, name)
 		return err
 	})
 }
 
-func getID(method string, name string) string {
+func getIDStorageAccount(method string, name string) string {
 	return fmt.Sprintf("StorageAccount.%s:%s", method, name)
 }
