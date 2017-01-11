@@ -2,7 +2,12 @@ package azure_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+
+	"github.com/NeowayLabs/klb/tests/lib/azure"
+	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
+	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
 
 func genStorageAccountName() string {
@@ -11,28 +16,26 @@ func genStorageAccountName() string {
 
 func testStorageAccountCreate(t *testing.T, f fixture.F) {
 	storage := genStorageAccountName()
-	fmt.Println(storage)
-	/*nash.Run(
+	nash.Run(
 		f.Ctx,
 		t,
-		"./testdata/create_avail_set.sh",
+		"./testdata/create_storage_account.sh",
 		f.ResGroupName,
 		availset,
 		f.Location,
 	)
-	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName)
+	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName, "LSR", "Storage")
 	availSets.AssertExists(t, availset)
-	*/
 }
 
+/*
 func testStorageAccountDelete(t *testing.T, f fixture.F) {
 
 	storage := genStorageAccountName()
-	fmt.Println(storage)
-/*	nash.Run(
+	nash.Run(
 		f.Ctx,
 		t,
-		"./testdata/create_avail_set.sh",
+		"./testdata/create_storage_account.sh",
 		f.ResGroupName,
 		availset,
 		f.Location,
@@ -49,5 +52,5 @@ func testStorageAccountDelete(t *testing.T, f fixture.F) {
 		availset,
 	)
 	availSets.AssertDeleted(t, availset)
-	*/
 }
+*/
