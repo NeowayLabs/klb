@@ -21,7 +21,7 @@ infrastructure on AWS or Azure.
 
 ### Azure
 
-To run `make testazure` you'll need the environment variables below:
+To run `make testall` you'll need the environment variables below:
 
 - AZURE_SUBSCRIPTION_ID=&lt;subscription id&gt;
 - AZURE_TENANT_ID=&lt;tenant id&gt;
@@ -141,7 +141,7 @@ If everything worked as expected, then export the required environment
 variables and run:
 
 ```
-λ> make testazure
+λ> make testall
 ```
 
 P.S.:
