@@ -30,29 +30,28 @@ func testStorageAccountCreate(t *testing.T, f fixture.F) {
 	storAccount.AssertExists(t, storage)
 }
 
-/*
 func testStorageAccountDelete(t *testing.T, f fixture.F) {
 
-	storage := genStorageAccountName()
+	genstorage := genStorageAccountName()
 	nash.Run(
 		f.Ctx,
 		t,
 		"./testdata/create_storage_account.sh",
 		f.ResGroupName,
-		availset,
+		genstorage,
 		f.Location,
 	)
 
-	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName)
-	availSets.AssertExists(t, availset)
+	storage := os.Getenv("STORAGE_ACCOUNT_NAME")
+	storAccount := azure.NewStorageAccount(f.Ctx, t, f.Session, f.ResGroupName)
+	storAccount.AssertExists(t, storage)
 
 	nash.Run(
 		f.Ctx,
 		t,
-		"./testdata/delete_avail_set.sh",
+		"./testdata/delete_storage_account.sh",
 		f.ResGroupName,
-		availset,
+		storage,
 	)
-	availSets.AssertDeleted(t, availset)
+	storAccount.AssertDeleted(t, storage)
 }
-*/
