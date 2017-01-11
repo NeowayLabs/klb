@@ -33,6 +33,7 @@ func testResourceGroupCreate(t *testing.T) {
 	nash.Run(
 		ctx,
 		t,
+		"testResourceGroupCreate",
 		"./testdata/create_resource_group.sh",
 		resgroup,
 		location,
@@ -53,6 +54,7 @@ func testResourceGroupDelete(t *testing.T) {
 	nash.Run(
 		ctx,
 		t,
+		"testResourceGroupDelete",
 		"./testdata/create_resource_group.sh",
 		resgroup,
 		location,
@@ -62,6 +64,7 @@ func testResourceGroupDelete(t *testing.T) {
 	nash.Run(
 		ctx,
 		t,
+		"testResourceGroupDelete",
 		"./testdata/delete_resource_group.sh",
 		resgroup,
 		location,

@@ -1,65 +1,54 @@
 package nash
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 	"github.com/NeowayLabs/nash"
-	"github.com/NeowayLabs/nash/sh"
 )
 
 type Shell struct {
-	shell  *nash.Shell
-	stdout *bytes.Buffer
-	stderr *bytes.Buffer
+	shell *nash.Shell
 }
 
-func New(t *testing.T) *Shell {
+func New(t *testing.T, output io.Writer) *Shell {
 	shell, err := nash.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-
-	shell.SetStdout(&stdout)
-	shell.SetStderr(&stderr)
+	shell.SetStdout(output)
+	shell.SetStderr(output)
 
 	nashPath := os.Getenv("HOME") + "/.nash"
 	os.MkdirAll(nashPath, 0655)
 	shell.SetDotDir(nashPath)
 
 	return &Shell{
-		shell:  shell,
-		stdout: &stdout,
-		stderr: &stderr,
+		shell: shell,
+		logs:  stdout,
 	}
-}
-
-func (s *Shell) Setvar(name string, value string) {
-	s.shell.Setvar(name, sh.NewStrObj(value))
 }
 
 func Run(
 	ctx context.Context,
 	t *testing.T,
+	scriptoutput io.Writer,
 	scriptpath string,
 	args ...string,
 ) {
-	s := New(t)
+	s := New(t, scriptoutput)
 	retrier.Run(ctx, t, "nash.Run:"+scriptpath, func() error {
 		err := s.shell.ExecFile(scriptpath, args...)
 		if err != nil {
 			return fmt.Errorf(
-				"error: %s\n\nstdout:%s\n\nstderr:%s\n\n",
+				"error: %s, nash exec logs at: %s\n",
 				err,
-				s.stdout,
-				s.stderr,
+				logspath,
 			)
 		}
 		return nil

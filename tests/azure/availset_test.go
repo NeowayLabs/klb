@@ -19,6 +19,7 @@ func testAvailSetCreate(t *testing.T, f fixture.F) {
 	nash.Run(
 		f.Ctx,
 		t,
+		f.Name,
 		"./testdata/create_avail_set.sh",
 		f.ResGroupName,
 		availset,
@@ -29,11 +30,11 @@ func testAvailSetCreate(t *testing.T, f fixture.F) {
 }
 
 func testAvailSetDelete(t *testing.T, f fixture.F) {
-
 	availset := genAvailSetName()
 	nash.Run(
 		f.Ctx,
 		t,
+		f.Name,
 		"./testdata/create_avail_set.sh",
 		f.ResGroupName,
 		availset,
@@ -46,6 +47,7 @@ func testAvailSetDelete(t *testing.T, f fixture.F) {
 	nash.Run(
 		f.Ctx,
 		t,
+		f.Name,
 		"./testdata/delete_avail_set.sh",
 		f.ResGroupName,
 		availset,

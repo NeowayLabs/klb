@@ -8,10 +8,14 @@ import (
 	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
+	"github.com/NeowayLabs/klb/tests/lib/log"
 )
 
 // Fixture provides you the basic data to write your tests, enjoy :-)
 type F struct {
+	//Ctx created with the timeout provided for this test.
+	//Use it to properly timeout your tests
+	Ctx context.Context
 	//ResGroupName is the resource group name where
 	//all resources will be created
 	ResGroupName string
@@ -19,9 +23,8 @@ type F struct {
 	Session *azure.Session
 	//Location where resources are created
 	Location string
-	//Ctx created with the timeout provided for this test.
-	//Use it to properly timeout your tests
-	Ctx context.Context
+	//Name is the test name
+	Name string
 }
 
 type Test func(*testing.T, F)
@@ -50,10 +53,14 @@ func Run(
 	location string,
 	testfunc Test,
 ) {
+	//FIXME: We could remove testname on Go 1.8
 	t.Run(testname, func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
+
+		logger := log.New(testname)
+		defer logger.Close()
 
 		session := azure.NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
@@ -71,10 +78,11 @@ func Run(
 		resources.AssertExists(t, resgroup)
 
 		testfunc(t, F{
+			Ctx:          ctx,
+			Name:         testname,
 			ResGroupName: resgroup,
 			Session:      session,
 			Location:     location,
-			Ctx:          ctx,
 		})
 	})
 }
