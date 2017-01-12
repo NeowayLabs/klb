@@ -44,6 +44,7 @@ func (l *Logger) Log(msg string, args ...interface{}) {
 }
 
 func (l *Logger) Write(b []byte) (n int, err error) {
+	//TODO: Not handling when b has multiple lines on it
 	timestamp := time.Now().Format("15:04:05.000")
 	timestamped := append([]byte(timestamp+": "), b...)
 	l.file.Write(timestamped)
