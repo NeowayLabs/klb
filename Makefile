@@ -31,10 +31,11 @@ depsdev:
 	@echo "Getting dependencies for dev"
 	go get -u -d ./tests/...
 
-TEST_TIMEOUT=10m
+timeout=10m
+logger=file
 
 testall: depsdev
-	cd tests/azure && go test -timeout $(TEST_TIMEOUT) -race ./...
+	cd tests/azure && go test -timeout $(timeout) -race ./... -args -logger $(logger)
 
 test: depsdev
-	cd tests/azure && go test -timeout $(TEST_TIMEOUT) -run=$(run) ./...
+	cd tests/azure && go test -timeout $(timeout) -run=$(run) ./... -args -logger $(logger)

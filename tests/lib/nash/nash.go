@@ -1,67 +1,77 @@
 package nash
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 	"github.com/NeowayLabs/nash"
-	"github.com/NeowayLabs/nash/sh"
 )
 
 type Shell struct {
-	shell  *nash.Shell
-	stdout *bytes.Buffer
-	stderr *bytes.Buffer
+	ctx    context.Context
+	t      *testing.T
+	logger *log.Logger
 }
 
-func New(t *testing.T) *Shell {
+func New(
+	ctx context.Context,
+	t *testing.T,
+	logger *log.Logger,
+) *Shell {
+	return &Shell{
+		ctx:    ctx,
+		t:      t,
+		logger: logger,
+	}
+}
+
+func (s *Shell) Run(
+	scriptpath string,
+	args ...string,
+) {
+	nashshell := newNashShell(s.t, &logWriter{
+		logger: s.logger,
+	})
+	retrier.Run(s.ctx, s.t, s.logger, "Shell.Run:"+scriptpath, func() error {
+		err := nashshell.ExecFile(scriptpath, args...)
+		if err != nil {
+			return fmt.Errorf(
+				"error: %s, executing script: %s",
+				err,
+				scriptpath,
+			)
+		}
+		return nil
+	})
+}
+
+func newNashShell(t *testing.T, output io.Writer) *nash.Shell {
 	shell, err := nash.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-
-	shell.SetStdout(&stdout)
-	shell.SetStderr(&stderr)
+	shell.SetStdout(output)
+	shell.SetStderr(output)
 
 	nashPath := os.Getenv("HOME") + "/.nash"
 	os.MkdirAll(nashPath, 0655)
 	shell.SetDotDir(nashPath)
 
-	return &Shell{
-		shell:  shell,
-		stdout: &stdout,
-		stderr: &stderr,
-	}
+	return shell
 }
 
-func (s *Shell) Setvar(name string, value string) {
-	s.shell.Setvar(name, sh.NewStrObj(value))
+type logWriter struct {
+	logger *log.Logger
 }
 
-func Run(
-	ctx context.Context,
-	t *testing.T,
-	scriptpath string,
-	args ...string,
-) {
-	s := New(t)
-	retrier.Run(ctx, t, "nash.Run:"+scriptpath, func() error {
-		err := s.shell.ExecFile(scriptpath, args...)
-		if err != nil {
-			return fmt.Errorf(
-				"error: %s\n\nstdout:%s\n\nstderr:%s\n\n",
-				err,
-				s.stdout,
-				s.stderr,
-			)
-		}
-		return nil
-	})
+func (l *logWriter) Write(b []byte) (int, error) {
+	l.logger.Println(strings.TrimSuffix(string(b), "\n"))
+	return len(b), nil
 }
