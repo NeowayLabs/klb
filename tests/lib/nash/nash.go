@@ -14,9 +14,10 @@ import (
 )
 
 type Shell struct {
-	ctx    context.Context
-	t      *testing.T
-	logger *log.Logger
+	ctx     context.Context
+	t       *testing.T
+	retrier *retrier.Retrier
+	logger  *log.Logger
 }
 
 func New(
@@ -25,9 +26,10 @@ func New(
 	logger *log.Logger,
 ) *Shell {
 	return &Shell{
-		ctx:    ctx,
-		t:      t,
-		logger: logger,
+		ctx:     ctx,
+		t:       t,
+		retrier: retrier.New(ctx, t, logger),
+		logger:  logger,
 	}
 }
 
@@ -38,7 +40,7 @@ func (s *Shell) Run(
 	nashshell := newNashShell(s.t, &logWriter{
 		logger: s.logger,
 	})
-	retrier.Run(s.ctx, s.t, s.logger, "Shell.Run:"+scriptpath, func() error {
+	s.retrier.Run("Shell.Run:"+scriptpath, func() error {
 		err := nashshell.ExecFile(scriptpath, args...)
 		if err != nil {
 			return fmt.Errorf(

@@ -15,6 +15,7 @@ type AvailSet struct {
 	ctx      context.Context
 	resgroup string
 	logger   *log.Logger
+	retrier  *retrier.Retrier
 }
 
 func NewAvailSet(
@@ -29,6 +30,7 @@ func NewAvailSet(
 		ctx:      ctx,
 		resgroup: resgroup,
 		logger:   logger,
+		retrier:  retrier.New(ctx, t, logger),
 	}
 	as.client.Authorizer = s.token
 	return as
@@ -37,7 +39,7 @@ func NewAvailSet(
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
 func (av *AvailSet) AssertExists(t *testing.T, name string) {
-	retrier.Run(av.ctx, t, av.logger, getID("AssertExists", name), func() error {
+	av.retrier.Run(getID("AssertExists", name), func() error {
 		_, err := av.client.Get(av.resgroup, name)
 		return err
 	})
@@ -45,7 +47,7 @@ func (av *AvailSet) AssertExists(t *testing.T, name string) {
 
 // AssertDeleted checks if resource was correctly deleted.
 func (av *AvailSet) AssertDeleted(t *testing.T, name string) {
-	retrier.Run(av.ctx, t, av.logger, getID("AssertDeleted", name), func() error {
+	av.retrier.Run(getID("AssertDeleted", name), func() error {
 		_, err := av.client.Get(av.resgroup, name)
 		if err == nil {
 			return fmt.Errorf("resource %s should not exist", name)
@@ -56,7 +58,7 @@ func (av *AvailSet) AssertDeleted(t *testing.T, name string) {
 
 // Delete the availability set
 func (av *AvailSet) Delete(t *testing.T, name string) {
-	retrier.Run(av.ctx, t, av.logger, getID("Delete", name), func() error {
+	av.retrier.Run(getID("Delete", name), func() error {
 		_, err := av.client.Delete(av.resgroup, name)
 		return err
 	})
