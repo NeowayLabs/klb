@@ -50,6 +50,11 @@ func newFile(t *testing.T, testname string) (*log.Logger, TearDownFunc) {
 	}
 }
 
+func newStdout(t *testing.T, testname string) (*log.Logger, TearDownFunc) {
+	logger := log.New(os.Stdout, testname, log.Ltime)
+	return logger, func() {}
+}
+
 type loggerBuilder func(t *testing.T, testname string) (*log.Logger, TearDownFunc)
 
 var logbuilders map[string]loggerBuilder
@@ -60,6 +65,7 @@ func init() {
 	flag.Parse()
 
 	logbuilders = map[string]loggerBuilder{
-		"file": newFile,
+		"file":   newFile,
+		"stdout": newStdout,
 	}
 }
