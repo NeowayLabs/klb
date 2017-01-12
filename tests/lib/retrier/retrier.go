@@ -14,21 +14,39 @@ import (
 	"time"
 )
 
+type Retrier struct {
+	ctx context.Context
+	t   *testing.T
+	l   *log.Logger
+}
+
 type WorkFunc func() error
+
+// New creates a new Retrier instance.
+// The given context is used to model cancellation
+// of any operation on this retrier
+func New(
+	ctx context.Context,
+	t *testing.T,
+	l *log.Logger,
+) *Retrier {
+	return &Retrier{
+		ctx: ctx,
+		t:   t,
+		l:   l,
+	}
+}
 
 // Run executes the given work function trying again if something
 // goes wrong. On success it just returns, if the context gets
 // cancelled it will call testing.T.Fatal with all the accumulated errors.
 // The name parameter is used to aid the error messages.
-func Run(
-	ctx context.Context,
-	t *testing.T,
-	l *log.Logger,
+func (r *Retrier) Run(
 	name string,
 	work WorkFunc,
 ) {
-	l.Printf("retrier: starting retry loop for work %q", name)
-	errs := retryUntilDone(ctx, l, name, work)
+	r.l.Printf("retrier: starting retry loop for work %q", name)
+	errs := retryUntilDone(r.ctx, r.l, name, work)
 	if len(errs) > 0 {
 		errmsgs := []string{
 			"\n",
@@ -40,9 +58,9 @@ func Run(
 				fmt.Sprintf("error[%d]: %s", i, err),
 			)
 		}
-		t.Fatal(t, strings.Join(errmsgs, "\n"))
+		r.t.Fatal(r.t, strings.Join(errmsgs, "\n"))
 	}
-	l.Printf("retrier: success running work %q", name)
+	r.l.Printf("retrier: success running work %q", name)
 }
 
 const backoff = 10 * time.Second

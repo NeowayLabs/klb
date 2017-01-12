@@ -15,6 +15,7 @@ type AvailSet struct {
 	ctx      context.Context
 	resgroup string
 	logger   *log.Logger
+	retrier  *retrier.Retrier
 }
 
 func NewAvailSet(
@@ -29,6 +30,7 @@ func NewAvailSet(
 		ctx:      ctx,
 		resgroup: resgroup,
 		logger:   logger,
+		retrier:  retrier.New(ctx, t, logger),
 	}
 	as.client.Authorizer = s.token
 	return as
@@ -36,17 +38,17 @@ func NewAvailSet(
 
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
-func (availSet *AvailSet) AssertExists(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, newID("AvailSet", "AssertExists", name), func() error {
-		_, err := availSet.client.Get(availSet.resgroup, name)
+func (av *AvailSet) AssertExists(t *testing.T, name string) {
+	av.retrier.Run(newID("AvailSet", "AssertExists", name), func() error {
+		_, err := av.client.Get(av.resgroup, name)
 		return err
 	})
 }
 
 // AssertDeleted checks if resource was correctly deleted.
-func (availSet *AvailSet) AssertDeleted(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, newID("AvailSet", "AssertDeleted", name), func() error {
-		_, err := availSet.client.Get(availSet.resgroup, name)
+func (av *AvailSet) AssertDeleted(t *testing.T, name string) {
+	av.retrier.Run(newID("AvailSet", "AssertDeleted", name), func() error {
+		_, err := av.client.Get(av.resgroup, name)
 		if err == nil {
 			return fmt.Errorf("resource %s should not exist", name)
 		}
@@ -55,9 +57,9 @@ func (availSet *AvailSet) AssertDeleted(t *testing.T, name string) {
 }
 
 // Delete the availability set
-func (availSet *AvailSet) Delete(t *testing.T, name string) {
-	retrier.Run(availSet.ctx, t, newID("AvailSet", "Delete", name), func() error {
-		_, err := availSet.client.Delete(availSet.resgroup, name)
+func (av *AvailSet) Delete(t *testing.T, name string) {
+	av.retrier.Run(newID("AvailSet", "Delete", name), func() error {
+		_, err := av.client.Delete(av.resgroup, name)
 		return err
 	})
 }
