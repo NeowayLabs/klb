@@ -1,6 +1,7 @@
 package log
 
 import (
+	"flag"
 	"log"
 	"os"
 	"strings"
@@ -26,6 +27,14 @@ type TearDownFunc func()
 //
 //You should not use the logger instance after you call TearDownFunc.
 func New(t *testing.T, testname string) (*log.Logger, TearDownFunc) {
+	builder, ok := logbuilders[logger]
+	if !ok {
+		t.Fatalf("unknow logger: %s", logger)
+	}
+	return builder(t, testname)
+}
+
+func newFile(t *testing.T, testname string) (*log.Logger, TearDownFunc) {
 	err := os.MkdirAll(logsdir, 0755)
 	if err != nil {
 		t.Fatalf("creating test logs dir: %s:", err)
@@ -38,5 +47,19 @@ func New(t *testing.T, testname string) (*log.Logger, TearDownFunc) {
 	logger := log.New(file, "", log.Ltime)
 	return logger, func() {
 		file.Close()
+	}
+}
+
+type loggerBuilder func(t *testing.T, testname string) (*log.Logger, TearDownFunc)
+
+var logbuilders map[string]loggerBuilder
+var logger string
+
+func init() {
+	flag.StringVar(&logger, "logger", "file", "test logger, valid values: 'stdout' 'file'")
+	flag.Parse()
+
+	logbuilders = map[string]loggerBuilder{
+		"file": newFile,
 	}
 }
