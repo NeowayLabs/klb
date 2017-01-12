@@ -14,6 +14,7 @@ const (
 
 func TestResourceGroup(t *testing.T) {
 	t.Parallel()
+	t.Skip()
 	t.Run("Create", testResourceGroupCreate)
 	t.Run("Delete", testResourceGroupDelete)
 }

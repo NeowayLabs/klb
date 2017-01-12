@@ -26,11 +26,11 @@ func testResourceGroupCreate(t *testing.T) {
 
 	resgroup := genResourceGroupName()
 	session := azure.NewSession(t)
-	resources := azure.NewResourceGroup(ctx, t, session)
+	resources := azure.NewResourceGroup(ctx, t, session, logger)
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		resources := azure.NewResourceGroup(ctx, t, session)
+		resources := azure.NewResourceGroup(ctx, t, session, logger)
 		resources.Delete(t, resgroup)
 	}()
 
@@ -57,7 +57,7 @@ func testResourceGroupDelete(t *testing.T) {
 
 	resgroup := genResourceGroupName()
 	session := azure.NewSession(t)
-	resources := azure.NewResourceGroup(ctx, t, session)
+	resources := azure.NewResourceGroup(ctx, t, session, logger)
 
 	nash.Run(
 		ctx,

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 type Logger struct {
@@ -36,16 +37,20 @@ func New(t *testing.T, testname string) *Logger {
 }
 
 func (l *Logger) Log(msg string, args ...interface{}) {
-	_, err := l.Write([]byte(fmt.Sprintf(msg, args...)))
+	_, err := l.Write([]byte(fmt.Sprintf(msg, args...) + "\n"))
 	if err != nil {
 		l.t.Fatalf("error logging msg: %s", err)
 	}
 }
 
 func (l *Logger) Write(b []byte) (n int, err error) {
-	res, err := l.file.Write(b)
+	timestamp := time.Now().Format("15:04:05.000")
+	timestamped := append([]byte(timestamp+": "), b...)
+	l.file.Write(timestamped)
 	l.file.Sync()
-	return res, err
+	// fake to the caller, we wrote more stuff :-)
+	// ignoring errors here is not the worst thing in life
+	return len(b), nil
 }
 
 func (l *Logger) Close() {

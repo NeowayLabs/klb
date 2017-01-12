@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 	"github.com/NeowayLabs/nash"
 )
@@ -34,12 +35,12 @@ func New(t *testing.T, output io.Writer) *Shell {
 func Run(
 	ctx context.Context,
 	t *testing.T,
-	scriptoutput io.Writer,
+	logger *log.Logger,
 	scriptpath string,
 	args ...string,
 ) {
-	s := New(t, scriptoutput)
-	retrier.Run(ctx, t, "nash.Run:"+scriptpath, func() error {
+	s := New(t, logger)
+	retrier.Run(ctx, t, logger, "nash.Run:"+scriptpath, func() error {
 		err := s.shell.ExecFile(scriptpath, args...)
 		if err != nil {
 			return fmt.Errorf(

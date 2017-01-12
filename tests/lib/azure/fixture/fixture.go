@@ -67,18 +67,21 @@ func Run(
 		session := azure.NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
 
-		resources := azure.NewResourceGroup(ctx, t, session)
+		resources := azure.NewResourceGroup(ctx, t, session, logger)
 		defer func() {
 			// We cant use an expired context when cleaning up state from Azure.
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := context.WithTimeout(context.Background(), timeout/2)
 			defer cancel()
-			resources := azure.NewResourceGroup(ctx, t, session)
+			resources := azure.NewResourceGroup(ctx, t, session, logger)
 			resources.Delete(t, resgroup)
 		}()
 
+		logger.Log("fixture: setting up resgroup %q at %q", resgroup, location)
 		resources.Create(t, resgroup, location)
 		resources.AssertExists(t, resgroup)
+		logger.Log("fixture: created resgroup %q with success", resgroup)
 
+		logger.Log("fixture: calling test function")
 		testfunc(t, F{
 			Ctx:          ctx,
 			Name:         testname,
@@ -87,5 +90,6 @@ func Run(
 			Location:     location,
 			Logger:       logger,
 		})
+		logger.Log("fixture: finished, failed=%t", t.Failed())
 	})
 }
