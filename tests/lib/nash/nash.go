@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"strings"
 	"testing"
 
-	"github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 	"github.com/NeowayLabs/nash"
 )
@@ -39,7 +40,9 @@ func Run(
 	scriptpath string,
 	args ...string,
 ) {
-	s := New(t, logger)
+	s := New(t, &logWriter{
+		logger: logger,
+	})
 	retrier.Run(ctx, t, logger, "nash.Run:"+scriptpath, func() error {
 		err := s.shell.ExecFile(scriptpath, args...)
 		if err != nil {
@@ -51,4 +54,13 @@ func Run(
 		}
 		return nil
 	})
+}
+
+type logWriter struct {
+	logger *log.Logger
+}
+
+func (l *logWriter) Write(b []byte) (int, error) {
+	l.logger.Println(strings.TrimSuffix(string(b), "\n"))
+	return len(b), nil
 }

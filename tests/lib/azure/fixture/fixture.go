@@ -3,12 +3,13 @@ package fixture
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
-	"github.com/NeowayLabs/klb/tests/lib/log"
+	testlog "github.com/NeowayLabs/klb/tests/lib/log"
 )
 
 // Fixture provides you the basic data to write your tests, enjoy :-)
@@ -61,8 +62,8 @@ func Run(
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		logger := log.New(t, testname)
-		defer logger.Close()
+		logger, teardown := testlog.New(t, testname)
+		defer teardown()
 
 		session := azure.NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
@@ -76,12 +77,12 @@ func Run(
 			resources.Delete(t, resgroup)
 		}()
 
-		logger.Log("fixture: setting up resgroup %q at %q", resgroup, location)
+		logger.Printf("fixture: setting up resgroup %q at %q", resgroup, location)
 		resources.Create(t, resgroup, location)
 		resources.AssertExists(t, resgroup)
-		logger.Log("fixture: created resgroup %q with success", resgroup)
+		logger.Printf("fixture: created resgroup %q with success", resgroup)
 
-		logger.Log("fixture: calling test function")
+		logger.Println("fixture: calling test function")
 		testfunc(t, F{
 			Ctx:          ctx,
 			Name:         testname,
@@ -90,6 +91,6 @@ func Run(
 			Location:     location,
 			Logger:       logger,
 		})
-		logger.Log("fixture: finished, failed=%t", t.Failed())
+		logger.Printf("fixture: finished, failed=%t", t.Failed())
 	})
 }

@@ -3,10 +3,10 @@ package azure
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/compute"
-	"github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 )
 

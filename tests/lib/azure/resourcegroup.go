@@ -3,10 +3,10 @@ package azure
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/resources/resources"
-	"github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 )
 
@@ -58,10 +58,10 @@ func (r *ResourceGroup) Create(t *testing.T, name string, location string) {
 }
 
 func (r *ResourceGroup) Delete(t *testing.T, name string) {
-	r.logger.Log("ResourceGroup.Delete: %q", name)
+	r.logger.Printf("ResourceGroup.Delete: %q", name)
 	retrier.Run(r.ctx, t, r.logger, "ResourceGroup.Delete", func() error {
 		_, err := r.client.Delete(name, nil)
 		return err
 	})
-	r.logger.Log("ResourceGroup.Delete finished")
+	r.logger.Printf("ResourceGroup.Delete finished")
 }

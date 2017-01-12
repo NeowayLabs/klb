@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
-	"github.com/NeowayLabs/klb/tests/lib/log"
+	testlog "github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
 
@@ -21,8 +21,8 @@ func testResourceGroupCreate(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	logger := log.New(t, "testResourceGroupCreate")
-	defer logger.Close()
+	logger, teardown := testlog.New(t, "testResourceGroupCreate")
+	defer teardown()
 
 	resgroup := genResourceGroupName()
 	session := azure.NewSession(t)
@@ -51,8 +51,8 @@ func testResourceGroupDelete(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	logger := log.New(t, "testResourceGroupDelete")
-	defer logger.Close()
+	logger, teardown := testlog.New(t, "testResourceGroupDelete")
+	defer teardown()
 
 	resgroup := genResourceGroupName()
 	session := azure.NewSession(t)

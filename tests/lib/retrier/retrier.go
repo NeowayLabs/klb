@@ -8,11 +8,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/NeowayLabs/klb/tests/lib/log"
 )
 
 type WorkFunc func() error
@@ -24,12 +23,12 @@ type WorkFunc func() error
 func Run(
 	ctx context.Context,
 	t *testing.T,
-	logger *log.Logger,
+	l *log.Logger,
 	name string,
 	work WorkFunc,
 ) {
-	logger.Log("retrier: starting retry loop for work %q", name)
-	errs := retryUntilDone(ctx, logger, name, work)
+	l.Printf("retrier: starting retry loop for work %q", name)
+	errs := retryUntilDone(ctx, l, name, work)
 	if len(errs) > 0 {
 		errmsgs := []string{
 			"\n",
@@ -43,7 +42,7 @@ func Run(
 		}
 		t.Fatal(t, strings.Join(errmsgs, "\n"))
 	}
-	logger.Log("retrier: success running work %q", name)
+	l.Printf("retrier: success running work %q", name)
 }
 
 const backoff = 10 * time.Second
@@ -60,7 +59,7 @@ func retryUntilDone(
 		result := make(chan error, 1)
 
 		go func() {
-			l.Log("retrier: executing work: %s", name)
+			l.Printf("retrier: executing work: %s", name)
 			result <- work()
 		}()
 
@@ -70,12 +69,12 @@ func retryUntilDone(
 				if res == nil {
 					return nil
 				}
-				l.Log("%s: got error: %s", name, res)
+				l.Printf("%s: got error: %s", name, res)
 				errs = append(errs, res)
 			}
 		case <-ctx.Done():
 			{
-				l.Log("retrier: %s: timeouted, returning all errors", name)
+				l.Printf("retrier: %s: timeouted, returning all errors", name)
 				return append(
 					errs,
 					errors.New("retrier timeout"),
