@@ -14,10 +14,44 @@ import (
 )
 
 type Shell struct {
-	shell *nash.Shell
+	ctx    context.Context
+	t      *testing.T
+	logger *log.Logger
 }
 
-func New(t *testing.T, output io.Writer) *Shell {
+func New(
+	ctx context.Context,
+	t *testing.T,
+	logger *log.Logger,
+) *Shell {
+	return &Shell{
+		ctx:    ctx,
+		t:      t,
+		logger: logger,
+	}
+}
+
+func (s *Shell) Run(
+	scriptpath string,
+	args ...string,
+) {
+	nashshell := newNashShell(s.t, &logWriter{
+		logger: s.logger,
+	})
+	retrier.Run(s.ctx, s.t, s.logger, "Shell.Run:"+scriptpath, func() error {
+		err := nashshell.ExecFile(scriptpath, args...)
+		if err != nil {
+			return fmt.Errorf(
+				"error: %s, executing script: %s",
+				err,
+				scriptpath,
+			)
+		}
+		return nil
+	})
+}
+
+func newNashShell(t *testing.T, output io.Writer) *nash.Shell {
 	shell, err := nash.New()
 	if err != nil {
 		t.Fatal(err)
@@ -30,30 +64,7 @@ func New(t *testing.T, output io.Writer) *Shell {
 	os.MkdirAll(nashPath, 0655)
 	shell.SetDotDir(nashPath)
 
-	return &Shell{shell: shell}
-}
-
-func Run(
-	ctx context.Context,
-	t *testing.T,
-	logger *log.Logger,
-	scriptpath string,
-	args ...string,
-) {
-	s := New(t, &logWriter{
-		logger: logger,
-	})
-	retrier.Run(ctx, t, logger, "nash.Run:"+scriptpath, func() error {
-		err := s.shell.ExecFile(scriptpath, args...)
-		if err != nil {
-			return fmt.Errorf(
-				"error: %s, executing script: %s",
-				err,
-				scriptpath,
-			)
-		}
-		return nil
-	})
+	return shell
 }
 
 type logWriter struct {

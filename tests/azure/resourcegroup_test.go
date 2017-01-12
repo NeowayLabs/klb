@@ -34,10 +34,8 @@ func testResourceGroupCreate(t *testing.T) {
 		resources.Delete(t, resgroup)
 	}()
 
-	nash.Run(
-		ctx,
-		t,
-		logger,
+	shell := nash.New(ctx, t, logger)
+	shell.Run(
 		"./testdata/create_resource_group.sh",
 		resgroup,
 		location,
@@ -58,20 +56,15 @@ func testResourceGroupDelete(t *testing.T) {
 	session := azure.NewSession(t)
 	resources := azure.NewResourceGroup(ctx, t, session, logger)
 
-	nash.Run(
-		ctx,
-		t,
-		logger,
+	shell := nash.New(ctx, t, logger)
+	shell.Run(
 		"./testdata/create_resource_group.sh",
 		resgroup,
 		location,
 	)
 	resources.AssertExists(t, resgroup)
 
-	nash.Run(
-		ctx,
-		t,
-		logger,
+	shell.Run(
 		"./testdata/delete_resource_group.sh",
 		resgroup,
 		location,
