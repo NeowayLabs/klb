@@ -35,6 +35,8 @@ func NewVnet(
 func (vnet *Vnet) AssertExists(t *testing.T, name string) {
 	retrier.Run(vnet.ctx, t, getID("Vnet", "AssertExists", name), func() error {
 		_, err := vnet.client.Get(vnet.resgroup, name, "")
+		if err != nil {
+		}
 		return err
 	})
 }
@@ -42,7 +44,7 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string) {
 // AssertDeleted checks if resource was correctly deleted.
 func (vnet *Vnet) AssertDeleted(t *testing.T, name string) {
 	retrier.Run(vnet.ctx, t, getID("Vnet", "AssertDeleted", name), func() error {
-		_, err := vnet.client.Get(vnet.resgroup, name, "")
+		a, err := vnet.client.Get(vnet.resgroup, name, "")
 		if err == nil {
 			return fmt.Errorf("resource %s should not exist", name)
 		}
@@ -53,8 +55,8 @@ func (vnet *Vnet) AssertDeleted(t *testing.T, name string) {
 // Delete the availability set
 func (vnet *Vnet) Delete(t *testing.T, name string) {
 	retrier.Run(vnet.ctx, t, getID("Vnet", "Delete", name), func() error {
-		// here they need a chan struct{}
-		_, err := vnet.client.Delete(vnet.resgroup, name, nil)
+		c := make(chan struct{})
+		_, err := vnet.client.Delete(vnet.resgroup, name, c)
 		return err
 	})
 }

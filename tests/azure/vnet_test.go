@@ -15,7 +15,6 @@ func genVnetName() string {
 }
 
 func testVnetCreate(t *testing.T, f fixture.F) {
-	fmt.Println("AQUIIIIIIIIIIIII")
 	vnet := genVnetName()
 	nash.Run(
 		f.Ctx,
@@ -28,4 +27,30 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 	)
 	vnets := azure.NewVnet(f.Ctx, t, f.Session, f.ResGroupName)
 	vnets.AssertExists(t, vnet)
+}
+
+func testVnetDelete(t *testing.T, f fixture.F) {
+
+	vnet := genVnetName()
+	nash.Run(
+		f.Ctx,
+		t,
+		"./testdata/create_vnet.sh",
+		vnet,
+		f.ResGroupName,
+		f.Location,
+		"10.116.0.0/16",
+	)
+
+	vnets := azure.NewVnet(f.Ctx, t, f.Session, f.ResGroupName)
+	vnets.AssertExists(t, vnet)
+
+	nash.Run(
+		f.Ctx,
+		t,
+		"./testdata/delete_vnet.sh",
+		vnet,
+		f.ResGroupName,
+	)
+	vnets.AssertDeleted(t, vnet)
 }
