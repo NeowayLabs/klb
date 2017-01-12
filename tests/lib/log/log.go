@@ -8,9 +8,15 @@ import (
 	"testing"
 )
 
+type TearDownFunc func()
+
+type loggerBuilder func(t *testing.T, testname string) (*log.Logger, TearDownFunc)
+
 const logsdir = "./testdata/logs"
 
-type TearDownFunc func()
+var logbuilders map[string]loggerBuilder
+
+var logger string
 
 //New creates a log.Logger for the given testame.
 //This will save the logs on our common logs dir
@@ -54,11 +60,6 @@ func newStdout(t *testing.T, testname string) (*log.Logger, TearDownFunc) {
 	logger := log.New(os.Stdout, testname, log.Ltime)
 	return logger, func() {}
 }
-
-type loggerBuilder func(t *testing.T, testname string) (*log.Logger, TearDownFunc)
-
-var logbuilders map[string]loggerBuilder
-var logger string
 
 func init() {
 	flag.StringVar(&logger, "logger", "file", "test logger, valid values: 'stdout' 'file'")
