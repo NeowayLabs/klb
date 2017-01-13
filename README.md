@@ -23,6 +23,12 @@ You can run the following command to install deps:
 make deps
 ```
 
+### Updating vendored dependencies
+
+```sh
+make vendor
+```
+
 ## Testing
 
 Just run `make testall`.

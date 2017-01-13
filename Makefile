@@ -1,4 +1,4 @@
-.PHONY: deps aws-deps azure-deps testazure test
+.PHONY: deps aws-deps azure-deps testazure test vendor
 
 ifndef TESTRUN
 TESTRUN=".*"
@@ -29,6 +29,9 @@ $(GOPATH)/bin/jq:
 
 depsdev:
 	@echo "updating tests dependencies"
+
+vendor:
+	./hack/vendor.sh
 
 timeout=10m
 logger=file

@@ -1,8 +1,9 @@
 #!/usr/bin/env nash
 
+cwdir <= pwd | xargs echo -n
+vendordir = $cwdir + "/tests/vendor"
+
 fn vendor() {
-        cwdir <= pwd | xargs echo -n
-        vendordir = $cwdir + "/tests/vendor"
         rm -rf $vendordir
 
         bindir = $vendordir + "/bin"
@@ -13,7 +14,7 @@ fn vendor() {
         setenv GOPATH = $vendordir
         setenv GOBIN = $vendordir
 
-        go get -v ./tests/...
+        go get -t -v ./tests/...
 
         rawpaths <= ls $srcdir
         paths <= split($paths, "\n")
@@ -23,4 +24,13 @@ fn vendor() {
         rm -rf $bindir $srcdir $pkgdir
 }
 
-vendor()
+fn govend() {
+    rm -rf $vendordir
+    mkdir -p $vendordir
+
+    go get github.com/govend/govend
+    govend -v
+}
+
+#vendor()
+govend()
