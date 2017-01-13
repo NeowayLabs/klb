@@ -7,7 +7,6 @@ import (
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
-	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
 
 func genAvailSetName() string {
@@ -16,36 +15,35 @@ func genAvailSetName() string {
 
 func testAvailSetCreate(t *testing.T, f fixture.F) {
 	availset := genAvailSetName()
-	nash.Run(
-		f.Ctx,
-		t,
+	f.Shell.Run(
 		"./testdata/create_avail_set.sh",
 		f.ResGroupName,
 		availset,
 		f.Location,
 	)
-	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName)
+	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.Logger, f.ResGroupName)
 	availSets.AssertExists(t, availset)
 }
 
 func testAvailSetDelete(t *testing.T, f fixture.F) {
-
 	availset := genAvailSetName()
-	nash.Run(
-		f.Ctx,
-		t,
+	f.Shell.Run(
 		"./testdata/create_avail_set.sh",
 		f.ResGroupName,
 		availset,
 		f.Location,
 	)
 
-	availSets := azure.NewAvailSet(f.Ctx, t, f.Session, f.ResGroupName)
-	availSets.AssertExists(t, availset)
-
-	nash.Run(
+	availSets := azure.NewAvailSet(
 		f.Ctx,
 		t,
+		f.Session,
+		f.Logger,
+		f.ResGroupName,
+	)
+	availSets.AssertExists(t, availset)
+
+	f.Shell.Run(
 		"./testdata/delete_avail_set.sh",
 		f.ResGroupName,
 		availset,

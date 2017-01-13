@@ -3,15 +3,21 @@ package fixture
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
+	testlog "github.com/NeowayLabs/klb/tests/lib/log"
+	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
 
 // Fixture provides you the basic data to write your tests, enjoy :-)
 type F struct {
+	//Ctx created with the timeout provided for this test.
+	//Use it to properly timeout your tests
+	Ctx context.Context
 	//ResGroupName is the resource group name where
 	//all resources will be created
 	ResGroupName string
@@ -19,12 +25,17 @@ type F struct {
 	Session *azure.Session
 	//Location where resources are created
 	Location string
-	//Ctx created with the timeout provided for this test.
-	//Use it to properly timeout your tests
-	Ctx context.Context
+	//Name is the test name
+	Name string
+	//Logger useful to log on your tests, bypass go test default
+	Logger *log.Logger
+	//Shell nash shell wrapper, ready to execute scripts
+	Shell *nash.Shell
 }
 
 type Test func(*testing.T, F)
+
+const resourceCleanupTimeout = 3 * time.Minute
 
 // Run creates a unique resource group based on testname and calls
 // the given testfunc passing as argument all the resources required
@@ -50,31 +61,42 @@ func Run(
 	location string,
 	testfunc Test,
 ) {
+	//FIXME: We could remove testname on Go 1.8
 	t.Run(testname, func(t *testing.T) {
 		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
+		logger, teardown := testlog.New(t, testname)
+		defer teardown()
+
 		session := azure.NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
 
-		resources := azure.NewResourceGroup(ctx, t, session)
+		resources := azure.NewResourceGroup(ctx, t, session, logger)
 		defer func() {
 			// We cant use an expired context when cleaning up state from Azure.
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			ctx, cancel := context.WithTimeout(context.Background(), resourceCleanupTimeout)
 			defer cancel()
-			resources := azure.NewResourceGroup(ctx, t, session)
+			resources := azure.NewResourceGroup(ctx, t, session, logger)
 			resources.Delete(t, resgroup)
 		}()
 
+		logger.Printf("fixture: setting up resgroup %q at %q", resgroup, location)
 		resources.Create(t, resgroup, location)
 		resources.AssertExists(t, resgroup)
+		logger.Printf("fixture: created resgroup %q with success", resgroup)
 
+		logger.Println("fixture: calling test function")
 		testfunc(t, F{
+			Ctx:          ctx,
+			Name:         testname,
 			ResGroupName: resgroup,
 			Session:      session,
 			Location:     location,
-			Ctx:          ctx,
+			Logger:       logger,
+			Shell:        nash.New(ctx, t, logger),
 		})
+		logger.Printf("fixture: finished, failed=%t", t.Failed())
 	})
 }

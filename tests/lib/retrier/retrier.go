@@ -8,28 +8,49 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 	"time"
 )
 
+type Retrier struct {
+	ctx context.Context
+	t   *testing.T
+	l   *log.Logger
+}
+
 type WorkFunc func() error
+
+// New creates a new Retrier instance.
+// The given context is used to model cancellation
+// of any operation on this retrier
+func New(
+	ctx context.Context,
+	t *testing.T,
+	l *log.Logger,
+) *Retrier {
+	return &Retrier{
+		ctx: ctx,
+		t:   t,
+		l:   l,
+	}
+}
 
 // Run executes the given work function trying again if something
 // goes wrong. On success it just returns, if the context gets
 // cancelled it will call testing.T.Fatal with all the accumulated errors.
 // The name parameter is used to aid the error messages.
-func Run(
-	ctx context.Context,
-	t *testing.T,
+func (r *Retrier) Run(
 	name string,
 	work WorkFunc,
 ) {
-	errs := retryUntilDone(ctx, work)
+	r.l.Printf("retrier: starting retry loop for work %q", name)
+	errs := retryUntilDone(r.ctx, r.l, name, work)
 	if len(errs) > 0 {
 		errmsgs := []string{
 			"\n",
-			fmt.Sprintf("Work %q failed, errors in order:", name),
+			fmt.Sprintf("work %q failed, errors in order:", name),
 		}
 		for i, err := range errs {
 			errmsgs = append(
@@ -37,19 +58,26 @@ func Run(
 				fmt.Sprintf("error[%d]: %s", i, err),
 			)
 		}
-		t.Fatal(t, strings.Join(errmsgs, "\n"))
+		r.t.Fatal(r.t, strings.Join(errmsgs, "\n"))
 	}
+	r.l.Printf("retrier: success running work %q", name)
 }
 
 const backoff = 10 * time.Second
 
-func retryUntilDone(ctx context.Context, work WorkFunc) []error {
+func retryUntilDone(
+	ctx context.Context,
+	l *log.Logger,
+	name string,
+	work WorkFunc,
+) []error {
 	var errs []error
 	for {
 		// buffered channel avoid goroutine leak
 		result := make(chan error, 1)
 
 		go func() {
+			l.Printf("retrier: executing work: %s", name)
 			result <- work()
 		}()
 
@@ -59,10 +87,12 @@ func retryUntilDone(ctx context.Context, work WorkFunc) []error {
 				if res == nil {
 					return nil
 				}
+				l.Printf("%s: got error: %s", name, res)
 				errs = append(errs, res)
 			}
 		case <-ctx.Done():
 			{
+				l.Printf("retrier: %s: timeouted, returning all errors", name)
 				return append(
 					errs,
 					errors.New("retrier timeout"),

@@ -25,9 +25,23 @@ make deps
 
 ## Testing
 
+Just run `make testall`.
+
+For each cloud you'll need the environment variables.
+See the docs for each cloud to help you with each one.
+
+Logging by default will be saved on files, since the tests can be
+pretty long running and you can check out the progress on the files.
+
+Inside each test package the logs will be saved at **./testdata/logs**.
+
+To run redirecting logs to stdout:
+
+Just run `make testall logger=stdout`.
+
 ### Azure
 
-To run `make testall` you'll need the environment variables below:
+You'll need the environment variables below:
 
 - AZURE_SUBSCRIPTION_ID=&lt;subscription id&gt;
 - AZURE_TENANT_ID=&lt;tenant id&gt;
