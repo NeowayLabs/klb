@@ -23,7 +23,7 @@ func testStorageAccountCreate(t *testing.T, f fixture.F) {
 		f.Location,
 	)
 	storage := os.Getenv("STORAGE_ACCOUNT_NAME")
-	storAccount := azure.NewStorageAccount(f.Ctx, t, f.Session, f.Logger, f.ResGroupName)
+	storAccount := azure.NewStorageAccount(f)
 	storAccount.AssertExists(t, storage)
 }
 
