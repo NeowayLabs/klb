@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/resources/resources"
-	"github.com/NeowayLabs/klb/tests/lib/azure/session"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 )
 
@@ -21,7 +20,7 @@ type ResourceGroup struct {
 func NewResourceGroup(
 	ctx context.Context,
 	t *testing.T,
-	s *session.Session,
+	s *Session,
 	logger *log.Logger,
 ) *ResourceGroup {
 	rg := &ResourceGroup{

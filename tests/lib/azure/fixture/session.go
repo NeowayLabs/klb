@@ -1,4 +1,4 @@
-package session
+package fixture
 
 import (
 	"os"
@@ -39,7 +39,7 @@ func getenv(t *testing.T, varname string) string {
 	return val
 }
 
-func New(t *testing.T) *Session {
+func NewSession(t *testing.T) *Session {
 	session := &Session{
 		ClientID:       getenv(t, "AZURE_CLIENT_ID"),
 		ClientSecret:   getenv(t, "AZURE_CLIENT_SECRET"),

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NeowayLabs/klb/tests/lib/azure/session"
 	testlog "github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/nash"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
@@ -23,7 +22,7 @@ type F struct {
 	//all resources will be created
 	ResGroupName string
 	//Session used to interact with the Azure API
-	Session *session.Session
+	Session *Session
 	//Location where resources are created
 	Location string
 	//Name is the test name
@@ -73,7 +72,7 @@ func Run(
 		logger, teardown := testlog.New(t, testname)
 		defer teardown()
 
-		session := session.New(t)
+		session := NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
 
 		resources := NewResourceGroup(ctx, t, session, logger)

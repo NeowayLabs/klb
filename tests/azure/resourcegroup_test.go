@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
-	"github.com/NeowayLabs/klb/tests/lib/azure/session"
 	testlog "github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
@@ -26,7 +25,7 @@ func testResourceGroupCreate(t *testing.T) {
 	defer teardown()
 
 	resgroup := genResourceGroupName()
-	session := session.New(t)
+	session := fixture.NewSession(t)
 	resources := fixture.NewResourceGroup(ctx, t, session, logger)
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -54,7 +53,7 @@ func testResourceGroupDelete(t *testing.T) {
 	defer teardown()
 
 	resgroup := genResourceGroupName()
-	session := session.New(t)
+	session := fixture.NewSession(t)
 	resources := fixture.NewResourceGroup(ctx, t, session, logger)
 
 	shell := nash.New(ctx, t, logger)
