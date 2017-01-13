@@ -1,4 +1,4 @@
-package azure
+package fixture
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func NewResourceGroup(
 		logger:  logger,
 		retrier: retrier.New(ctx, t, logger),
 	}
-	rg.client.Authorizer = s.token
+	rg.client.Authorizer = s.Token
 	return rg
 }
 
