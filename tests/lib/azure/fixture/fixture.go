@@ -10,6 +10,7 @@ import (
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	testlog "github.com/NeowayLabs/klb/tests/lib/log"
+	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
 
 // Fixture provides you the basic data to write your tests, enjoy :-)
@@ -28,6 +29,8 @@ type F struct {
 	Name string
 	//Logger useful to log on your tests, bypass go test default
 	Logger *log.Logger
+	//Shell nash shell wrapper, ready to execute scripts
+	Shell *nash.Shell
 }
 
 type Test func(*testing.T, F)
@@ -92,6 +95,7 @@ func Run(
 			Session:      session,
 			Location:     location,
 			Logger:       logger,
+			Shell:        nash.New(ctx, t, logger),
 		})
 		logger.Printf("fixture: finished, failed=%t", t.Failed())
 	})
