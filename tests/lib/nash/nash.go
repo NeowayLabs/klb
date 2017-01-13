@@ -41,7 +41,7 @@ func (s *Shell) Run(
 		logger: s.logger,
 	})
 	s.retrier.Run("Shell.Run:"+scriptpath, func() error {
-		completeargs = []string{scriptpath}
+		completeargs := []string{scriptpath}
 		completeargs = append(completeargs, args...)
 		err := nashshell.ExecFile(scriptpath, completeargs...)
 		if err != nil {
