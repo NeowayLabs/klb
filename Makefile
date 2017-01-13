@@ -28,8 +28,7 @@ $(GOPATH)/bin/jq:
 	chmod "+x" $(GOPATH)/bin/jq
 
 depsdev:
-	@echo "Getting dependencies for dev"
-	go get -u -d ./tests/...
+	@echo "updating tests dependencies"
 
 timeout=10m
 logger=file
@@ -37,8 +36,8 @@ parallel=30 #Explore I/O parallelization
 gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
-testall: depsdev
+testall:
 	$(gotest) ./... $(gotestargs)
 
-test: depsdev
+test:
 	$(gotest) -run=$(run) ./... $(gotestargs)
