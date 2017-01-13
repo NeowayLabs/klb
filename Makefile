@@ -28,7 +28,7 @@ $(GOPATH)/bin/jq:
 	chmod "+x" $(GOPATH)/bin/jq
 
 depsdev:
-	@echo "Getting dependencies for dev"
+	@echo "updating dev dependencies"
 	go get -u -d ./tests/...
 
 timeout=10m

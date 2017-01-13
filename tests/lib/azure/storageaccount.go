@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/storage"
@@ -42,25 +41,6 @@ func NewStorageAccount(
 func (s *StorageAccount) AssertExists(t *testing.T, name string) {
 	s.retrier.Run(getIDStorageAccount("AssertExists", name), func() error {
 		_, err := s.client.GetProperties(s.resgroup, name)
-		return err
-	})
-}
-
-// AssertDeleted checks if resource was correctly deleted.
-func (s *StorageAccount) AssertDeleted(t *testing.T, name string) {
-	s.retrier.Run(getIDStorageAccount("AssertDeleted", name), func() error {
-		_, err := s.client.GetProperties(s.resgroup, name)
-		if err == nil {
-			return fmt.Errorf("resource %s should not exist", name)
-		}
-		return nil
-	})
-}
-
-// Delete the availability set
-func (s *StorageAccount) Delete(t *testing.T, name string) {
-	s.retrier.Run(getIDStorageAccount("Delete", name), func() error {
-		_, err := s.client.Delete(s.resgroup, os.Getenv("STORAGE_ACCOUNT_NAME"))
 		return err
 	})
 }

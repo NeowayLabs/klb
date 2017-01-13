@@ -2,7 +2,6 @@ package azure
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"testing"
 
@@ -43,26 +42,6 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string) {
 		_, err := vnet.client.Get(vnet.resgroup, name, "")
 		if err != nil {
 		}
-		return err
-	})
-}
-
-// AssertDeleted checks if resource was correctly deleted.
-func (vnet *Vnet) AssertDeleted(t *testing.T, name string) {
-	vnet.retrier.Run(newID("Vnet", "AssertDeleted", name), func() error {
-		_, err := vnet.client.Get(vnet.resgroup, name, "")
-		if err == nil {
-			return fmt.Errorf("resource %s should not exist", name)
-		}
-		return nil
-	})
-}
-
-// Delete the availability set
-func (vnet *Vnet) Delete(t *testing.T, name string) {
-	vnet.retrier.Run(newID("Vnet", "Delete", name), func() error {
-		c := make(chan struct{})
-		_, err := vnet.client.Delete(vnet.resgroup, name, c)
 		return err
 	})
 }
