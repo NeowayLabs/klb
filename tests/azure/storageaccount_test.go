@@ -8,7 +8,6 @@ import (
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
-	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
 
 func genStorageAccountName() string {
@@ -17,25 +16,21 @@ func genStorageAccountName() string {
 
 func testStorageAccountCreate(t *testing.T, f fixture.F) {
 	genstorage := genStorageAccountName()
-	nash.Run(
-		f.Ctx,
-		t,
+	f.Shell.Run(
 		"./testdata/create_storage_account.sh",
 		f.ResGroupName,
 		genstorage,
 		f.Location,
 	)
 	storage := os.Getenv("STORAGE_ACCOUNT_NAME")
-	storAccount := azure.NewStorageAccount(f.Ctx, t, f.Session, f.ResGroupName)
+	storAccount := azure.NewStorageAccount(f.Ctx, t, f.Session, f.Logger, f.ResGroupName)
 	storAccount.AssertExists(t, storage)
 }
 
 func testStorageAccountDelete(t *testing.T, f fixture.F) {
 
 	genstorage := genStorageAccountName()
-	nash.Run(
-		f.Ctx,
-		t,
+	f.Shell.Run(
 		"./testdata/create_storage_account.sh",
 		f.ResGroupName,
 		genstorage,
@@ -43,12 +38,10 @@ func testStorageAccountDelete(t *testing.T, f fixture.F) {
 	)
 
 	storage := os.Getenv("STORAGE_ACCOUNT_NAME")
-	storAccount := azure.NewStorageAccount(f.Ctx, t, f.Session, f.ResGroupName)
+	storAccount := azure.NewStorageAccount(f.Ctx, t, f.Session, f.Logger, f.ResGroupName)
 	storAccount.AssertExists(t, storage)
 
-	nash.Run(
-		f.Ctx,
-		t,
+	f.Shell.Run(
 		"./testdata/delete_storage_account.sh",
 		f.ResGroupName,
 		storage,
