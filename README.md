@@ -17,6 +17,12 @@ infrastructure on AWS or Azure.
 - [jq](https://stedolan.github.io/jq/)
 - [awscli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
 
+You can run the following command to install deps:
+
+```sh
+make deps
+```
+
 ## Testing
 
 Just run `make testall`.
@@ -35,6 +41,7 @@ Just run `make testall logger=stdout`.
 
 ### Azure
 
+You'll need the environment variables below:
 
 - AZURE_SUBSCRIPTION_ID=&lt;subscription id&gt;
 - AZURE_TENANT_ID=&lt;tenant id&gt;
@@ -63,7 +70,7 @@ setenv AZURE_CLIENT_SECRET
 Redirect the output above to a file and import into your nash session:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh > credentials
+λ> ./tools/azure/getcredentials.sh <service principal name> <service secret> > credentials
 λ> import ./credentials
 ```
 
@@ -154,7 +161,7 @@ If everything worked as expected, then export the required environment
 variables and run:
 
 ```
-λ> make testazure
+λ> make testall
 ```
 
 P.S.:
