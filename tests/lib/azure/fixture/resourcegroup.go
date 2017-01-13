@@ -1,4 +1,4 @@
-package azure
+package fixture
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/resources/resources"
+	"github.com/NeowayLabs/klb/tests/lib/azure/session"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
 )
 
@@ -20,7 +21,7 @@ type ResourceGroup struct {
 func NewResourceGroup(
 	ctx context.Context,
 	t *testing.T,
-	s *Session,
+	s *session.Session,
 	logger *log.Logger,
 ) *ResourceGroup {
 	rg := &ResourceGroup{
@@ -29,7 +30,7 @@ func NewResourceGroup(
 		logger:  logger,
 		retrier: retrier.New(ctx, t, logger),
 	}
-	rg.client.Authorizer = s.token
+	rg.client.Authorizer = s.Token
 	return rg
 }
 

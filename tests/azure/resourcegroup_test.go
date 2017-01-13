@@ -6,7 +6,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/NeowayLabs/klb/tests/lib/azure"
+	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
+	"github.com/NeowayLabs/klb/tests/lib/azure/session"
 	testlog "github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/nash"
 )
@@ -25,12 +26,12 @@ func testResourceGroupCreate(t *testing.T) {
 	defer teardown()
 
 	resgroup := genResourceGroupName()
-	session := azure.NewSession(t)
-	resources := azure.NewResourceGroup(ctx, t, session, logger)
+	session := session.New(t)
+	resources := fixture.NewResourceGroup(ctx, t, session, logger)
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		resources := azure.NewResourceGroup(ctx, t, session, logger)
+		resources := fixture.NewResourceGroup(ctx, t, session, logger)
 		resources.Delete(t, resgroup)
 	}()
 
@@ -53,8 +54,8 @@ func testResourceGroupDelete(t *testing.T) {
 	defer teardown()
 
 	resgroup := genResourceGroupName()
-	session := azure.NewSession(t)
-	resources := azure.NewResourceGroup(ctx, t, session, logger)
+	session := session.New(t)
+	resources := fixture.NewResourceGroup(ctx, t, session, logger)
 
 	shell := nash.New(ctx, t, logger)
 	shell.Run(

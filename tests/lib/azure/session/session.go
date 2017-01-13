@@ -1,4 +1,4 @@
-package azure
+package session
 
 import (
 	"os"
@@ -12,7 +12,7 @@ type Session struct {
 	ClientSecret   string
 	SubscriptionID string
 	TenantID       string
-	token          *restazure.ServicePrincipalToken
+	Token          *restazure.ServicePrincipalToken
 }
 
 func (s *Session) generateToken(t *testing.T) {
@@ -20,7 +20,7 @@ func (s *Session) generateToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.token, err = restazure.NewServicePrincipalToken(
+	s.Token, err = restazure.NewServicePrincipalToken(
 		*oauthConfig,
 		s.ClientID,
 		s.ClientSecret,
@@ -39,7 +39,7 @@ func getenv(t *testing.T, varname string) string {
 	return val
 }
 
-func NewSession(t *testing.T) *Session {
+func New(t *testing.T) *Session {
 	session := &Session{
 		ClientID:       getenv(t, "AZURE_CLIENT_ID"),
 		ClientSecret:   getenv(t, "AZURE_CLIENT_SECRET"),

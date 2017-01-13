@@ -22,6 +22,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 		f.Location,
 		"10.116.0.0/16",
 	)
-	vnets := azure.NewVnet(f.Ctx, t, f.Session, f.Logger, f.ResGroupName)
+	vnets := azure.NewVnet(f)
 	vnets.AssertExists(t, vnet)
+	// TODO: Validate network
 }

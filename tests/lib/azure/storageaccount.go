@@ -1,45 +1,31 @@
 package azure
 
 import (
-	"context"
-	"log"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/storage"
-	"github.com/NeowayLabs/klb/tests/lib/retrier"
+	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
 type StorageAccount struct {
-	client   storage.AccountsClient
-	ctx      context.Context
-	logger   *log.Logger
-	retrier  *retrier.Retrier
-	resgroup string
+	client storage.AccountsClient
+	f      fixture.F
 }
 
-func NewStorageAccount(
-	ctx context.Context,
-	t *testing.T,
-	s *Session,
-	logger *log.Logger,
-	resgroup string,
-) *StorageAccount {
+func NewStorageAccount(f fixture.F) *StorageAccount {
 	as := &StorageAccount{
-		client:   storage.NewAccountsClient(s.SubscriptionID),
-		ctx:      ctx,
-		resgroup: resgroup,
-		logger:   logger,
-		retrier:  retrier.New(ctx, t, logger),
+		client: storage.NewAccountsClient(f.Session.SubscriptionID),
+		f:      f,
 	}
-	as.client.Authorizer = s.token
+	as.client.Authorizer = f.Session.Token
 	return as
 }
 
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
 func (s *StorageAccount) AssertExists(t *testing.T, name string) {
-	s.retrier.Run(newID("StorageAccount", "AssertExists", name), func() error {
-		_, err := s.client.GetProperties(s.resgroup, name)
+	s.f.Retrier.Run(newID("StorageAccount", "AssertExists", name), func() error {
+		_, err := s.client.GetProperties(s.f.ResGroupName, name)
 		return err
 	})
 }

@@ -1,45 +1,31 @@
 package azure
 
 import (
-	"context"
-	"log"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/network"
-	"github.com/NeowayLabs/klb/tests/lib/retrier"
+	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
 type Vnet struct {
-	client   network.VirtualNetworksClient
-	ctx      context.Context
-	logger   *log.Logger
-	retrier  *retrier.Retrier
-	resgroup string
+	client network.VirtualNetworksClient
+	f      fixture.F
 }
 
-func NewVnet(
-	ctx context.Context,
-	t *testing.T,
-	s *Session,
-	l *log.Logger,
-	resgroup string,
-) *Vnet {
+func NewVnet(f fixture.F) *Vnet {
 	as := &Vnet{
-		client:   network.NewVirtualNetworksClient(s.SubscriptionID),
-		ctx:      ctx,
-		resgroup: resgroup,
-		logger:   l,
-		retrier:  retrier.New(ctx, t, l),
+		client: network.NewVirtualNetworksClient(f.Session.SubscriptionID),
+		f:      f,
 	}
-	as.client.Authorizer = s.token
+	as.client.Authorizer = f.Session.Token
 	return as
 }
 
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
 func (vnet *Vnet) AssertExists(t *testing.T, name string) {
-	vnet.retrier.Run(newID("Vnet", "AssertExists", name), func() error {
-		_, err := vnet.client.Get(vnet.resgroup, name, "")
+	vnet.f.Retrier.Run(newID("Vnet", "AssertExists", name), func() error {
+		_, err := vnet.client.Get(vnet.f.ResGroupName, name, "")
 		if err != nil {
 		}
 		return err
