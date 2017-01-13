@@ -2,7 +2,6 @@ package azure
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"testing"
 
@@ -39,12 +38,8 @@ func NewStorageAccount(
 // AssertExists checks if availability sets exists in the resource group.
 // Fail tests otherwise.
 func (s *StorageAccount) AssertExists(t *testing.T, name string) {
-	s.retrier.Run(getIDStorageAccount("AssertExists", name), func() error {
+	s.retrier.Run(newID("StorageAccount", "AssertExists", name), func() error {
 		_, err := s.client.GetProperties(s.resgroup, name)
 		return err
 	})
-}
-
-func getIDStorageAccount(method string, name string) string {
-	return fmt.Sprintf("StorageAccount.%s:%s", method, name)
 }
