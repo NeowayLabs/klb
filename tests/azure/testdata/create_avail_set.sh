@@ -2,8 +2,8 @@
 
 import ../../azure/all
 
-resgroup = $ARGS[0]
-availset = $ARGS[1]
-location = $ARGS[2]
+resgroup = $ARGS[1]
+availset = $ARGS[2]
+location = $ARGS[3]
 
 azure_availset_create($availset, $resgroup, $location)
