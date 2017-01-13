@@ -71,3 +71,9 @@ func testResourceGroupDelete(t *testing.T) {
 	)
 	resources.AssertDeleted(t, resgroup)
 }
+
+func TestResourceGroup(t *testing.T) {
+	t.Parallel()
+	t.Run("Create", testResourceGroupCreate)
+	t.Run("Delete", testResourceGroupDelete)
+}
