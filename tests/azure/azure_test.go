@@ -24,8 +24,12 @@ func TestAvailabilitySet(t *testing.T) {
 	fixture.Run(t, "AvailabilitySet_Delete", timeout, location, testAvailSetDelete)
 }
 
+func TestVnetSet(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "Vnet_Create", timeout, location, testVnetCreate)
+}
+
 func TestStorageAccount(t *testing.T) {
 	t.Parallel()
-	storageAccoutTimeout := 150 * time.Second
-	fixture.Run(t, "StorageAccount_Create", storageAccoutTimeout, location, testStorageAccountCreate)
+	fixture.Run(t, "StorageAccount_Create", timeout, location, testStorageAccountCreate)
 }
