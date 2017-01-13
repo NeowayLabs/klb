@@ -27,9 +27,6 @@ $(GOPATH)/bin/jq:
 	wget "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O $(GOPATH)/bin/jq
 	chmod "+x" $(GOPATH)/bin/jq
 
-depsdev:
-	@echo "updating tests dependencies"
-
 vendor:
 	./hack/vendor.sh
 

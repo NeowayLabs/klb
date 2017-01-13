@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/NeowayLabs/klb/tests/lib/azure"
 	testlog "github.com/NeowayLabs/klb/tests/lib/log"
 	"github.com/NeowayLabs/klb/tests/lib/nash"
+	"github.com/NeowayLabs/klb/tests/lib/retrier"
 )
 
 // Fixture provides you the basic data to write your tests, enjoy :-)
@@ -21,8 +21,8 @@ type F struct {
 	//ResGroupName is the resource group name where
 	//all resources will be created
 	ResGroupName string
-	//Session used to interact with the API
-	Session *azure.Session
+	//Session used to interact with the Azure API
+	Session *Session
 	//Location where resources are created
 	Location string
 	//Name is the test name
@@ -31,6 +31,8 @@ type F struct {
 	Logger *log.Logger
 	//Shell nash shell wrapper, ready to execute scripts
 	Shell *nash.Shell
+	//Retrier retrier can be used to run functions until context is cancelled
+	Retrier *retrier.Retrier
 }
 
 type Test func(*testing.T, F)
@@ -70,15 +72,15 @@ func Run(
 		logger, teardown := testlog.New(t, testname)
 		defer teardown()
 
-		session := azure.NewSession(t)
+		session := NewSession(t)
 		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
 
-		resources := azure.NewResourceGroup(ctx, t, session, logger)
+		resources := NewResourceGroup(ctx, t, session, logger)
 		defer func() {
 			// We cant use an expired context when cleaning up state from Azure.
 			ctx, cancel := context.WithTimeout(context.Background(), resourceCleanupTimeout)
 			defer cancel()
-			resources := azure.NewResourceGroup(ctx, t, session, logger)
+			resources := NewResourceGroup(ctx, t, session, logger)
 			resources.Delete(t, resgroup)
 		}()
 
@@ -96,6 +98,7 @@ func Run(
 			Location:     location,
 			Logger:       logger,
 			Shell:        nash.New(ctx, t, logger),
+			Retrier:      retrier.New(ctx, t, logger),
 		})
 		logger.Printf("fixture: finished, failed=%t", t.Failed())
 	})

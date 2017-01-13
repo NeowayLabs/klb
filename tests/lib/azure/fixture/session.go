@@ -1,4 +1,4 @@
-package azure
+package fixture
 
 import (
 	"os"
@@ -12,7 +12,7 @@ type Session struct {
 	ClientSecret   string
 	SubscriptionID string
 	TenantID       string
-	token          *restazure.ServicePrincipalToken
+	Token          *restazure.ServicePrincipalToken
 }
 
 func (s *Session) generateToken(t *testing.T) {
@@ -20,7 +20,7 @@ func (s *Session) generateToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.token, err = restazure.NewServicePrincipalToken(
+	s.Token, err = restazure.NewServicePrincipalToken(
 		*oauthConfig,
 		s.ClientID,
 		s.ClientSecret,
