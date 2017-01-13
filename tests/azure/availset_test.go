@@ -50,3 +50,9 @@ func testAvailSetDelete(t *testing.T, f fixture.F) {
 	)
 	availSets.AssertDeleted(t, availset)
 }
+
+func TestAvailabilitySet(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "AvailabilitySet_Create", timeout, location, testAvailSetCreate)
+	fixture.Run(t, "AvailabilitySet_Delete", timeout, location, testAvailSetDelete)
+}

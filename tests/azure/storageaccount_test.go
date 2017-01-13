@@ -26,3 +26,8 @@ func testStorageAccountCreate(t *testing.T, f fixture.F) {
 	storAccount := azure.NewStorageAccount(f.Ctx, t, f.Session, f.Logger, f.ResGroupName)
 	storAccount.AssertExists(t, storage)
 }
+
+func TestStorageAccount(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "StorageAccount_Create", timeout, location, testStorageAccountCreate)
+}

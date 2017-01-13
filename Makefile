@@ -33,9 +33,12 @@ depsdev:
 
 timeout=10m
 logger=file
+parallel=30 #Explore I/O parallelization
+gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
+gotestargs=-args -logger $(logger)
 
 testall: depsdev
-	cd tests/azure && go test -timeout $(timeout) -race ./... -args -logger $(logger)
+	$(gotest) ./... $(gotestargs)
 
 test: depsdev
-	cd tests/azure && go test -timeout $(timeout) -run=$(run) ./... -args -logger $(logger)
+	$(gotest) -run=$(run) ./... $(gotestargs)

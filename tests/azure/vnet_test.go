@@ -25,3 +25,8 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 	vnets := azure.NewVnet(f.Ctx, t, f.Session, f.Logger, f.ResGroupName)
 	vnets.AssertExists(t, vnet)
 }
+
+func TestVnetSet(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "Vnet_Create", timeout, location, testVnetCreate)
+}
