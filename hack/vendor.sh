@@ -25,10 +25,12 @@ fn vendor() {
 }
 
 fn govend() {
+    go get github.com/govend/govend
+
     rm -rf $vendordir
     mkdir -p $vendordir
-
-    go get github.com/govend/govend
+    testsdir = $cwdir + "/tests"
+    chdir($testsdir)
     govend -v
 }
 
