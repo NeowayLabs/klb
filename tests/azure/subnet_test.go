@@ -39,7 +39,7 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 		nsg,
 	)
 	subnets := azure.NewSubnet(f)
-	subnets.AssertExists(t, subnet)
+	subnets.AssertExists(t, vnet, subnet)
 }
 
 func TestSubnetSet(t *testing.T) {
