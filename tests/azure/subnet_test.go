@@ -14,7 +14,7 @@ func genSubnetName() string {
 }
 
 func testSubnetCreate(t *testing.T, f fixture.F) {
-	nsg := fmt.Sprintf("klb-nsg-tests-%d", rand.Intn(1000))
+	nsg := genNsgName()
 	f.Shell.Run(
 		"./testdata/create_nsg.sh",
 		nsg,
