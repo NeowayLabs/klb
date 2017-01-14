@@ -1,4 +1,4 @@
-.PHONY: deps aws-deps azure-deps testazure test
+.PHONY: deps aws-deps azure-deps testazure test vendor
 
 ifndef TESTRUN
 TESTRUN=".*"
@@ -27,9 +27,8 @@ $(GOPATH)/bin/jq:
 	wget "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O $(GOPATH)/bin/jq
 	chmod "+x" $(GOPATH)/bin/jq
 
-depsdev:
-	@echo "updating dev dependencies"
-	go get -u -d ./tests/...
+vendor:
+	./hack/vendor.sh
 
 timeout=10m
 logger=file
@@ -37,8 +36,8 @@ parallel=30 #Explore I/O parallelization
 gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
-testall: depsdev
+testall:
 	$(gotest) ./... $(gotestargs)
 
-test: depsdev
+test:
 	$(gotest) -run=$(run) ./... $(gotestargs)
