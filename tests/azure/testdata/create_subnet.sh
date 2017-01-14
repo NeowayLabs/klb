@@ -2,9 +2,10 @@
 
 import ../../azure/all
 
-resgroup = $ARGS[1]
-subnet = $ARGS[2]
-location = $ARGS[3]
-cidr = $ARGS[4]
+subnet = $ARGS[1]
+resgroup = $ARGS[2]
+vnet = $ARGS[3]
+location = $ARGS[4]
+nsg = $ARGS[5]
 
-azure_subnet_create($subnet, $resgroup, $location, $cidr)
+azure_subnet_create($subnet, $resgroup, $vnet, $location, $nsg)
