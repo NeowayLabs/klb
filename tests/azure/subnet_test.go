@@ -35,7 +35,7 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 		subnet,
 		f.ResGroupName,
 		vnet,
-		f.Location,
+		"10.116.1.0/24",
 		nsg,
 	)
 	subnets := azure.NewSubnet(f)
