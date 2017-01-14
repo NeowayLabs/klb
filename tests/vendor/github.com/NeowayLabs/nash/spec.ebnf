@@ -1,0 +1,104 @@
+/* Nash program */
+program = { statement } .
+
+/* Statement */
+statement = varDecl | command | fnInv | builtin | comment .
+
+/* Variable declaration */
+varDecl      = assignValue | assignCmdOut .
+assignValue  = identifier "=" varSpec .
+varSpec      = ( list | varValue ) .
+varValue     = string_lit | ( stringConcat { stringConcat } ) .
+assignCmdOut = identifier "<=" ( command | fnInv ) .
+
+/* Command */
+command   = ( [ "(" ] cmdpart [ ")" ]  | pipe ) .
+cmdpart   = [ "-" ] ( cmdname | abscmd ) { argument } { redirect } .
+cmdname   = identifier .
+abscmd    = filename .
+argument  = ( unicode_char { unicode_char } ) | string_lit .
+pipe      = [ "(" ] cmdpart "|" cmdpart [ { "|" cmdpart } ] [ ")" ] .
+redirect    = ( ">" ( filename | uri | variable ) |
+               ">" "[" unicode_digit "]" ( filename | uri | variable ) |
+               ">" "[" unicode_digit "=" ( unicode_digit | identifier ) "]" |
+               ">" "[" unicode_digit "=" "]" ) .
+
+/* Builtin */
+builtin = importDecl | rforkDecl | ifDecl | forDecl | setenvDecl |
+          fnDecl | bindfn | dump .
+
+/* Import statement */
+importDecl = "import" ( filename | string_lit ) .
+
+/* Rfork scope */
+rforkDecl   = "rfork" rforkFlags "{" program "}" .
+rforkFlags  = { identifier } .
+
+/* If-else-if */
+ifDecl = "if" ( identifier | varValue ) comparison
+              ( identifier | varValue ) "{" program "}"
+         [ "else" "{" program "}" ]
+         [ "else" ifDecl ] .
+
+/* For loop */
+forDecl = "for" [ identifier "in" list ] "{" program "}" .
+
+/* Function declaration */
+fnDecl = "fn" identifier "(" fnArgs ")" "{"
+         program [ returnDecl ]
+         "}" .
+fnArgs = { fnArg [ "," ] } .
+fnArg  = identifier .
+
+/* return declaration */
+returnDecl = "return" [ ( variable | string_lit | list | fnInv ) ] .
+
+/* Function invocation */
+fnInv = ( variable | identifier ) "(" fnArgValues ")" .
+
+fnArgValues = { fnArgValue [ "," ] } .
+fnArgValue  = [ string_lit | stringConcat | variable | fnInv ] .
+
+/* Function binding */
+bindfn = "bindfn" identifier identifier .
+
+/* dump shell state */
+dump = "dump" [ filename ] .
+
+/* Set environment variable */
+setenvDecl = "setenv" ( identifier | varDecl ) .
+
+/* Comment */
+comment = "#" { unicode_char } .
+
+/* Lists */
+list = "(" { varValue } ")" .
+
+letter      = unicode_letter | "_" .
+filename    = { [ "/" ]  { unicode_letter } } .
+ipaddr      = unicode_digit { unicode_digit } "."
+              unicode_digit { unicode_digit } "."
+              unicode_digit { unicode_digit } "."
+              unicode_digit { unicode_digit } "." .
+port        = unicode_digit { unicode_digit } .
+networkaddr = ipaddr ":" port .
+location    = filename | networkaddr .
+schema      = "file" | "tcp" | "udp" | "unix" .
+uri         = schema "://" location .
+
+identifier  = letter { letter | unicode_digit } .
+variable    = "$" identifier .
+
+comparison  = "==" | "!=" .
+
+string_lit   = "\"" { unicode_char | newline } "\"" .
+
+stringConcat = ( string_lit "+" string_lit ) |
+               ( variable "+" string_lit ) |
+               ( string_lit "+" variable ) .
+
+/* terminals */
+newline        = /* the Unicode code point U+000A */ .
+unicode_char   = /* an arbitrary Unicode code point except newline */ .
+unicode_letter = /* a Unicode code point classified as "Letter" */ .
+unicode_digit  = /* a Unicode code point classified as "Number, decimal digit" */ .

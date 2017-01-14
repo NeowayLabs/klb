@@ -1,0 +1,31 @@
+os:
+  - linux
+  - osx
+
+language: go
+sudo: false
+
+go:
+  - tip
+  - 1.7
+  - 1.6
+  - 1.5
+install:
+  - go get -v golang.org/x/exp/ebnf
+  - make build
+script:
+  - go get github.com/axw/gocov/gocov
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
+  - make test
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/52ad02845e880cdca2cf
+    on_success: change
+    on_failure: always
+    on_start: never
+  email:
+    - tiago.natel@neoway.com.br
