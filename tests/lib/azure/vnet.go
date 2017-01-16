@@ -21,7 +21,7 @@ func NewVnet(f fixture.F) *Vnet {
 	return as
 }
 
-// AssertExists checks if availability sets exists in the resource group.
+// AssertExists checks if virtual network exists in the resource group.
 // Fail tests otherwise.
 func (vnet *Vnet) AssertExists(t *testing.T, name string) {
 	vnet.f.Retrier.Run(newID("Vnet", "AssertExists", name), func() error {
