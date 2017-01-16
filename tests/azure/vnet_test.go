@@ -15,15 +15,17 @@ func genVnetName() string {
 
 func testVnetCreate(t *testing.T, f fixture.F) {
 	vnet := genVnetName()
+	address := "10.116.0.0/16"
+
 	f.Shell.Run(
 		"./testdata/create_vnet.sh",
 		vnet,
 		f.ResGroupName,
 		f.Location,
-		"10.116.0.0/16",
+		address,
 	)
 	vnets := azure.NewVnet(f)
-	vnets.AssertExists(t, vnet)
+	vnets.AssertExists(t, vnet, address)
 	// TODO: Validate network
 }
 
