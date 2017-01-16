@@ -31,9 +31,19 @@ func (s *Subnet) AssertExists(t *testing.T, vnetName, subnetName, address, nsg s
 		if err != nil {
 			return err
 		}
-		addressSubnet := *subnet.SubnetPropertiesFormat.AddressPrefix
+		properties := *subnet.SubnetPropertiesFormat
+		if properties == nil {
+			return errors.New("The field SubnetPropertiesFormat is nil!")
+		}
+		if properties.AddressPrefix == nil {
+			return errors.New("The field AddressPrefix is nil!")
+		}
+		addressSubnet := *properties.AddressPrefix
 		if addressSubnet != address {
 			return errors.New("Subnet created with wrong Address. Expected: " + address + "Actual: " + addressSubnet)
+		}
+		if properties.NetworkSecurityGroup == nil || properties.NetworkSecurityGroup.ID == nil {
+			return errors.New("The field NetworkSecurityGroup or NetworkSecurityGroup.ID is nil!")
 		}
 		nsgSubnet := *subnet.SubnetPropertiesFormat.NetworkSecurityGroup.ID
 		if !strings.Contains(nsgSubnet, nsg) {
