@@ -42,7 +42,7 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 	subnets.AssertExists(t, vnet, subnet)
 }
 
-func TestSubnetSet(t *testing.T) {
+func TestSubnet(t *testing.T) {
 	t.Parallel()
 	fixture.Run(t, "Subnet_Create", timeout, location, testSubnetCreate)
 }

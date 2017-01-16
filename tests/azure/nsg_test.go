@@ -25,7 +25,7 @@ func testNsgCreate(t *testing.T, f fixture.F) {
 	nsgs.AssertExists(t, nsg)
 }
 
-func TestNsgSet(t *testing.T) {
+func TestNsg(t *testing.T) {
 	t.Parallel()
 	fixture.Run(t, "Nsg_Create", timeout, location, testNsgCreate)
 }
