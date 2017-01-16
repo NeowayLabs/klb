@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
@@ -35,5 +34,5 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 }
 func TestSubnet(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "Subnet_Create", 3*time.Minute, location, testSubnetCreate)
+	fixture.Run(t, "Subnet_Create", timeout, location, testSubnetCreate)
 }
