@@ -15,20 +15,7 @@ func genSubnetName() string {
 
 func testSubnetCreate(t *testing.T, f fixture.F) {
 	nsg := genNsgName()
-	f.Shell.Run(
-		"./testdata/create_nsg.sh",
-		nsg,
-		f.ResGroupName,
-		f.Location,
-	)
 	vnet := genVnetName()
-	f.Shell.Run(
-		"./testdata/create_vnet.sh",
-		vnet,
-		f.ResGroupName,
-		f.Location,
-		"10.116.0.0/16",
-	)
 	subnet := genSubnetName()
 	f.Shell.Run(
 		"./testdata/create_subnet.sh",
@@ -37,6 +24,7 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 		vnet,
 		"10.116.1.0/24",
 		nsg,
+		"10.116.0.0/16",
 	)
 	subnets := azure.NewSubnet(f)
 	subnets.AssertExists(t, vnet, subnet)
