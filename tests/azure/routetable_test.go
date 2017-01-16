@@ -16,13 +16,17 @@ func genRouteTableName() string {
 func testRouteTableCreate(t *testing.T, f fixture.F) {
 	routeTable := genRouteTableName()
 	route := routeTable + "route-test"
+	address := "0.0.0.0/0"
+	hoptype := "VirtualAppliance"
+	hopaddress := "10.116.1.100"
+
 	f.Shell.Run(
 		"./testdata/create_route_table.sh",
 		routeTable,
 		route,
 		f.ResGroupName,
 		f.Location,
-		"0.0.0.0/0",
+		address,
 		"VirtualAppliance",
 		"10.116.1.100",
 	)
@@ -30,7 +34,7 @@ func testRouteTableCreate(t *testing.T, f fixture.F) {
 	routeTables.AssertExists(t, routeTable)
 
 	routes := azure.NewRoute(f)
-	routes.AssertExists(t, routeTable, route)
+	routes.AssertExists(t, routeTable, route, address, hoptype, hopaddress)
 }
 
 func TestRouteTable(t *testing.T) {
