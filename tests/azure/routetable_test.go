@@ -23,15 +23,21 @@ func testRouteTableCreate(t *testing.T, f fixture.F) {
 	f.Shell.Run(
 		"./testdata/create_route_table.sh",
 		routeTable,
-		route,
 		f.ResGroupName,
 		f.Location,
-		address,
-		"VirtualAppliance",
-		"10.116.1.100",
 	)
 	routeTables := azure.NewRouteTable(f)
 	routeTables.AssertExists(t, routeTable)
+
+	f.Shell.Run(
+		"./testdata/add_route_to_route_table.sh",
+		routeTable,
+		route,
+		f.ResGroupName,
+		address,
+		hoptype,
+		hopaddress,
+	)
 
 	routes := azure.NewRoute(f)
 	routes.AssertExists(t, routeTable, route, address, hoptype, hopaddress)
