@@ -32,8 +32,10 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string, address string) {
 		}
 
 		addressActual := *net.VirtualNetworkPropertiesFormat.AddressSpace.AddressPrefixes
-		if addressActual[0] != address {
-			return errors.New("Address expected is " + address + " but actual is " + addressActual[0])
+		if addressActual != nil {
+			if addressActual[0] != address {
+				return errors.New("Address expected is " + address + " but actual is " + addressActual[0])
+			}
 		}
 
 		return nil
