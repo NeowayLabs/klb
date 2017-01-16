@@ -26,7 +26,6 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 	)
 	vnets := azure.NewVnet(f)
 	vnets.AssertExists(t, vnet, address)
-	// TODO: Validate network
 }
 
 func TestVnetSet(t *testing.T) {
