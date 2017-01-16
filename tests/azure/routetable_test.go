@@ -27,5 +27,5 @@ func testRouteTableCreate(t *testing.T, f fixture.F) {
 
 func TestRouteTable(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "RouteTable_Create", timeout, location, testRouTableteCreate)
+	fixture.Run(t, "RouteTable_Create", timeout, location, testRouteTableCreate)
 }
