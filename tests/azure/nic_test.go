@@ -19,7 +19,16 @@ func testNicCreate(t *testing.T, f fixture.F) {
 	nic := genNicName()
 	subnet := genSubnetName()
 	vnetAddress := "10.116.0.0/16"
-	address := "10.116.1.1"
+	addrnic := "10.116.1.100"
+	subnetAddress := "10.116.1.0/24"
+
+	f.Shell.Run(
+		"./testdata/create_nsg.sh",
+		nsg,
+		f.ResGroupName,
+		f.Location,
+	)
+	_ = azure.NewNsg(f)
 
 	f.Shell.Run(
 		"./testdata/create_vnet.sh",
@@ -28,27 +37,17 @@ func testNicCreate(t *testing.T, f fixture.F) {
 		f.Location,
 		vnetAddress,
 	)
-	vnets := azure.NewVnet(f)
-
-	f.Shell.Run(
-		"./testdata/create_nsg.sh",
-		nsg,
-		f.ResGroupName,
-		f.Location,
-	)
-	nsgs := azure.NewNsg(f)
+	_ = azure.NewVnet(f)
 
 	f.Shell.Run(
 		"./testdata/create_subnet.sh",
 		subnet,
 		f.ResGroupName,
 		vnet,
-		"10.116.1.0/24",
+		subnetAddress,
 		nsg,
-		"10.116.0.0/16",
-		f.Location,
 	)
-	subnets := azure.NewSubnet(f)
+	_ = azure.NewSubnet(f)
 
 	f.Shell.Run(
 		"./testdata/create_nic.sh",
@@ -56,20 +55,15 @@ func testNicCreate(t *testing.T, f fixture.F) {
 		nic,
 		f.Location,
 		vnet,
-
-		// resgroup = $ARGS[1]
-		// name     = $ARGS[2]
-		// location = $ARGS[3]
-		// vnet     = $ARGS[4]
-		// subnet   = $ARGS[5]
-		// address  = $ARGS[6]
-
+		subnet,
+		addrnic,
 	)
-	vnets := azure.NewVnet(f)
-	vnets.AssertExists(t, vnet)
+	nics := azure.NewNic(f)
+
+	nics.AssertExists(t, nic)
 }
 
-func TestVnetSet(t *testing.T) {
+func TestNic(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "Vnet_Create", timeout, location, testVnetCreate)
+	fixture.Run(t, "Nic_Create", timeout, location, testNicCreate)
 }
