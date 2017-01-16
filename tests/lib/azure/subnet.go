@@ -31,10 +31,11 @@ func (s *Subnet) AssertExists(t *testing.T, vnetName, subnetName, address, nsg s
 		if err != nil {
 			return err
 		}
-		properties := *subnet.SubnetPropertiesFormat
-		if properties == nil {
+		if subnet.SubnetPropertiesFormat == nil {
 			return errors.New("The field SubnetPropertiesFormat is nil!")
 		}
+
+		properties := *subnet.SubnetPropertiesFormat
 		if properties.AddressPrefix == nil {
 			return errors.New("The field AddressPrefix is nil!")
 		}
