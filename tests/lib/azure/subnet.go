@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -40,5 +41,6 @@ func (s *Subnet) AssertCreatedWithRightParameters(t *testing.T, vnetName, subnet
 			return err
 		}
 		fmt.Println("Subnet:", subnet.Properties)
+		return errors.New("ERRO")
 	})
 }
