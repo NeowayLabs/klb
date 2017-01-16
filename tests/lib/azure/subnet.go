@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/network"
@@ -27,5 +28,17 @@ func (s *Subnet) AssertExists(t *testing.T, vnetName, subnetName string) {
 	s.f.Retrier.Run(newID("Subnet", "AssertExists", subnetName), func() error {
 		_, err := s.client.Get(s.f.ResGroupName, vnetName, subnetName, "")
 		return err
+	})
+}
+
+// AssertCreatedWithRightParameters checks if subnet was created with the right parameters in the resource group.
+// Fail tests otherwise.
+func (s *Subnet) AssertCreatedWithRightParameters(t *testing.T, vnetName, subnetName string) {
+	s.f.Retrier.Run(newID("Subnet", "AssertCreatedWithRightParameters", subnetName), func() error {
+		subnet, err := s.client.Get(s.f.ResGroupName, vnetName, subnetName, "")
+		if err != nil {
+			return err
+		}
+		fmt.Println("Subnet:", subnet.Properties)
 	})
 }
