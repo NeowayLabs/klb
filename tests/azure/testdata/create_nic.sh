@@ -1,0 +1,17 @@
+#!/usr/bin/env nash
+
+import ../../azure/all
+
+resgroup = $ARGS[1]
+name     = $ARGS[2]
+location = $ARGS[3]
+vnet     = $ARGS[4]
+subnet   = $ARGS[5]
+address  = $ARGS[6]
+
+nic <= azure_nic_new($name, $resgroup, $location)
+nic <= azure_nic_set_vnet($nic, $vnet)
+nic <= azure_nic_set_subnet($nic, $subnet)
+nic <= azure_nic_set_privateip($nic, $address)
+
+azure_nic_create($nic)
