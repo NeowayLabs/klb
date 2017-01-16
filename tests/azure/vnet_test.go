@@ -26,6 +26,19 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 	)
 	vnets := azure.NewVnet(f)
 	vnets.AssertExists(t, vnet, address)
+
+	//azure_vnet_set_route_table($name, $resgroup, $vnet, $subnet, $routetable)
+
+	vnetRouteTable := vnet + "routetable-test"
+	f.Shell.Run(
+		"./testdata/set_vnet_route_table.sh",
+		vnetRouteTable,
+		f.ResGroupName,
+		f.Location,
+		vnet,
+		//subnet,
+		//route_table,
+	)
 }
 
 func TestVnet(t *testing.T) {
