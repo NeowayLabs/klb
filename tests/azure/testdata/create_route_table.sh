@@ -11,4 +11,4 @@ hoptype        = $ARGS[6]
 hopaddress     = $ARGS[7]
 
 azure_route_table_create($routetable, $resgroup, $location)
-azure_route_table_add_route($route, $resgroup, $routetable, $hoptype, $hopaddress)
+azure_route_table_add_route($route, $resgroup, $routetable, $address, $hoptype, $hopaddress)
