@@ -27,7 +27,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 	// TODO: Validate network
 }
 
-func TestVnetSet(t *testing.T) {
+func TestVnet(t *testing.T) {
 	t.Parallel()
 	fixture.Run(t, "Vnet_Create", timeout, location, testVnetCreate)
 }

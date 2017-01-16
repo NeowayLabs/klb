@@ -21,7 +21,7 @@ func NewStorageAccount(f fixture.F) *StorageAccount {
 	return as
 }
 
-// AssertExists checks if availability sets exists in the resource group.
+// AssertExists checks if storage account exists in the resource group.
 // Fail tests otherwise.
 func (s *StorageAccount) AssertExists(t *testing.T, name string) {
 	s.f.Retrier.Run(newID("StorageAccount", "AssertExists", name), func() error {
