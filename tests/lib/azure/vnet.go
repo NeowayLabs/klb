@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/network"
@@ -23,11 +24,22 @@ func NewVnet(f fixture.F) *Vnet {
 
 // AssertExists checks if virtual network exists in the resource group.
 // Fail tests otherwise.
-func (vnet *Vnet) AssertExists(t *testing.T, name string) {
+func (vnet *Vnet) AssertExists(t *testing.T, name string, address string) {
 	vnet.f.Retrier.Run(newID("Vnet", "AssertExists", name), func() error {
-		_, err := vnet.client.Get(vnet.f.ResGroupName, name, "")
+		net, err := vnet.client.Get(vnet.f.ResGroupName, name, "")
 		if err != nil {
+			return err
 		}
-		return err
+
+		addressActual := *net.VirtualNetworkPropertiesFormat.AddressSpace.AddressPrefixes
+		if addressActual != nil {
+			if addressActual[0] != address {
+				return errors.New("Address expected is " + address + " but actual is " + addressActual[0])
+			}
+		} else {
+			return errors.New("Address is a nil pointer")
+		}
+
+		return nil
 	})
 }
