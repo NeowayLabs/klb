@@ -25,6 +25,7 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 		"10.116.1.0/24",
 		nsg,
 		"10.116.0.0/16",
+		f.Location,
 	)
 	subnets := azure.NewSubnet(f)
 	subnets.AssertExists(t, vnet, subnet)
