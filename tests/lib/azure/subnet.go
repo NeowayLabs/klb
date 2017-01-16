@@ -40,7 +40,7 @@ func (s *Subnet) AssertCreatedWithRightParameters(t *testing.T, vnetName, subnet
 		if err != nil {
 			return err
 		}
-		fmt.Println("Subnet:", subnet.Properties)
+		fmt.Printf("Subnet %+v\n:", subnet)
 		return errors.New("ERRO")
 	})
 }
