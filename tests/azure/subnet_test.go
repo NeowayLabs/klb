@@ -31,7 +31,7 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 		f.Location,
 	)
 	subnets := azure.NewSubnet(f)
-	subnets.AssertExists(t, vnet, subnet, subnetAddress)
+	subnets.AssertExists(t, vnet, subnet, subnetAddress, nsg)
 }
 func TestSubnet(t *testing.T) {
 	t.Parallel()

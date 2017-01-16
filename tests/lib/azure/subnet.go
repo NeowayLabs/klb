@@ -2,6 +2,7 @@ package azure
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/network"
@@ -24,7 +25,7 @@ func NewSubnet(f fixture.F) *Subnet {
 
 // AssertExists checks if subnet exists in the resource group.
 // Fail tests otherwise.
-func (s *Subnet) AssertExists(t *testing.T, vnetName, subnetName, address string) {
+func (s *Subnet) AssertExists(t *testing.T, vnetName, subnetName, address, nsg string) {
 	s.f.Retrier.Run(newID("Subnet", "AssertExists", subnetName), func() error {
 		subnet, err := s.client.Get(s.f.ResGroupName, vnetName, subnetName, "")
 		if err != nil {
@@ -33,6 +34,10 @@ func (s *Subnet) AssertExists(t *testing.T, vnetName, subnetName, address string
 		addressSubnet := *subnet.SubnetPropertiesFormat.AddressPrefix
 		if addressSubnet != address {
 			return errors.New("Subnet created with wrong Address. Expected: " + address + "Actual: " + addressSubnet)
+		}
+		nsgSubnet := *subnet.SubnetPropertiesFormat.NetworkSecurityGroup.ID
+		if !strings.Contains(nsgSubnet, nsg) {
+			return errors.New("Subnet created in the wrong Network security group. Expected: " + nsg + "Actual: " + nsgSubnet)
 		}
 		return nil
 	})
