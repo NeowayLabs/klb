@@ -36,6 +36,8 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string, address string) {
 			if addressActual[0] != address {
 				return errors.New("Address expected is " + address + " but actual is " + addressActual[0])
 			}
+		} else {
+			return errors.New("Address is a nil pointer")
 		}
 
 		return nil
