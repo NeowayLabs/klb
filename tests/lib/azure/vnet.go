@@ -31,6 +31,14 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string, address string) {
 			return err
 		}
 
+		if net.VirtualNetworkPropertiesFormat == nil {
+			return errors.New("The field VirtualNetworkPropertiesFormat is nil!")
+		}
+		properties := *net.VirtualNetworkPropertiesFormat
+
+		if properties.AddressSpace == nil {
+			return errors.New("The field AddressSpace is nil!")
+		}
 		addressActual := *net.VirtualNetworkPropertiesFormat.AddressSpace.AddressPrefixes
 		if addressActual != nil {
 			if addressActual[0] != address {
