@@ -37,12 +37,12 @@ func (nic *Nic) AssertExists(t *testing.T, name string, nsg string, address stri
 		properties := *n.InterfacePropertiesFormat
 
 		if properties.IPConfigurations == nil {
-			return errors.New("The field AddressPrefix is nil!")
+			return errors.New("The field IPConfigurations is nil!")
 		}
 		ip := *properties.IPConfigurations
 
 		if len(ip) == 0 || ip[0].PrivateIPAddress == nil {
-			return errors.New("The field AddressPrefix is nil!")
+			return errors.New("The field PrivateIPAddress is nil!")
 		}
 
 		privateAddress := *ip[0].PrivateIPAddress
