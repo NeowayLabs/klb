@@ -29,6 +29,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 
 	//azure_vnet_set_route_table($name, $resgroup, $vnet, $subnet, $routetable)
 
+	subnet := genSubnetName()
 	vnetRouteTable := vnet + "routetable-test"
 	f.Shell.Run(
 		"./testdata/set_vnet_route_table.sh",
@@ -36,7 +37,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 		f.ResGroupName,
 		f.Location,
 		vnet,
-		//subnet,
+		subnet,
 		//route_table,
 	)
 }
