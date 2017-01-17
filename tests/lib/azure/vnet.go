@@ -2,6 +2,7 @@ package azure
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/network"
@@ -24,7 +25,7 @@ func NewVnet(f fixture.F) *Vnet {
 
 // AssertExists checks if virtual network exists in the resource group.
 // Fail tests otherwise.
-func (vnet *Vnet) AssertExists(t *testing.T, name string, address string) {
+func (vnet *Vnet) AssertExists(t *testing.T, name string, address, routeTable string) {
 	vnet.f.Retrier.Run(newID("Vnet", "AssertExists", name), func() error {
 		net, err := vnet.client.Get(vnet.f.ResGroupName, name, "")
 		if err != nil {
@@ -46,6 +47,18 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string, address string) {
 			}
 		} else {
 			return errors.New("Address is a nil pointer")
+		}
+
+		if properties.Subnets == nil {
+			return errors.New("The field Subnets is nil!")
+		}
+		subnets := *properties.Subnets
+		if subnets[0].SubnetPropertiesFormat.RouteTable.ID {
+			return errors.New("The field ID is nil!")
+		}
+		routeTableVnet := *subnets[0].SubnetPropertiesFormat.RouteTable.ID
+		if !strings.Contains(routeTableVnet, routeTable) {
+			return errors.New("Vnet created with wrong route table. Expected: " + routeTable + "Actual: " + routeTableVnet)
 		}
 
 		return nil
