@@ -53,7 +53,7 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string, address, routeTable st
 			return errors.New("The field Subnets is nil!")
 		}
 		subnets := *properties.Subnets
-		if subnets[0].SubnetPropertiesFormat.RouteTable.ID {
+		if subnets[0].SubnetPropertiesFormat.RouteTable.ID == nil {
 			return errors.New("The field ID is nil!")
 		}
 		routeTableVnet := *subnets[0].SubnetPropertiesFormat.RouteTable.ID
