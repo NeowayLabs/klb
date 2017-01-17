@@ -28,7 +28,7 @@ func testNicCreate(t *testing.T, f fixture.F) {
 		f.ResGroupName,
 		f.Location,
 	)
-	_ = azure.NewNsg(f)
+	azure.NewNsg(f)
 
 	f.Shell.Run(
 		"./testdata/create_vnet.sh",
@@ -37,7 +37,7 @@ func testNicCreate(t *testing.T, f fixture.F) {
 		f.Location,
 		vnetAddress,
 	)
-	_ = azure.NewVnet(f)
+	azure.NewVnet(f)
 
 	f.Shell.Run(
 		"./testdata/create_subnet.sh",
@@ -47,7 +47,7 @@ func testNicCreate(t *testing.T, f fixture.F) {
 		subnetAddress,
 		nsg,
 	)
-	_ = azure.NewSubnet(f)
+	azure.NewSubnet(f)
 
 	f.Shell.Run(
 		"./testdata/create_nic.sh",
