@@ -23,6 +23,17 @@ You can run the following command to install deps:
 make deps
 ```
 
+## Install
+
+Just run:
+
+```sh
+make install
+```
+
+To install klb on your **NASHPATH**.
+
+
 ### Updating vendored dependencies
 
 ```sh

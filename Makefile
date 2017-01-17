@@ -30,6 +30,20 @@ $(GOPATH)/bin/jq:
 vendor:
 	./hack/vendor.sh
 
+
+guard-%:
+	@ if [ "${${*}}" = "" ]; then \
+                echo "Env var '$*' not set"; \
+                exit 1; \
+        fi
+
+installdir=$(NASHPATH)/lib/klb
+install: guard-NASHPATH
+	rm -rf $(installdir)
+	mkdir -p $(installdir)
+	cp -pr ./aws $(installdir)
+	cp -pr ./azure $(installdir)
+
 timeout=10m
 logger=file
 parallel=30 #Explore I/O parallelization
