@@ -47,7 +47,7 @@ func (nic *Nic) AssertExists(t *testing.T, name string, nsg string, address stri
 
 		privateAddress := *ip[0].PrivateIPAddress
 		if privateAddress != address {
-			return errors.New("Subnet created with wrong Address. Expected: " + address + "Actual: " + privateAddress)
+			return errors.New("Nic created with wrong Address. Expected: " + address + "Actual: " + privateAddress)
 		}
 
 		return nil
