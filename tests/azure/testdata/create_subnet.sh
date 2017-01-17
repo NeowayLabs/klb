@@ -1,6 +1,9 @@
 #!/usr/bin/env nash
 
-import ../../azure/all
+import ../../azure/login
+import ../../azure/nsg
+import ../../azure/vnet
+import ../../azure/subnet
 
 subnet = $ARGS[1]
 resgroup = $ARGS[2]
