@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
@@ -60,10 +61,10 @@ func testNicCreate(t *testing.T, f fixture.F) {
 	)
 	nics := azure.NewNic(f)
 
-	nics.AssertExists(t, nic)
+	nics.AssertExists(t, nic, nsg, addrnic)
 }
 
 func TestNic(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "Nic_Create", timeout, location, testNicCreate)
+	fixture.Run(t, "Nic_Create", 300*time.Second, location, testNicCreate)
 }

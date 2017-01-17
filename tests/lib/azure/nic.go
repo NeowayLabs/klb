@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/network"
@@ -21,13 +22,34 @@ func NewNic(f fixture.F) *Nic {
 	return as
 }
 
-// AssertExists checks if virtual network exists in the resource group.
+// AssertExists checks if nic exists in the resource group.
 // Fail tests otherwise.
-func (nic *Nic) AssertExists(t *testing.T, name string) {
+func (nic *Nic) AssertExists(t *testing.T, name string, nsg string, address string) {
 	nic.f.Retrier.Run(newID("Nic", "AssertExists", name), func() error {
-		_, err := nic.client.Get(nic.f.ResGroupName, name, "")
+		n, err := nic.client.Get(nic.f.ResGroupName, name, "")
 		if err != nil {
+			return err
 		}
-		return err
+
+		if n.InterfacePropertiesFormat == nil {
+			return errors.New("The field InterfacePropertiesFormat is nil!")
+		}
+		properties := *n.InterfacePropertiesFormat
+
+		if properties.IPConfigurations == nil {
+			return errors.New("The field AddressPrefix is nil!")
+		}
+		ip := *properties.IPConfigurations
+
+		if len(ip) == 0 || ip[0].PrivateIPAddress == nil {
+			return errors.New("The field AddressPrefix is nil!")
+		}
+
+		privateAddress := *ip[0].PrivateIPAddress
+		if privateAddress != address {
+			return errors.New("Subnet created with wrong Address. Expected: " + address + "Actual: " + privateAddress)
+		}
+
+		return nil
 	})
 }
