@@ -15,17 +15,53 @@ func genVnetName() string {
 
 func testVnetCreate(t *testing.T, f fixture.F) {
 	vnet := genVnetName()
-	address := "10.116.0.0/16"
+	nsg := genNsgName()
+	subnet := genSubnetName()
+	vnetAddress := "10.116.0.0/16"
+	subnetAddress := "10.116.1.0/24"
 
 	f.Shell.Run(
 		"./testdata/create_vnet.sh",
 		vnet,
 		f.ResGroupName,
 		f.Location,
-		address,
+		vnetAddress,
+	)
+
+	f.Shell.Run(
+		"./testdata/create_nsg.sh",
+		nsg,
+		f.ResGroupName,
+		f.Location,
+	)
+
+	f.Shell.Run(
+		"./testdata/create_subnet.sh",
+		subnet,
+		f.ResGroupName,
+		vnet,
+		subnetAddress,
+		nsg,
+	)
+
+	routeTable := genRouteTableName()
+
+	f.Shell.Run(
+		"./testdata/create_route_table.sh",
+		routeTable,
+		f.ResGroupName,
+		f.Location,
+	)
+
+	f.Shell.Run(
+		"./testdata/set_vnet_route_table.sh",
+		vnet,
+		subnet,
+		f.ResGroupName,
+		routeTable,
 	)
 	vnets := azure.NewVnet(f)
-	vnets.AssertExists(t, vnet, address)
+	vnets.AssertExists(t, vnet, vnetAddress, routeTable)
 }
 
 func TestVnet(t *testing.T) {
