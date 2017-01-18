@@ -2,8 +2,8 @@
 
 
 if len($ARGS) != "4" {
-    echo "Usage: " $ARGS[0] "<(sh|nash)> <service principal name>" "<service secret>"
-	abort
+        echo "Usage: " $ARGS[0] "<(sh|nash)> <service principal name>" "<service secret>"
+        exit
 }
 
 shell=$ARGS[1]

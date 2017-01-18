@@ -37,12 +37,15 @@ guard-%:
                 exit 1; \
         fi
 
-installdir=$(NASHPATH)/lib/klb
+libdir=$(NASHPATH)/lib/klb
+bindir=$(NASHPATH)/bin
 install: guard-NASHPATH
-	rm -rf $(installdir)
-	mkdir -p $(installdir)
-	cp -pr ./aws $(installdir)
-	cp -pr ./azure $(installdir)
+	rm -rf $(libdir)
+	mkdir -p $(libdir)
+	mkdir -p $(bindir)
+	cp -pr ./aws $(libdir)
+	cp -pr ./azure $(libdir)
+	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 
 timeout=10m
 logger=file
