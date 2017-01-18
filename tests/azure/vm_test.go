@@ -17,11 +17,11 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	vm := genVMName()
 
 	f.Shell.Run(
-		"./testdata/set_vnet_route_table.sh",
-		vnet,
-		subnet,
+		"./testdata/create_vm.sh",
+		vm,
 		f.ResGroupName,
-		routeTable,
+		f.Location,
+		"Linux",
 	)
 	vms := azure.NewVM(f)
 	vms.AssertExists(t, vm)
