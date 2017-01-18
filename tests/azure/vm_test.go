@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
@@ -26,8 +27,8 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	storAcc := genStorageAccountName()
 	osDisk := "test.vhd"
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
-	customData := "test.sh"
-	keyFile := "test.pub"
+	customData := ""
+	//	keyFile := tmpfile.Name()
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
@@ -99,7 +100,6 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		osDisk,
 		imageUrn,
 		customData,
-		keyFile,
 	)
 	vms := azure.NewVM(f)
 	vms.AssertExists(t, vm)
@@ -107,5 +107,5 @@ func testVMCreate(t *testing.T, f fixture.F) {
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "VM_Create", timeout, location, testVMCreate)
+	fixture.Run(t, "VM_Create", 10*time.Minute, location, testVMCreate)
 }
