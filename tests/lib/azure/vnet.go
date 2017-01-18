@@ -25,7 +25,7 @@ func NewVnet(f fixture.F) *Vnet {
 
 // AssertExists checks if virtual network exists in the resource group.
 // Fail tests otherwise.
-func (vnet *Vnet) AssertExists(t *testing.T, name string, address, routeTable string) {
+func (vnet *Vnet) AssertExists(t *testing.T, name, expectedAddress, expectedRouteTable string) {
 	vnet.f.Retrier.Run(newID("Vnet", "AssertExists", name), func() error {
 		net, err := vnet.client.Get(vnet.f.ResGroupName, name, "")
 		if err != nil {
@@ -40,10 +40,10 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string, address, routeTable st
 		if properties.AddressSpace == nil {
 			return errors.New("The field AddressSpace is nil!")
 		}
-		addressActual := *net.VirtualNetworkPropertiesFormat.AddressSpace.AddressPrefixes
-		if addressActual != nil {
-			if addressActual[0] != address {
-				return errors.New("Address expected is " + address + " but actual is " + addressActual[0])
+		gotAddress := *net.VirtualNetworkPropertiesFormat.AddressSpace.AddressPrefixes
+		if gotAddress != nil {
+			if gotAddress[0] != expectedAddress {
+				return errors.New("Address expected is " + expectedAddress + " but got " + gotAddress[0])
 			}
 		} else {
 			return errors.New("Address is a nil pointer")
@@ -56,9 +56,9 @@ func (vnet *Vnet) AssertExists(t *testing.T, name string, address, routeTable st
 		if subnets[0].SubnetPropertiesFormat.RouteTable.ID == nil {
 			return errors.New("The field ID is nil!")
 		}
-		routeTableVnet := *subnets[0].SubnetPropertiesFormat.RouteTable.ID
-		if !strings.Contains(routeTableVnet, routeTable) {
-			return errors.New("Vnet created with wrong route table. Expected: " + routeTable + "Actual: " + routeTableVnet)
+		gotRouteTable := *subnets[0].SubnetPropertiesFormat.RouteTable.ID
+		if !strings.Contains(gotRouteTable, expectedRouteTable) {
+			return errors.New("Vnet created with wrong route table. Expected: " + expectedRouteTable + "Actual: " + gotRouteTable)
 		}
 
 		return nil
