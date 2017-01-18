@@ -41,18 +41,23 @@ func (vnet *Vnet) AssertExists(t *testing.T, name, expectedAddress, expectedRout
 			return errors.New("The field AddressSpace is nil!")
 		}
 		gotAddress := *net.VirtualNetworkPropertiesFormat.AddressSpace.AddressPrefixes
-		if gotAddress != nil {
-			if gotAddress[0] != expectedAddress {
-				return errors.New("Address expected is " + expectedAddress + " but got " + gotAddress[0])
-			}
-		} else {
-			return errors.New("Address is a nil pointer")
+		if len(gotAddress) == 0 {
+			return errors.New("Address is nil!")
+		}
+		if gotAddress[0] != expectedAddress {
+			return errors.New("Address expected is " + expectedAddress + " but got " + gotAddress[0])
 		}
 
-		if properties.Subnets == nil {
+		subnets := *properties.Subnets
+		if len(subnets) == 0 {
 			return errors.New("The field Subnets is nil!")
 		}
-		subnets := *properties.Subnets
+		if subnets[0].SubnetPropertiesFormat == nil {
+			return errors.New("The field SubnetPropertiesFormat is nil!")
+		}
+		if subnets[0].SubnetPropertiesFormat.RouteTable == nil {
+			return errors.New("The field RouteTable is nil!")
+		}
 		if subnets[0].SubnetPropertiesFormat.RouteTable.ID == nil {
 			return errors.New("The field ID is nil!")
 		}
