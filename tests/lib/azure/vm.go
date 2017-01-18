@@ -25,7 +25,7 @@ func NewVM(f fixture.F) *VM {
 // Fail tests otherwise.
 func (vm *VM) AssertExists(t *testing.T, name string) {
 	vm.f.Retrier.Run(newID("VM", "AssertExists", name), func() error {
-		_, err := vm.client.Get(vm.f.ResGroupName, name)
+		_, err := vm.client.Get(vm.f.ResGroupName, name, "")
 		return err
 	})
 }
