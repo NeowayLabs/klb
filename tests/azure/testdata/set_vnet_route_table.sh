@@ -2,10 +2,9 @@
 
 import ../../azure/all
 
-name           = $ARGS[1]
-resgroup       = $ARGS[2]
-vnet           = $ARGS[3]
-subnet         = $ARGS[4]
-routetable     = $ARGS[5]
+vnet           = $ARGS[1]
+subnet         = $ARGS[2]
+resgroup       = $ARGS[3]
+routetable     = $ARGS[4]
 
-azure_vnet_set_route_table($subnet, $resgroup, $vnet, $subnet, $routetable)
+azure_vnet_set_route_table($vnet, $subnet, $resgroup, $routetable)

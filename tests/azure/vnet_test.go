@@ -55,10 +55,9 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 
 	f.Shell.Run(
 		"./testdata/set_vnet_route_table.sh",
-		subnet,
-		f.ResGroupName,
 		vnet,
 		subnet,
+		f.ResGroupName,
 		routeTable,
 	)
 	vnets := azure.NewVnet(f)
