@@ -1,18 +1,23 @@
 #!/usr/bin/env nash
 
 
-if len($ARGS) != "3" {
-	echo "Usage: " $ARGS[0] "<service principal name>" "<service secret>"
-	abort
+if len($ARGS) != "4" {
+        echo "Usage: " $ARGS[0] "<(sh|nash)> <service principal name>" "<service secret>"
+        exit
 }
+
+shell=$ARGS[1]
 
 fn printvar(name, value) {
-	printf "%s=\"%s\"\n" $name $value
-	printf "setenv %s\n" $name
+        if $shell == "nash" {
+	    printf "setenv %s=\"%s\"\n" $name $value
+	    return
+        }
+	printf "export %s=\"%s\"\n" $name $value
 }
 
-SPNAME                  = $ARGS[1]
-SPSECRET                = $ARGS[2]
+SPNAME                  = $ARGS[2]
+SPSECRET                = $ARGS[3]
 
 AZURE_SUBSCRIPTION_ID   <= (
 	azure account show
