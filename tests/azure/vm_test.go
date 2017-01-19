@@ -46,7 +46,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		keyFile,
 	)
 	vms := azure.NewVM(f)
-	vms.AssertExists(t, vm)
+	vms.AssertExists(t, vm, availSet, vmSize, osType)
 }
 
 func createVMResources(f fixture.F) (string, string, string, string, string) {
