@@ -49,7 +49,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	vms.AssertExists(t, vm)
 }
 
-func createVMResources(f fixture.F) (availSet, vnet, subnet, nic, storAcc string) {
+func createVMResources(f fixture.F) (string, string, string, string, string) {
 
 	availSet := genAvailSetName()
 	vnet := genVnetName()
