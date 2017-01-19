@@ -17,7 +17,7 @@ storacc  = $ARGS[11]
 osdisk   = $ARGS[12]
 imageurn = $ARGS[13]
 custdata = $ARGS[14]
-#keyfile  = $ARGS[15]
+keyfile  = $ARGS[15]
 
 azure_login()
 vm <= azure_vm_new($name, $resgroup, $location, $ostype)
@@ -31,5 +31,5 @@ vm <= azure_vm_set_storageaccount($vm, $storacc)
 vm <= azure_vm_set_osdiskvhd($vm, $osdisk)
 vm <= azure_vm_set_imageurn($vm, $imageurn)
 #vm <= azure_vm_set_customdata($vm, $custdata)
-#vm <= azure_vm_set_publickeyfile($vm, $keyfile)
+vm <= azure_vm_set_publickeyfile($vm, $keyfile)
 azure_vm_create($vm)

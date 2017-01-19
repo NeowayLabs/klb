@@ -11,7 +11,7 @@ import (
 )
 
 func genVMName() string {
-	return fmt.Sprintf("klb-vm-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klbvmtests%d", rand.Intn(1000))
 }
 
 func testVMCreate(t *testing.T, f fixture.F) {
@@ -28,7 +28,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	osDisk := "test.vhd"
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
 	customData := ""
-	//	keyFile := tmpfile.Name()
+	keyFile := "tests/azure/testdata/key.pub"
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
@@ -100,6 +100,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		osDisk,
 		imageUrn,
 		customData,
+		keyFile,
 	)
 	vms := azure.NewVM(f)
 	vms.AssertExists(t, vm)
