@@ -44,7 +44,7 @@ install: guard-NASHPATH
 	cp -pr ./aws $(installdir)
 	cp -pr ./azure $(installdir)
 
-timeout=10m
+timeout=20m
 logger=file
 parallel=30 #Explore I/O parallelization
 gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
