@@ -28,7 +28,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	osDisk := "test.vhd"
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
 	customData := ""
-	keyFile := "tests/azure/testdata/key.pub"
+	keyFile := "./testdata/key.pub"
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
