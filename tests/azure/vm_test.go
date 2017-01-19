@@ -20,15 +20,42 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	osType := "Linux"
 	vmSize := "Standard_DS4_v2"
 	username := "core"
+	osDisk := "test.vhd"
+	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
+	customData := ""
+	keyFile := "./testdata/key.pub"
+
+	availSet, vnet, subnet, nic, storAcc := createVMResources(f)
+
+	f.Shell.Run(
+		"./testdata/create_vm.sh",
+		vm,
+		f.ResGroupName,
+		f.Location,
+		osType,
+		vmSize,
+		username,
+		availSet,
+		vnet,
+		subnet,
+		nic,
+		storAcc,
+		osDisk,
+		imageUrn,
+		customData,
+		keyFile,
+	)
+	vms := azure.NewVM(f)
+	vms.AssertExists(t, vm)
+}
+
+func createVMResources(f fixture.F) (availSet, vnet, subnet, nic, storAcc string) {
+
 	availSet := genAvailSetName()
 	vnet := genVnetName()
 	subnet := genSubnetName()
 	nic := genNicName()
 	storAcc := genStorageAccountName()
-	osDisk := "test.vhd"
-	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
-	customData := ""
-	keyFile := "./testdata/key.pub"
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
@@ -82,28 +109,8 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		storAcc,
 		f.Location,
 	)
-	//storage := os.Getenv("STORAGE_ACCOUNT_NAME")
 
-	f.Shell.Run(
-		"./testdata/create_vm.sh",
-		vm,
-		f.ResGroupName,
-		f.Location,
-		osType,
-		vmSize,
-		username,
-		availSet,
-		vnet,
-		subnet,
-		nic,
-		storAcc,
-		osDisk,
-		imageUrn,
-		customData,
-		keyFile,
-	)
-	vms := azure.NewVM(f)
-	vms.AssertExists(t, vm)
+	return availSet, vnet, subnet, nic, storAcc
 }
 
 func TestVM(t *testing.T) {
