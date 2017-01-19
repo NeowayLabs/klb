@@ -108,5 +108,5 @@ func testVMCreate(t *testing.T, f fixture.F) {
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "VM_Create", 19*time.Minute, location, testVMCreate)
+	fixture.Run(t, "VM_Create", 25*time.Minute, location, testVMCreate)
 }
