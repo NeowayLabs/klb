@@ -2,8 +2,6 @@ package azure
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"strings"
 	"testing"
 
@@ -27,7 +25,7 @@ func NewVM(f fixture.F) *VM {
 
 // AssertExists checks if VM exists in the resource group.
 // Fail tests otherwise.
-func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize, expectedOsType string) {
+func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize, expectedOsType, expectedNic string) {
 	vm.f.Retrier.Run(newID("VM", "AssertExists", name), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, name, "")
 		if err != nil {
@@ -47,19 +45,37 @@ func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize,
 		if !strings.Contains(gotAvailSet, strings.ToUpper(expectedAvailSet)) {
 			return errors.New("AvailSet expected is " + expectedAvailSet + " but got " + gotAvailSet)
 		}
+		if properties.HardwareProfile == nil {
+			return errors.New("Field HardwareProfile is nil!")
+		}
 		hardwareProfile := *properties.HardwareProfile
 		gotVMSize := string(hardwareProfile.VMSize)
 		if gotVMSize != expectedVMSize {
 			return errors.New("VM Size expected is " + expectedVMSize + " but got " + gotVMSize)
+		}
+		if properties.StorageProfile == nil {
+			return errors.New("Field StorageProfile is nil!")
+		}
+		if properties.StorageProfile.OsDisk == nil {
+			return errors.New("Field OsDisk is nil!")
 		}
 		osDisk := *properties.StorageProfile.OsDisk
 		gotOsType := string(osDisk.OsType)
 		if gotOsType != expectedOsType {
 			return errors.New("OS type expected is " + expectedOsType + " but got " + gotOsType)
 		}
-		fmt.Println("STORAGE PROFILE: %v", *properties.StorageProfile, *properties.StorageProfile.ImageReference, *properties.StorageProfile.OsDisk, *properties.StorageProfile.DataDisks, "OS PROFILE %v", *properties.OsProfile.ComputerName)
+		if properties.NetworkProfile == nil {
+			return errors.New("Field NetworkProfile is nil!")
+		}
 		network := *properties.NetworkProfile.NetworkInterfaces
-		log.Fatal("NETWORK PROFILE:%v", *properties.NetworkProfile, *network[0].ID)
+		if len(network) == 0 {
+			return errors.New("Field NetworkInterfaces is nil!")
+		}
+		net := network[0]
+		gotNic := string(*net.ID)
+		if !strings.Contains(gotNic, expectedNic) {
+			return errors.New("Nic expected is " + expectedNic + " but got " + gotNic)
+		}
 		return nil
 	})
 }
