@@ -22,7 +22,6 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	username := "core"
 	osDisk := "test.vhd"
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
-	customData := ""
 	keyFile := "./testdata/key.pub"
 
 	availSet, vnet, subnet, nic, storAcc := createVMResources(f)
@@ -42,7 +41,6 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		storAcc,
 		osDisk,
 		imageUrn,
-		customData,
 		keyFile,
 	)
 	vms := azure.NewVM(f)
