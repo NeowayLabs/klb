@@ -47,7 +47,7 @@ install: guard-NASHPATH
 	cp -pr ./azure $(libdir)
 	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 
-timeout=10m
+timeout=30m
 logger=file
 parallel=30 #Explore I/O parallelization
 gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
