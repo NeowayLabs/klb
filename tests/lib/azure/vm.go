@@ -72,6 +72,9 @@ func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize,
 			return errors.New("Field NetworkInterfaces is nil!")
 		}
 		net := network[0]
+		if net.ID == nil {
+			return errors.New("Field ID is nil!")
+		}
 		gotNic := string(*net.ID)
 		if !strings.Contains(gotNic, expectedNic) {
 			return errors.New("Nic expected is " + expectedNic + " but got " + gotNic)

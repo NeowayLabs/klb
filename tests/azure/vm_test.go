@@ -14,6 +14,14 @@ func genVMName() string {
 	return fmt.Sprintf("klbvmtests%d", rand.Intn(1000))
 }
 
+type VMResources struct {
+	availSet string
+	vnet     string
+	subnet   string
+	nic      string
+	storAcc  string
+}
+
 func testVMCreate(t *testing.T, f fixture.F) {
 
 	vm := genVMName()
@@ -24,7 +32,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
 	keyFile := "./testdata/key.pub"
 
-	availSet, vnet, subnet, nic, storAcc := createVMResources(f)
+	resources := createVMResources(f)
 
 	f.Shell.Run(
 		"./testdata/create_vm.sh",
@@ -34,26 +42,27 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		osType,
 		vmSize,
 		username,
-		availSet,
-		vnet,
-		subnet,
-		nic,
-		storAcc,
+		resources.availSet,
+		resources.vnet,
+		resources.subnet,
+		resources.nic,
+		resources.storAcc,
 		osDisk,
 		imageUrn,
 		keyFile,
 	)
 	vms := azure.NewVM(f)
-	vms.AssertExists(t, vm, availSet, vmSize, osType, nic)
+	vms.AssertExists(t, vm, resources.availSet, vmSize, osType, resources.nic)
 }
 
-func createVMResources(f fixture.F) (string, string, string, string, string) {
+func createVMResources(f fixture.F) VMResources {
 
-	availSet := genAvailSetName()
-	vnet := genVnetName()
-	subnet := genSubnetName()
-	nic := genNicName()
-	storAcc := genStorageAccountName()
+	resources := VMResources{}
+	resources.availSet = genAvailSetName()
+	resources.vnet = genVnetName()
+	resources.subnet = genSubnetName()
+	resources.nic = genNicName()
+	resources.storAcc = genStorageAccountName()
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
@@ -63,13 +72,13 @@ func createVMResources(f fixture.F) (string, string, string, string, string) {
 	f.Shell.Run(
 		"./testdata/create_avail_set.sh",
 		f.ResGroupName,
-		availSet,
+		resources.availSet,
 		f.Location,
 	)
 
 	f.Shell.Run(
 		"./testdata/create_vnet.sh",
-		vnet,
+		resources.vnet,
 		f.ResGroupName,
 		f.Location,
 		vnetAddress,
@@ -84,9 +93,9 @@ func createVMResources(f fixture.F) (string, string, string, string, string) {
 
 	f.Shell.Run(
 		"./testdata/create_subnet.sh",
-		subnet,
+		resources.subnet,
 		f.ResGroupName,
-		vnet,
+		resources.vnet,
 		subnetAddress,
 		nsg,
 	)
@@ -94,21 +103,21 @@ func createVMResources(f fixture.F) (string, string, string, string, string) {
 	f.Shell.Run(
 		"./testdata/create_nic.sh",
 		f.ResGroupName,
-		nic,
+		resources.nic,
 		f.Location,
-		vnet,
-		subnet,
+		resources.vnet,
+		resources.subnet,
 		addrnic,
 	)
 
 	f.Shell.Run(
 		"./testdata/create_storage_account.sh",
 		f.ResGroupName,
-		storAcc,
+		resources.storAcc,
 		f.Location,
 	)
 
-	return availSet, vnet, subnet, nic, storAcc
+	return resources
 }
 
 func TestVM(t *testing.T) {
