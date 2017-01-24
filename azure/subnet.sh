@@ -15,7 +15,7 @@ fn azure_subnet_get_id(name, group, vnet) {
         resp <= (
                 azure network vnet subnet show $group $vnet $name --json
         )
-        id <= echo $resp | jq ".id"
+        id <= echo $resp | jq -r ".id"
         return $id
 }
 
