@@ -20,6 +20,12 @@ fn azure_nic_set_vnet(instance, vnet) {
 	return $instance
 }
 
+fn azure_nic_set_subnet(instance, subnet) {
+        instance <= append($instance, "--subnet-name")
+        instance <= append($instance, $subnet)
+        return $instance
+}
+
 fn azure_nic_set_subnet_id(instance, subnetid) {
 	instance <= append($instance, "--subnet-id")
 	instance <= append($instance, $subnetid)
