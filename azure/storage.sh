@@ -26,5 +26,43 @@ fn azure_storage_account_create(name, group, location, sku, kind) {
 # `name` is the storage account name
 # `group` is the resource group name
 fn azure_storage_account_delete(name, group) {
-	azure storage account delete $name
+	azure storage account delete --quiet --resource-group $group $name
+}
+
+# azure_storage_account_get_keys gets `storage account` keys list.
+# `name` is the storage account name
+# `group` is the resource group name
+#
+# This function return a list with storage accout keys
+fn azure_storage_account_get_keys(name, group) {
+	keys <= azure storage account keys list --resource-group $group $name | grep "key[0-9]" | awk "{print $3}"
+	k    <= split($keys, "\n")
+
+	return $k
+}
+
+# azure_store_share_create creates a new `storage share`.
+# `name` is the storage file share name
+# `quota` is the storage file share quota (in GB)
+# `storage account name` is the storage account name
+# `storage account key` is the storage account key
+#
+# Ref: https://docs.microsoft.com/en-us/azure/storage/storage-how-to-use-files-linux
+fn azure_storage_share_create(name, quota, storage, storagekey) {
+	(
+		azure storage share create --share $name --quota $quota --account-name $storage --account-key $storagekey
+	)
+}
+
+# azure_store_share_delete deletes a exist `storage share`.
+# `name` is the storage file share name
+# `storage account name` is the storage account name
+# `storage account key` is the storage account key
+fn azure_storage_share_delete(name, storage, storagekey) {
+	(
+		azure storage share delete --quiet
+						--share $name
+						--account-name $storage
+						--account-key $storagekey
+	)
 }
