@@ -28,7 +28,7 @@ func validateVnetDnsServers(
 	t *testing.T,
 	expectedDnsServers []string,
 	net network.VirtualNetwork,
-) {
+) error {
 	if net.DhcpOptions == nil {
 		return errors.New("The field DhcpOptions is nil!")
 	}
@@ -37,13 +37,17 @@ func validateVnetDnsServers(
 	}
 
 	dnsServers := *net.DhcpOptions.DNSServers
-	err := fmt.Errorf("expected DNS servers[%s], got [%s]", expectedDnsServers, dnsServers)
-	if len(dnsServer) != len(expectedDnsServers) {
+	err := fmt.Errorf(
+		"expected DNS servers[%s], got [%s]",
+		expectedDnsServers,
+		dnsServers,
+	)
+	if len(dnsServers) != len(expectedDnsServers) {
 		return err
 	}
 	for _, expectedDnsServer := range expectedDnsServers {
 		found := false
-		for dnsServer := range dnsServers {
+		for _, dnsServer := range dnsServers {
 			if dnsServer == expectedDnsServer {
 				found = true
 				break
@@ -53,6 +57,7 @@ func validateVnetDnsServers(
 			return err
 		}
 	}
+	return nil
 }
 
 // AssertExists checks if virtual network exists in the resource group.
@@ -70,7 +75,7 @@ func (vnet *Vnet) AssertExists(
 			return err
 		}
 
-		err := validateVnetDnsServers(t, expectedDnsServers, net)
+		err = validateVnetDnsServers(t, expectedDnsServers, net)
 		if err != nil {
 			return err
 		}
