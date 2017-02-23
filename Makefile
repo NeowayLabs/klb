@@ -50,9 +50,7 @@ install: guard-NASHPATH
 timeout=30m
 logger=file
 parallel=30 #Explore I/O parallelization
-#FIXME ADD RACE DETECTOR AGAIN BEFORE i4k GETS PISSED OFF
-#gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
-gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout)
+gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
 test:
