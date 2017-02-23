@@ -53,8 +53,5 @@ parallel=30 #Explore I/O parallelization
 gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
-testall:
-	$(gotest) ./... $(gotestargs)
-
 test:
 	$(gotest) -run=$(run) ./... $(gotestargs)

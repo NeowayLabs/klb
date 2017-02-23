@@ -3,6 +3,7 @@ package azure_test
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
@@ -19,6 +20,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 	subnet := genSubnetName()
 	vnetAddress := "10.116.0.0/16"
 	subnetAddress := "10.116.1.0/24"
+	dnsAddresses := []string{"8.8.8.8", "4.4.4.4"}
 
 	f.Shell.Run(
 		"./testdata/create_vnet.sh",
@@ -26,6 +28,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 		f.ResGroupName,
 		f.Location,
 		vnetAddress,
+		strings.Join(dnsAddresses, ","),
 	)
 
 	f.Shell.Run(

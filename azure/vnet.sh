@@ -1,7 +1,18 @@
 # Virtual Network related functions
 
-fn azure_vnet_create(name, group, location, cidr) {
-	azure network vnet create --name $name --resource-group $group --location $location --address-prefixes $cidr
+fn azure_vnet_create(name, group, location, cidr, dnsservers) {
+        fn join(list, sep) {
+            out = ""
+
+            for l in $list {
+                out = $out+$l+$sep
+            }
+            out <= echo $out | sed "s/"+$sep+"$//g"
+            return $out
+        }
+
+        dns <= join($dnsservers, ",")
+	azure network vnet create --name $name --resource-group $group --location $location --address-prefixes $cidr --dns-servers $dns
 }
 
 fn azure_vnet_delete(name, group) {
