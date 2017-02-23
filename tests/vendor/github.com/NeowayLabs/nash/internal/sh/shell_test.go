@@ -232,6 +232,25 @@ kernel 4.7.1`,
 			"",
 			"",
 		},
+		{
+			"list assignment",
+			`l = (0 1 2 3)
+                         l[0] = "666"
+                         echo -n $l`,
+			`666 1 2 3`,
+			"",
+			"",
+		},
+		{
+			"list assignment",
+			`l = (0 1 2 3)
+                         a = "2"
+                         l[$a] = "666"
+                         echo -n $l`,
+			`0 1 666 3`,
+			"",
+			"",
+		},
 	} {
 		testExec(t,
 			test.desc,
@@ -271,6 +290,25 @@ func TestExecuteCmdAssignment(t *testing.T) {
 			"",
 			"<interactive>:2:25: Invalid assignment from function that does not return values: e()",
 		},
+		{
+			"list assignment",
+			`l = (0 1 2 3)
+                         l[0] <= echo -n 666
+                         echo -n $l`,
+			`666 1 2 3`,
+			"",
+			"",
+		},
+		{
+			"list assignment",
+			`l = (0 1 2 3)
+                         a = "2"
+                         l[$a] <= echo -n "666"
+                         echo -n $l`,
+			`0 1 666 3`,
+			"",
+			"",
+		},
 	} {
 		testExec(t,
 			test.desc,
@@ -282,6 +320,7 @@ func TestExecuteCmdAssignment(t *testing.T) {
 	}
 }
 
+// IFS *DO NOT* exists anymore. This tests only assure things works as expected (IFS has no power)
 func TestExecuteCmdAssignmentIFS(t *testing.T) {
 	for _, test := range []execTest{
 		{
@@ -293,7 +332,7 @@ for i in $range {
     echo "i = " + $i
 }`,
 			"", "",
-			"<interactive>:4:0: Invalid variable type in for range: StringType",
+			"<interactive>:4:9: Invalid variable type in for range: StringType",
 		},
 		{
 			"ifs",
@@ -304,7 +343,7 @@ for i in $range {
     echo "i = " + $i
 }`,
 			"", "",
-			"<interactive>:4:0: Invalid variable type in for range: StringType",
+			"<interactive>:4:9: Invalid variable type in for range: StringType",
 		},
 		{
 			"ifs",
@@ -315,7 +354,7 @@ for i in $range {
     echo "i = " + $i
 }`,
 			"", "",
-			"<interactive>:4:0: Invalid variable type in for range: StringType",
+			"<interactive>:4:9: Invalid variable type in for range: StringType",
 		},
 		{
 			"ifs",
@@ -326,7 +365,7 @@ for i in $range {
     echo "i = " + $i
 }`,
 			"", "",
-			"<interactive>:4:0: Invalid variable type in for range: StringType",
+			"<interactive>:4:9: Invalid variable type in for range: StringType",
 		},
 	} {
 		testExec(t,
@@ -943,18 +982,18 @@ func TestNonInteractive(t *testing.T) {
 	shell.SetInteractive(false)
 	shell.filename = "<non-interactive>"
 
-	expectedErr := "<non-interactive>:1:0: "+
-		"'hello' is a bind to 'greeting'."+
+	expectedErr := "<non-interactive>:1:0: " +
+		"'hello' is a bind to 'greeting'." +
 		" No binds allowed in non-interactive mode."
 
 	testShellExec(t, shell, "test 'binded' function non-interactive",
 		`hello`, "", "", expectedErr)
 
-	expectedErr = "<non-interactive>:6:8: 'bindfn' is not allowed in"+
+	expectedErr = "<non-interactive>:6:8: 'bindfn' is not allowed in" +
 		" non-interactive mode."
 
 	testShellExec(t, shell, "test bindfn non-interactive",
-	`
+		`
         fn goodbye() {
                 echo "Ciao"
         }
