@@ -20,14 +20,10 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 	vnetAddress := "10.116.0.0/16"
 	subnetAddress := "10.116.1.0/24"
 
-	f.Shell.Run(
-		"./testdata/create_vnet.sh",
-		vnet,
-		f.ResGroupName,
-		f.Location,
-		vnetAddress,
-	)
-	azure.NewVnet(f)
+	createVNet(t, f, vnetDescription{
+		name:     vnet,
+		vnetAddr: vnetAddress,
+	})
 
 	f.Shell.Run(
 		"./testdata/create_nsg.sh",
@@ -35,7 +31,6 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 		f.ResGroupName,
 		f.Location,
 	)
-	azure.NewNsg(f)
 
 	f.Shell.Run(
 		"./testdata/create_subnet.sh",
@@ -50,5 +45,5 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 }
 func TestSubnet(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "Subnet_Create", timeout, location, testSubnetCreate)
+	fixture.Run(t, "testSubnetCreate", timeout, location, testSubnetCreate)
 }
