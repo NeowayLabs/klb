@@ -29,13 +29,10 @@ func testNicCreate(t *testing.T, f fixture.F) {
 		f.Location,
 	)
 
-	f.Shell.Run(
-		"./testdata/create_vnet.sh",
-		vnet,
-		f.ResGroupName,
-		f.Location,
-		vnetAddress,
-	)
+	createVNet(t, f, vnetDescription{
+		name:     vnet,
+		vnetAddr: vnetAddress,
+	})
 
 	f.Shell.Run(
 		"./testdata/create_subnet.sh",

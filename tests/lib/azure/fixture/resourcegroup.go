@@ -52,7 +52,7 @@ func (r *ResourceGroup) AssertDeleted(t *testing.T, name string) {
 
 func (r *ResourceGroup) Create(t *testing.T, name string, location string) {
 	r.retrier.Run("ResourceGroup.Create", func() error {
-		_, err := r.client.CreateOrUpdate(name, resources.ResourceGroup{
+		_, err := r.client.CreateOrUpdate(name, resources.Group{
 			Location: &location,
 		})
 		return err
