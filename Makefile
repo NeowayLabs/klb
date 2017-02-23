@@ -17,7 +17,7 @@ aws-deps:
 	pip install --user awscli
 
 azure-deps: jq-dep
-	npm install -g azure-cli
+	sudo npm install -g azure-cli
 
 jq-dep: $(GOPATH)/bin/jq
 
