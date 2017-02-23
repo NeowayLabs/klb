@@ -32,7 +32,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
 	keyFile := "./testdata/key.pub"
 
-	resources := createVMResources(f)
+	resources := createVMResources(t, f)
 
 	f.Shell.Run(
 		"./testdata/create_vm.sh",
@@ -55,7 +55,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	vms.AssertExists(t, vm, resources.availSet, vmSize, osType, resources.nic)
 }
 
-func createVMResources(f fixture.F) VMResources {
+func createVMResources(t *testing.T, f fixture.F) VMResources {
 
 	resources := VMResources{}
 	resources.availSet = genAvailSetName()
@@ -76,13 +76,10 @@ func createVMResources(f fixture.F) VMResources {
 		f.Location,
 	)
 
-	f.Shell.Run(
-		"./testdata/create_vnet.sh",
-		resources.vnet,
-		f.ResGroupName,
-		f.Location,
-		vnetAddress,
-	)
+	createVNet(t, f, vnetDescription{
+		name:     resources.vnet,
+		vnetAddr: vnetAddress,
+	})
 
 	f.Shell.Run(
 		"./testdata/create_nsg.sh",

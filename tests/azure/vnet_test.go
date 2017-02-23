@@ -3,6 +3,7 @@ package azure_test
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
@@ -13,20 +14,40 @@ func genVnetName() string {
 	return fmt.Sprintf("klb-vnet-tests-%d", rand.Intn(1000))
 }
 
+type vnetDescription struct {
+	name         string
+	vnetAddr     string
+	dnsAddresses []string
+}
+
+func createVNet(t *testing.T, f fixture.F, desc vnetDescription) {
+	if len(desc.dnsAddresses) == 0 {
+		desc.dnsAddresses = []string{"8.8.8.8"}
+	}
+	f.Shell.Run(
+		"./testdata/create_vnet.sh",
+		desc.name,
+		f.ResGroupName,
+		f.Location,
+		desc.vnetAddr,
+		strings.Join(desc.dnsAddresses, ","),
+	)
+
+}
+
 func testVnetCreate(t *testing.T, f fixture.F) {
 	vnet := genVnetName()
 	nsg := genNsgName()
 	subnet := genSubnetName()
 	vnetAddress := "10.116.0.0/16"
 	subnetAddress := "10.116.1.0/24"
+	dnsAddresses := []string{"8.8.8.8", "4.4.4.4"}
 
-	f.Shell.Run(
-		"./testdata/create_vnet.sh",
-		vnet,
-		f.ResGroupName,
-		f.Location,
-		vnetAddress,
-	)
+	createVNet(t, f, vnetDescription{
+		name:         vnet,
+		vnetAddr:     vnetAddress,
+		dnsAddresses: dnsAddresses,
+	})
 
 	f.Shell.Run(
 		"./testdata/create_nsg.sh",
