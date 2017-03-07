@@ -1,6 +1,5 @@
 #!/usr/bin/env nash
 
-import nashlib/all
 import klb/azure/all
 
 # RESOURCE Settings
@@ -10,6 +9,7 @@ LOCATION                     = "eastus"
 # VNET Settings
 VNET_NAME                    = $RESOURCE_GROUP_NAME+"-vnet"
 VNET_ADDRESS_SPACE           = "192.168.0.0/16"
+VNET_DNS_SERVER              = ("8.8.8.8" "8.8.4.4")
 
 SUBNET_PUBLIC_NAME           = $RESOURCE_GROUP_NAME+"-subnet-public"
 SUBNET_PUBLIC_ADDRESS_RANGE  = "192.168.1.0/24"
@@ -42,7 +42,7 @@ fn create_resource_group() {
 
 fn create_virtual_network() {
 	# VNET
-	azure_vnet_create($VNET_NAME, $RESOURCE_GROUP_NAME, $LOCATION, $VNET_ADDRESS_SPACE)
+	azure_vnet_create($VNET_NAME, $RESOURCE_GROUP_NAME, $LOCATION, $VNET_ADDRESS_SPACE, $VNET_DNS_SERVER)
 
 	# NSG
 	azure_nsg_create($NSG_PUBLIC_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
