@@ -53,9 +53,13 @@ fn create_virtual_network() {
 	azure_subnet_create($SUBNET_PRIVATE_NAME, $RESOURCE_GROUP_NAME, $VNET_NAME, $SUBNET_PRIVATE_ADDRESS_RANGE, $NSG_PRIVATE_NAME)
 
 	# RULE NSG
-	azure_nsg_add_inbound_rule("Inbound-ssh-rule-100", $RESOURCE_GROUP_NAME, $NSG_PUBLIC_NAME, "100", "*", "192.168.0.0/16", "22", "Allow")
-	azure_nsg_add_outbound_rule("Outbound-ssh-rule-100", $RESOURCE_GROUP_NAME, $NSG_PUBLIC_NAME, "100", "*", "192.168.0.0/16", "22", "Allow")
-
+	nsg <= azure_nsg_rule_new("Inbound-ssh-rule-100",$RESOURCE_GROUP_NAME, $NSG_PUBLIC_NAME, "100")
+	nsg <= azure_nsg_rule_set_protocol($nsg, "*")
+	nsg <= azure_nsg_rule_set_source_address($nsg, "192.168.0.0/16")
+	nsg <= azure_nsg_rule_set_destination_port($nsg, "22")
+	nsg <= azure_nsg_rule_set_access($nsg, "Allow")
+	azure_nsg_rule_create($nsg)
+	
 	# ROUTE TABLE
 	azure_route_table_create($ROUTE_TABLE_PUBLIC_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
 	azure_route_table_create($ROUTE_TABLE_PRIVATE_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
