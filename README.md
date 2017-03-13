@@ -150,49 +150,8 @@ When you have the subscription **ID** just run:
 ./tools/azure/createsp.sh <subscription-id> <service-principal-name> <password>
 ```
 
-//TODO: Write the docs bellow as an script
-
-You'll need to grant permissions to the service principal to
-authenticate on behalf of your subscription id.
-
-You'll need the Object ID of the just created `service principal`. To
-get this value, run the command below and look for the service name
-`klb-sp-tests`:
-
-```sh
-λ> azure ad sp list
-```
-
-And then issue the command below to grant permissions to the `klb-sp-tests`:
-
-```sh
-λ> azure role assignment create --objectId <klb-sp-tests object id> -o Owner -c /subscriptions/{AZURE_SUBSCRIPTION_ID}/
-```
-
-To get the `AZURE_CLIENT_ID` env var value run:
-
-```sh
-azure ad app list
-```
-
-And get the `AppId`. For example:
-
-```
-data:    AppId:                   (AZURE_CLIENT_ID)
-data:    ObjectId:                XXXX-XXXX-XXXX-XXXXXXXXX
-data:    DisplayName:             klb-sp-tests
-data:    IdentifierUris:          0=http://klb-sp-tests
-data:    ReplyUrls:
-data:    AvailableToOtherTenants: False
-data:    HomePage:                http://klb-sp-tests
-```
-
-If everything worked as expected, then export the required environment
-variables and run:
-
-```
-λ> make testall
-```
+If it executes with success you will have a valid service principal
+to start having some fun at Azure.
 
 P.S.:
 - barefoot running is not implemented.

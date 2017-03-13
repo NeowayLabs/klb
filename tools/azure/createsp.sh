@@ -1,23 +1,42 @@
 #!/usr/bin/env nash
 
 if len($ARGS) != "4" {
-	echo "usage: "+$ARGS[0]+" <service_principal>  <subscription_id> <password>"
+	echo "usage: "+$ARGS[0]+" <subscription_id>  <service_principal> <password>"
 	exit
 }
 
-SERVICE_PRINCIPAL = $ARGS[1]
-SUBSCRIPTION_ID   = $ARGS[2]
-PASSWORD          = $ARGS[3]
+subscription_id   = $ARGS[1]
+service_principal = $ARGS[2]
+password          = $ARGS[3]
 
-SUBSCRIPTION_NAME <= azure account show $SUBSCRIPTION_ID --json | jq -r ".[0].name"
+subscription_name <= azure account show $subscription_id --json | jq -r ".[0].name"
 
-echo "Setting azure subscription to: "+$SUBSCRIPTION_NAME+" ["+$SUBSCRIPTION_ID+"]"
-azure account set $SUBSCRIPTION_ID >[1=]
-echo "Creating azure service principal: "+$SERVICE_PRINCIPAL
+echo "Setting azure subscription to: "+$subscription_name+" ["+$subscription_id+"]"
+azure account set $subscription_id >[1=]
+echo "Creating azure service principal: "+$service_principal
 
-SERVICE_PRINCIPAL_OBJECT_ID <= azure ad sp create -n $SERVICE_PRINCIPAL -p $PASSWORD --json | jq -r ".objectId"
+service_principal_obj_id <= azure ad sp create -n $service_principal -p $password --json | jq -r ".objectId"
 
-echo "Granting access to "+$SERVICE_PRINCIPAL+" ["+$SERVICE_PRINCIPAL_OBJECT_ID+"] at: "+$SUBSCRIPTION_NAME+" ["+$SUBSCRIPTION_ID+"]"
-sleep 5
-azure role assignment create --objectId $SERVICE_PRINCIPAL_OBJECT_ID -o Owner -c "/subscriptions/"+$SUBSCRIPTION_ID+"/" >[1=]
-echo "Done"
+fn loop(func, count) {
+        sequence <= seq 1 $count
+        range <= split($sequence, "\n")
+        for i in $range {
+            $func()
+        }
+}
+
+fn grant_access() {
+        echo "Granting access to "+$service_principal+" ["+$service_principal_obj_id+"] at: "+$subscription_name+" ["+$subscription_id+"]"
+        -azure role assignment create --objectId $service_principal_obj_id -o Owner -c "/subscriptions/"+$subscription_id+"/" >[1=]
+        if $status == "0" {
+            echo "granted access with success"
+            exit("0")
+        }
+        echo "unable to grant access, trying again"
+        sleep 1
+}
+
+loop($grant_access, "5")
+
+echo "unable to grant access, try again expired"
+exit("1")
