@@ -125,40 +125,32 @@ If you have not configured the service principal yet, then the
 following section could be helpful.
 
 
-#### Setting up the service principal
+#### Creating a service principal
 
-The values of `AZURE_SUBSCRIPTION_ID` and `AZURE_TENANT_ID` could be
-obtained from the command below:
+Before anything, you must be logged before creating a service principal,
+so run:
 
-```sh
-λ> azure account show
-info:    Executing command account show
-data:    Name                        : <SUBSCRIPTION NAME>
-data:    ID                          : <AZURE_SUBSCRIPTION_ID>
-data:    State                       : Enabled
-data:    Tenant ID                   : <AZURE_TENANT_ID>
-data:    Is Default                  : true
-data:    Environment                 : AzureCloud
-data:    Has Certificate             : No
-data:    Has Access Token            : Yes
-data:    User name                   : <your email address>
-data:
-info:    account show command OK
+```
+azure login
 ```
 
-In the output above, `ID` is the `AZURE_SUBSCRIPTION_ID` and `Tenant ID`
-is the `AZURE_TENANT_ID`. The values of `AZURE_CLIENT_ID` and
-`AZURE_CLIENT_SECRET` came from a previously created service principal.
-To create a simple service principal to authenticate in the API,
-follow these steps below.
+Now that you are logged, first you need to
+define in which subscription you want to create it.
 
-The following command will create a service principal called `klb-sp-tests`
-with a password of your choice. This password will be the value of
-`AZURE_CLIENT_SECRET` environment variable.
+To know which subscriptions are available for your user run:
 
 ```sh
-λ> azure ad sp create -n klb-sp-tests -p <your password>
+azure account list
 ```
+
+You will need the **ID** of the subscription for the next step.
+When you have the subscription **ID** just run:
+
+```sh
+./tools/azure/createsp.sh <subscription-id> <service-principal-name> <password>
+```
+
+//TODO: Write the docs bellow as an script
 
 You'll need to grant permissions to the service principal to
 authenticate on behalf of your subscription id.
