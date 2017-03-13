@@ -1,6 +1,5 @@
 #!/usr/bin/env nash
 
-import nashlib/all
 import klb/azure/all
 
 # RESOURCE Settings
@@ -10,6 +9,7 @@ LOCATION                     = "eastus"
 # VNET Settings
 VNET_NAME                    = $RESOURCE_GROUP_NAME+"-vnet"
 VNET_ADDRESS_SPACE           = "192.168.0.0/16"
+VNET_DNS_SERVER              = ("8.8.8.8" "8.8.4.4")
 
 SUBNET_PUBLIC_NAME           = $RESOURCE_GROUP_NAME+"-subnet-public"
 SUBNET_PUBLIC_ADDRESS_RANGE  = "192.168.1.0/24"
@@ -42,7 +42,7 @@ fn create_resource_group() {
 
 fn create_virtual_network() {
 	# VNET
-	azure_vnet_create($VNET_NAME, $RESOURCE_GROUP_NAME, $LOCATION, $VNET_ADDRESS_SPACE)
+	azure_vnet_create($VNET_NAME, $RESOURCE_GROUP_NAME, $LOCATION, $VNET_ADDRESS_SPACE, $VNET_DNS_SERVER)
 
 	# NSG
 	azure_nsg_create($NSG_PUBLIC_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
@@ -53,9 +53,13 @@ fn create_virtual_network() {
 	azure_subnet_create($SUBNET_PRIVATE_NAME, $RESOURCE_GROUP_NAME, $VNET_NAME, $SUBNET_PRIVATE_ADDRESS_RANGE, $NSG_PRIVATE_NAME)
 
 	# RULE NSG
-	azure_nsg_add_inbound_rule("Inbound-ssh-rule-100", $RESOURCE_GROUP_NAME, $NSG_PUBLIC_NAME, "100", "*", "192.168.0.0/16", "22", "Allow")
-	azure_nsg_add_outbound_rule("Outbound-ssh-rule-100", $RESOURCE_GROUP_NAME, $NSG_PUBLIC_NAME, "100", "*", "192.168.0.0/16", "22", "Allow")
-
+	nsg <= azure_nsg_rule_new("Inbound-ssh-rule-100",$RESOURCE_GROUP_NAME, $NSG_PUBLIC_NAME, "100")
+	nsg <= azure_nsg_rule_set_protocol($nsg, "*")
+	nsg <= azure_nsg_rule_set_source_address($nsg, "192.168.0.0/16")
+	nsg <= azure_nsg_rule_set_destination_port($nsg, "22")
+	nsg <= azure_nsg_rule_set_access($nsg, "Allow")
+	azure_nsg_rule_create($nsg)
+	
 	# ROUTE TABLE
 	azure_route_table_create($ROUTE_TABLE_PUBLIC_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
 	azure_route_table_create($ROUTE_TABLE_PRIVATE_NAME, $RESOURCE_GROUP_NAME, $LOCATION)
