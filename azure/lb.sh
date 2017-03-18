@@ -3,18 +3,20 @@
 # LB functions
 
 fn azure_lb_create(name, group, location) {
-
-    azure network lb create 
-    	--name $name 
-    	--resource-group $group
-    	--location $location
+	(
+	    azure network lb create 
+	    	--name $name 
+	    	--resource-group $group
+	    	--location $location
+    )
 }
 
 fn azure_lb_delete(name, group) {
-
-    azure network lb delete 
-    	--name $name 
-    	--resource-group $group
+	(
+	    azure network lb delete 
+	    	--name $name 
+	    	--resource-group $group
+	)
 }
 
 
@@ -81,31 +83,38 @@ fn azure_lb_frontend_ip_set_subnet_vnet_name(instance, subnetvnetname) {
 }
 
 fn azure_lb_frontend_ip_create(instance) {
-    azure network lb frontend-ip create $instance
+    (
+    	azure network lb frontend-ip create $instance
+	)
 }
 
 fn azure_lb_frontend_ip_delete(name, group, lbname) {
-    azure network lb frontend-ip delete
-        --name $name
-    	--resource-group $group
-    	--lb-name $lbname
+    (
+	    azure network lb frontend-ip delete
+	        --name $name
+	    	--resource-group $group
+	    	--lb-name $lbname
+	)
 }
 
 # ADDRESS POLL functions
 
 fn azure_lb_addresspool_create(name, group, lbname) {
-
-	azure network lb address-pool create 
-		--resource-group $group 
-		--lb-name $lbname 
-		--name $name
+    (
+		azure network lb address-pool create 
+			--resource-group $group 
+			--lb-name $lbname 
+			--name $name
+	)
 }
 
 fn azure_lb_addresspool_delete(name, group, lbname) {
-    azure network lb address-pool delete
-        --name $name
-    	--resource-group $group
-    	--lb-name $lbname
+	(
+	    azure network lb address-pool delete
+	        --name $name
+	    	--resource-group $group
+	    	--lb-name $lbname
+	)
 }
 
 # RULE functions
@@ -187,14 +196,18 @@ fn azure_lb_rule_set_probename(instance, probename) {
 }
 
 fn azure_lb_rule_create(instance) {
-    azure network lb rule create $instance
+	(
+    	azure network lb rule create $instance
+   	)
 }
 
 fn azure_lb_rule_delete(name, group, lbname) {
-    azure network lb rule delete
-        --name $name
-    	--resource-group $group
-    	--lb-name $lbname
+    (
+	    azure network lb rule delete
+	        --name $name
+	    	--resource-group $group
+	    	--lb-name $lbname
+	)
 }
 
 # TODO: INBOUND-NAT-RULE functions
@@ -263,12 +276,16 @@ fn azure_lb_probe_set_path(instance, path) {
 }
 
 fn azure_lb_probe_create(instance) {
-    azure network lb probe create $instance
+	(
+    	azure network lb probe create $instance
+    )
 }
 
 fn azure_lb_probe_delete(name, group, lbname) {
-    azure network lb probe delete
-        --name $name
-    	--resource-group $group
-    	--lb-name $lbname
+    (
+	    azure network lb probe delete
+	        --name $name
+	    	--resource-group $group
+	    	--lb-name $lbname
+	)
 }
