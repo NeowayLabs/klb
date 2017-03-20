@@ -46,6 +46,7 @@ install: guard-NASHPATH
 	cp -pr ./aws $(libdir)
 	cp -pr ./azure $(libdir)
 	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
+	cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
 timeout=30m
 logger=file
