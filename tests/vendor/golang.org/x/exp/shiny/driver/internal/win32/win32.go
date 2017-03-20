@@ -66,7 +66,7 @@ func newWindow(opts *screen.NewWindowOptions) (syscall.Handle, error) {
 	if err != nil {
 		return 0, err
 	}
-	title, err := syscall.UTF16PtrFromString("Shiny Window")
+	title, err := syscall.UTF16PtrFromString(opts.GetTitle())
 	if err != nil {
 		return 0, err
 	}
