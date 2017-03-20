@@ -14,6 +14,7 @@ subnetaddr = $ARGS[4]
 lbname = $ARGS[5]
 frontendip_name = $ARGS[6]
 frontendip_private_ip = $ARGS[7]
+addrpoolname = $ARGS[8]
 
 vnet = "alb-tests-vnet"
 securitygroup = "alb-tests-securitygroup"
@@ -39,3 +40,5 @@ frontip <= azure_lb_frontend_ip_set_subnet_id($frontip, $subnetid)
 frontip <= azure_lb_frontend_ip_set_private_ip($frontip, $frontendip_private_ip)
 
 azure_lb_frontend_ip_create($frontip)
+
+azure_lb_addresspool_create($addrpoolname, $resgroup, $lbname)
