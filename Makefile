@@ -17,7 +17,12 @@ aws-deps:
 	pip install --user awscli
 
 azure-deps: jq-dep
-	sudo npm install -g azure-cli
+	wget https://nodejs.org/dist/v6.9.4/node-v6.9.4.tar.gz && \
+	tar xfv node-v6.9.4.tar.gz && \
+	cd node-v6.9.4 && \
+	./configure && \
+	make install && \
+	npm install -g azure-cli
 
 jq-dep: $(GOPATH)/bin/jq
 
