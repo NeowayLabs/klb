@@ -47,7 +47,7 @@ func testRouteTableAddInternetRoute(t *testing.T, f fixture.F) {
 	routeTable := genRouteTableName()
 	route := routeTable + "route-internet-test"
 	address := "0.0.0.0/0"
-	hoptype := "VirtualAppliance"
+	hoptype := "Internet"
 
 	f.Shell.Run(
 		"./testdata/create_route_table.sh",
