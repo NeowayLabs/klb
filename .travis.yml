@@ -1,0 +1,14 @@
+language: go
+
+sudo: required
+
+go:
+  - 1.7
+  - 1.8
+  - tip
+
+install:
+  - make deps
+
+script:
+  - travis_wait 30 make test
