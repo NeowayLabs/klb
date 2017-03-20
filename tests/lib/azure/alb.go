@@ -61,7 +61,7 @@ func assertFrontendIp(
 ) error {
 	front_ips := prop.FrontendIPConfigurations
 	if front_ips == nil {
-		return fmt.Errorf("no frontend ip found in: %+v", prop)
+		return fmt.Errorf("no frontend ip found in: %s", prop)
 	}
 
 	for _, front_ip := range *front_ips {
@@ -74,17 +74,17 @@ func assertFrontendIp(
 
 		ip_prop := front_ip.FrontendIPConfigurationPropertiesFormat
 		if ip_prop == nil {
-			return fmt.Errorf("no ip config found in: %+v", front_ip)
+			return fmt.Errorf("no ip config found in: %s", front_ip)
 		}
 		if ip_prop.PrivateIPAddress == nil {
-			return fmt.Errorf("no private ip found in: %+v", ip_prop)
+			return fmt.Errorf("no private ip found in: %s", ip_prop)
 		}
 		if privateIP == *ip_prop.PrivateIPAddress {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("unable to find %q private ip %q at %+v", prop)
+	return fmt.Errorf("unable to find %q private ip %q at %s", frontendipName, privateIP, prop)
 }
 
 func assertBackendPool(
@@ -94,7 +94,7 @@ func assertBackendPool(
 ) error {
 	backendpools := prop.BackendAddressPools
 	if backendpools == nil {
-		return fmt.Errorf("no backend pools found in: %+v", prop)
+		return fmt.Errorf("no backend pools found in: %s", prop)
 	}
 
 	for _, backendpool := range *backendpools {
@@ -105,7 +105,7 @@ func assertBackendPool(
 			return nil
 		}
 	}
-	return fmt.Errorf("unable to backend pool %q at %+v", prop)
+	return fmt.Errorf("unable to find backend pool %q at %s", poolname, prop)
 }
 
 func assertConfig(
@@ -118,7 +118,7 @@ func assertConfig(
 
 	prop := lb.LoadBalancerPropertiesFormat
 	if prop == nil {
-		return fmt.Errorf("no properties found on lb: %+v", lb)
+		return fmt.Errorf("no properties found on lb: %s", lb)
 	}
 
 	err := assertFrontendIp(t, *prop, frontendipName, privateIP)
