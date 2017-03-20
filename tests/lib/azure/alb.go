@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -22,22 +23,26 @@ func NewLoadBalancers(f fixture.F) *LoadBalancers {
 	return as
 }
 
-// AssertExists checks if availability sets exists in the resource group.
+// AssertExists checks if load balancer exists in the resource group.
 // Fail tests otherwise.
-func (av *LoadBalancers) AssertExists(t *testing.T, name string) {
-	av.f.Retrier.Run(newID("LoadBalancers", "AssertExists", name), func() error {
-		_, err := av.client.Get(av.f.ResGroupName, name)
-		return err
-	})
-}
-
-// AssertDeleted checks if resource was correctly deleted.
-func (av *LoadBalancers) AssertDeleted(t *testing.T, name string) {
-	av.f.Retrier.Run(newID("LoadBalancers", "AssertDeleted", name), func() error {
-		_, err := av.client.Get(av.f.ResGroupName, name)
-		if err == nil {
-			return fmt.Errorf("resource %s should not exist", name)
+func (lb *LoadBalancers) AssertExists(t *testing.T, name string) {
+	lb.f.Retrier.Run(newID("LoadBalancers", "AssertExists", name), func() error {
+		res, err := lb.client.List(lb.f.ResGroupName)
+		if err != nil {
+			return err
 		}
-		return nil
+		if res.Value == nil {
+			return errors.New("no load balancers found")
+		}
+		lbs := *res.Value
+		for _, l := range lbs {
+			if l.Name == nil {
+				continue
+			}
+			if name == *l.Name {
+				return nil
+			}
+		}
+		return fmt.Errorf("unable to find %s in %s", name, res.Value)
 	})
 }

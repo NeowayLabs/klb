@@ -1,49 +1,35 @@
 package azure_test
 
 import (
-	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
-func genALBName() string {
-	return fmt.Sprintf("klb-alb-tests-%d", rand.Intn(1000))
-}
-
 func testALBCreate(t *testing.T, f fixture.F) {
-	name := genALBName()
+	const cidr = "10.120.0.0/16"
+	const subnetaddr = "10.120.1.0/24"
+	const lbname = "loadbalancer"
+	const frontendip_name = "lbfrontendip"
+	const frontendip_private_ip = "10.120.1.4"
+	const addrpoolname = "lbpool"
+
 	f.Shell.Run(
 		"./testdata/create_alb.sh",
 		f.ResGroupName,
-		name,
 		f.Location,
+		cidr,
+		subnetaddr,
+		lbname,
+		frontendip_name,
+		frontendip_private_ip,
+		addrpoolname,
 	)
-	loadbalancer := azure.NewLoadBalancer(f)
-	loadbalancer.AssertExists(t, name)
+
+	loadbalancer := azure.NewLoadBalancers(f)
+	loadbalancer.AssertExists(t, lbname)
 }
-
-//func testAvailSetDelete(t *testing.T, f fixture.F) {
-//loadbalancer := genALBName()
-//f.Shell.Run(
-//"./testdata/create_avail_set.sh",
-//f.ResGroupName,
-//loadbalancer,
-//f.Location,
-//)
-
-//availSets := azure.NewAvailSet(f)
-//availSets.AssertExists(t, loadbalancer)
-
-//f.Shell.Run(
-//"./testdata/delete_avail_set.sh",
-//f.ResGroupName,
-//loadbalancer,
-//)
-//availSets.AssertDeleted(t, loadbalancer)
-//}
 
 func TestLoadBalancer(t *testing.T) {
 	t.Parallel()
