@@ -12,8 +12,8 @@ func testALBCreate(t *testing.T, f fixture.F) {
 	const subnetaddr = "10.120.1.0/24"
 	const lbname = "loadbalancer"
 	const frontendip_name = "lbfrontendip"
-	const frontendip_private_ip = "10.120.1.4"
-	const addrpoolname = "lbpool"
+	const lb_private_ip = "10.120.1.4"
+	const poolname = "lbpool"
 
 	f.Shell.Run(
 		"./testdata/create_alb.sh",
@@ -23,12 +23,12 @@ func testALBCreate(t *testing.T, f fixture.F) {
 		subnetaddr,
 		lbname,
 		frontendip_name,
-		frontendip_private_ip,
-		addrpoolname,
+		lb_private_ip,
+		poolname,
 	)
 
 	loadbalancer := azure.NewLoadBalancers(f)
-	loadbalancer.AssertExists(t, lbname)
+	loadbalancer.AssertExists(t, lbname, frontendip_name, lb_private_ip, poolname)
 }
 
 func TestLoadBalancer(t *testing.T) {
