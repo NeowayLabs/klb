@@ -18,7 +18,7 @@ aws-deps:
 
 azure-deps: jq-dep
 	wget https://nodejs.org/dist/v6.9.4/node-v6.9.4.tar.gz && \
-	tar xfv node-v6.9.4.tar.gz && \
+	tar xf node-v6.9.4.tar.gz && \
 	cd node-v6.9.4 && \
 	./configure && \
 	make install && \
