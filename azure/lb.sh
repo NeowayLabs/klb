@@ -4,38 +4,25 @@
 
 fn azure_lb_create(name, group, location) {
 	(
-	    azure network lb create 
-	    	--name $name 
-	    	--resource-group $group
-	    	--location $location
-    )
+		azure network lb create --name $name --resource-group $group --location $location
+	)
 }
 
 fn azure_lb_delete(name, group) {
 	(
-	    azure network lb delete 
-	    	--name $name 
-	    	--resource-group $group
+		azure network lb delete --name $name --resource-group $group
 	)
 }
-
 
 # FRONTEND IP functions
 
 fn azure_lb_frontend_ip_new(name, group) {
-
-   	instance = (
-        "--name" 
-        $name
-		"--resource-group"
-        $group 
-	)
+	instance = ("--name" $name "--resource-group" $group)
 
 	return $instance
 }
 
 fn azure_lb_frontend_ip_set_lbname(instance, lbname) {
-
 	instance <= append($instance, "--lb-name")
 	instance <= append($instance, $lbname)
 
@@ -43,7 +30,6 @@ fn azure_lb_frontend_ip_set_lbname(instance, lbname) {
 }
 
 fn azure_lb_frontend_ip_set_private_ip(instance, private_ip) {
-
 	instance <= append($instance, "--private-ip-address")
 	instance <= append($instance, $private_ip)
 
@@ -51,7 +37,6 @@ fn azure_lb_frontend_ip_set_private_ip(instance, private_ip) {
 }
 
 fn azure_lb_frontend_ip_set_id_public_ip(instance, idpublicip) {
-
 	instance <= append($instance, "--public-ip-id")
 	instance <= append($instance, $idpublicip)
 
@@ -59,7 +44,6 @@ fn azure_lb_frontend_ip_set_id_public_ip(instance, idpublicip) {
 }
 
 fn azure_lb_frontend_ip_set_subnet_id(instance, subnetid) {
-
 	instance <= append($instance, "--subnet-id")
 	instance <= append($instance, $subnetid)
 
@@ -67,7 +51,6 @@ fn azure_lb_frontend_ip_set_subnet_id(instance, subnetid) {
 }
 
 fn azure_lb_frontend_ip_set_subnet_name(instance, subnetname) {
-
 	instance <= append($instance, "--subnet-name")
 	instance <= append($instance, $subnetname)
 
@@ -75,7 +58,6 @@ fn azure_lb_frontend_ip_set_subnet_name(instance, subnetname) {
 }
 
 fn azure_lb_frontend_ip_set_subnet_vnet_name(instance, subnetvnetname) {
-
 	instance <= append($instance, "--subnet-vnet-name")
 	instance <= append($instance, $subnetvnetname)
 
@@ -83,56 +65,47 @@ fn azure_lb_frontend_ip_set_subnet_vnet_name(instance, subnetvnetname) {
 }
 
 fn azure_lb_frontend_ip_create(instance) {
-    (
-    	azure network lb frontend-ip create $instance
-	)
+	(azure network lb frontend-ip create $instance)
 }
 
 fn azure_lb_frontend_ip_delete(name, group, lbname) {
-    (
-	    azure network lb frontend-ip delete
-	        --name $name
-	    	--resource-group $group
-	    	--lb-name $lbname
+	(
+		azure network lb frontend-ip delete
+						--name $name
+						--resource-group $group
+						--lb-name $lbname
 	)
 }
 
 # ADDRESS POLL functions
 
 fn azure_lb_addresspool_create(name, group, lbname) {
-    (
-		azure network lb address-pool create 
-			--resource-group $group 
-			--lb-name $lbname 
-			--name $name
+	(
+		azure network lb address-pool create
+						--resource-group $group
+						--lb-name $lbname
+						--name $name
 	)
 }
 
 fn azure_lb_addresspool_delete(name, group, lbname) {
 	(
-	    azure network lb address-pool delete
-	        --name $name
-	    	--resource-group $group
-	    	--lb-name $lbname
+		azure network lb address-pool delete
+						--name $name
+						--resource-group $group
+						--lb-name $lbname
 	)
 }
 
 # RULE functions
 
 fn azure_lb_rule_new(name, group) {
-
-   	instance = (
-        "--name" 
-        $name
-		"--resource-group"
-        $group 
-	)
+	instance = ("--name" $name "--resource-group" $group)
 
 	return $instance
 }
 
 fn azure_lb_rule_set_lbname(instance, lbname) {
-
 	instance <= append($instance, "--lb-name")
 	instance <= append($instance, $lbname)
 
@@ -140,7 +113,6 @@ fn azure_lb_rule_set_lbname(instance, lbname) {
 }
 
 fn azure_lb_rule_set_protocol(instance, protocol) {
-
 	instance <= append($instance, "--protocol")
 	instance <= append($instance, $protocol)
 
@@ -148,7 +120,6 @@ fn azure_lb_rule_set_protocol(instance, protocol) {
 }
 
 fn azure_lb_rule_set_frontendport(instance, frontendport) {
-
 	instance <= append($instance, "--frontend-port")
 	instance <= append($instance, $frontendport)
 
@@ -156,7 +127,6 @@ fn azure_lb_rule_set_frontendport(instance, frontendport) {
 }
 
 fn azure_lb_rule_set_backendport(instance, backendport) {
-
 	instance <= append($instance, "--backend-port")
 	instance <= append($instance, $backendport)
 
@@ -164,7 +134,6 @@ fn azure_lb_rule_set_backendport(instance, backendport) {
 }
 
 fn azure_lb_rule_set_enablefloatingip(instance, enablefloatingip) {
-
 	instance <= append($instance, "--enable-floating-ip")
 	instance <= append($instance, $enablefloatingip)
 
@@ -172,7 +141,6 @@ fn azure_lb_rule_set_enablefloatingip(instance, enablefloatingip) {
 }
 
 fn azure_lb_rule_set_frontendipname(instance, frontendipname) {
-
 	instance <= append($instance, "--frontend-ip-name")
 	instance <= append($instance, $frontendipname)
 
@@ -180,7 +148,6 @@ fn azure_lb_rule_set_frontendipname(instance, frontendipname) {
 }
 
 fn azure_lb_rule_set_addresspoolname(instance, addresspoolname) {
-
 	instance <= append($instance, "--backend-address-pool-name")
 	instance <= append($instance, $addresspoolname)
 
@@ -188,7 +155,6 @@ fn azure_lb_rule_set_addresspoolname(instance, addresspoolname) {
 }
 
 fn azure_lb_rule_set_probename(instance, probename) {
-
 	instance <= append($instance, "--probe-name")
 	instance <= append($instance, $probename)
 
@@ -196,39 +162,29 @@ fn azure_lb_rule_set_probename(instance, probename) {
 }
 
 fn azure_lb_rule_create(instance) {
-	(
-    	azure network lb rule create $instance
-   	)
+	(azure network lb rule create $instance)
 }
 
 fn azure_lb_rule_delete(name, group, lbname) {
-    (
-	    azure network lb rule delete
-	        --name $name
-	    	--resource-group $group
-	    	--lb-name $lbname
+	(
+		azure network lb rule delete
+					--name $name
+					--resource-group $group
+					--lb-name $lbname
 	)
 }
 
 # TODO: INBOUND-NAT-RULE functions
 
-
 # PROBE functions
 
 fn azure_lb_probe_new(name, group) {
-
-   	instance = (
-        "--name" 
-        $name
-		"--resource-group"
-        $group 
-	)
+	instance = ("--name" $name "--resource-group" $group)
 
 	return $instance
 }
 
 fn azure_lb_probe_set_lbname(instance, lbname) {
-
 	instance <= append($instance, "--lb-name")
 	instance <= append($instance, $lbname)
 
@@ -236,7 +192,6 @@ fn azure_lb_probe_set_lbname(instance, lbname) {
 }
 
 fn azure_lb_probe_set_protocol(instance, protocol) {
-
 	instance <= append($instance, "--protocol")
 	instance <= append($instance, $protocol)
 
@@ -244,7 +199,6 @@ fn azure_lb_probe_set_protocol(instance, protocol) {
 }
 
 fn azure_lb_probe_set_port(instance, port) {
-
 	instance <= append($instance, "--port")
 	instance <= append($instance, $port)
 
@@ -252,7 +206,6 @@ fn azure_lb_probe_set_port(instance, port) {
 }
 
 fn azure_lb_probe_set_interval(instance, interval) {
-
 	instance <= append($instance, "--interval")
 	instance <= append($instance, $interval)
 
@@ -260,7 +213,6 @@ fn azure_lb_probe_set_interval(instance, interval) {
 }
 
 fn azure_lb_probe_set_count(instance, count) {
-
 	instance <= append($instance, "--count")
 	instance <= append($instance, $count)
 
@@ -268,7 +220,6 @@ fn azure_lb_probe_set_count(instance, count) {
 }
 
 fn azure_lb_probe_set_path(instance, path) {
-
 	instance <= append($instance, "--path")
 	instance <= append($instance, $path)
 
@@ -276,16 +227,14 @@ fn azure_lb_probe_set_path(instance, path) {
 }
 
 fn azure_lb_probe_create(instance) {
-	(
-    	azure network lb probe create $instance
-    )
+	(azure network lb probe create $instance)
 }
 
 fn azure_lb_probe_delete(name, group, lbname) {
-    (
-	    azure network lb probe delete
-	        --name $name
-	    	--resource-group $group
-	    	--lb-name $lbname
+	(
+		azure network lb probe delete
+					--name $name
+					--resource-group $group
+					--lb-name $lbname
 	)
 }
