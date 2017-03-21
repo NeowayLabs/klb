@@ -82,6 +82,26 @@ fn azure_nic_set_lb_address_pool_ids(instance, lbpoolids) {
 	return $instance
 }
 
+fn azure_nic_set_lb_inbound_nat_rule_ids(instance, natruleids) {
+	fn join(list, sep) {
+		out = ""
+
+		for l in $list {
+			out = $out+$l+$sep
+		}
+
+		out <= echo $out | sed "s/"+$sep+"$//g"
+
+		return $out
+	}
+
+	natids   <= join($natruleids, ",")
+	instance <= append($instance, "--lb-inbound-nat-rule-ids")
+	instance <= append($instance, $natids)
+
+	return $instance
+}
+
 fn azure_nic_create(instance) {
 	azure network nic create $instance
 }
