@@ -11,18 +11,20 @@ endif
 all:
 	@echo "did you mean 'make test' ?"
 
+bootstrapci:
+	@echo "bootstraping CI host"
+	curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+	apt-get install nodejs jq
+	pip install --user awscli
+	npm install -g azure-cli
+
 deps: aws-deps azure-deps jq-dep
 
 aws-deps:
 	pip install --user awscli
 
 azure-deps: jq-dep
-	wget https://nodejs.org/dist/v6.9.4/node-v6.9.4.tar.gz && \
-	tar xf node-v6.9.4.tar.gz && \
-	cd node-v6.9.4 && \
-	./configure && \
-	make install && \
-	npm install -g azure-cli
+	sudo npm install -g azure-cli
 
 jq-dep: $(GOPATH)/bin/jq
 

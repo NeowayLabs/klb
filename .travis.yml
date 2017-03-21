@@ -1,14 +1,12 @@
 language: go
 
-sudo: required
-
 go:
   - 1.7
   - 1.8
   - tip
 
 install:
-  - make deps
+  - make bootstrapci
 
 script:
   - travis_wait 30 make test
