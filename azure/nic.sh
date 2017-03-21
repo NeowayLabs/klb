@@ -62,7 +62,7 @@ fn azure_nic_set_ipfw(instance, ipfw) {
 	return $instance
 }
 
-fn azure_nic_set_lb_address_pool_ids(instance, lbpoolids) {
+fn azure_nic_set_lb_address_pool_ids(instance, addresspoolids) {
 	fn join(list, sep) {
 		out = ""
 
@@ -75,9 +75,9 @@ fn azure_nic_set_lb_address_pool_ids(instance, lbpoolids) {
 		return $out
 	}
 
-	lbids    <= join($lbpoolids, ",")
+	poolids    <= join($addresspoolids, ",")
 	instance <= append($instance, "--lb-address-pool-ids")
-	instance <= append($instance, $lbids)
+	instance <= append($instance, $poolids)
 
 	return $instance
 }
