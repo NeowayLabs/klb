@@ -13,10 +13,10 @@ all:
 
 bootstrapci:
 	@echo "bootstraping CI host"
-	curl -sL https://deb.nodesource.com/setup_6.x | bash -
-	apt-get install nodejs jq
-	pip install --user awscli
-	npm install -g azure-cli
+	curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
+	sudo apt-get install nodejs jq
+	sudo pip install --user awscli
+	sudo npm install -g azure-cli
 
 deps: aws-deps azure-deps jq-dep
 

@@ -5,6 +5,8 @@ go:
   - 1.8
   - tip
 
+sudo: required
+
 install:
   - make bootstrapci
 
