@@ -7,7 +7,7 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
-func testALBCreate(t *testing.T, f fixture.F) {
+func testLoadBalancer(t *testing.T, f fixture.F) {
 	const cidr = "10.120.0.0/16"
 	const subnetaddr = "10.120.1.0/24"
 	const lbname = "loadbalancer"
@@ -33,5 +33,5 @@ func testALBCreate(t *testing.T, f fixture.F) {
 
 func TestLoadBalancer(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "LoadBalancer_Create", timeout, location, testALBCreate)
+	fixture.Run(t, "LoadBalancer", timeout, location, testLoadBalancer)
 }
