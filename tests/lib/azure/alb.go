@@ -59,27 +59,27 @@ func assertFrontendIp(
 	frontendipName string,
 	privateIP string,
 ) error {
-	front_ips := prop.FrontendIPConfigurations
-	if front_ips == nil {
+	frontIPs := prop.FrontendIPConfigurations
+	if frontIPs == nil {
 		return fmt.Errorf("no frontend ip found in: %s", prop)
 	}
 
-	for _, front_ip := range *front_ips {
-		if front_ip.Name == nil {
+	for _, frontIP := range *frontIPs {
+		if frontIP.Name == nil {
 			continue
 		}
-		if frontendipName != *front_ip.Name {
+		if frontendipName != *frontIP.Name {
 			continue
 		}
 
-		ip_prop := front_ip.FrontendIPConfigurationPropertiesFormat
-		if ip_prop == nil {
-			return fmt.Errorf("no ip config found in: %s", front_ip)
+		ipProp := frontIP.FrontendIPConfigurationPropertiesFormat
+		if ipProp == nil {
+			return fmt.Errorf("no ip config found in: %s", frontIP)
 		}
-		if ip_prop.PrivateIPAddress == nil {
-			return fmt.Errorf("no private ip found in: %s", ip_prop)
+		if ipProp.PrivateIPAddress == nil {
+			return fmt.Errorf("no private ip found in: %s", ipProp)
 		}
-		if privateIP == *ip_prop.PrivateIPAddress {
+		if privateIP == *ipProp.PrivateIPAddress {
 			return nil
 		}
 	}
