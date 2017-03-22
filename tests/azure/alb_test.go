@@ -29,6 +29,41 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 
 	loadbalancer := azure.NewLoadBalancers(f)
 	loadbalancer.AssertExists(t, lbname, frontendip_name, lb_private_ip, poolname)
+
+	probes := []azure.LoadBalancerProbe{
+		{
+			Name:     "tcp",
+			Protocol: "tcp",
+			Port:     "7777",
+			Interval: "60",
+			Count:    "10",
+		},
+		{
+			Name:     "http",
+			Protocol: "http",
+			Port:     "7776",
+			Interval: "120",
+			Count:    "20",
+			Path:     "/healthz",
+		},
+	}
+
+	for _, p := range probes {
+		args := []string{
+			f.ResGroupName,
+			p.Name,
+			lbname,
+			p.Port,
+			p.Protocol,
+			p.Interval,
+			p.Count,
+		}
+		if p.Path != "" {
+			args = append(args, p.Path)
+		}
+		f.Shell.Run("./testdata/add_alb_probe.sh", args...)
+		loadbalancer.AssertProbeExists(t, lbname, p)
+	}
 }
 
 func TestLoadBalancer(t *testing.T) {

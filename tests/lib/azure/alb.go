@@ -14,6 +14,15 @@ type LoadBalancers struct {
 	f      fixture.F
 }
 
+type LoadBalancerProbe struct {
+	Name     string
+	Protocol string
+	Port     string
+	Interval string
+	Count    string
+	Path     string
+}
+
 func NewLoadBalancers(f fixture.F) *LoadBalancers {
 	as := &LoadBalancers{
 		client: network.NewLoadBalancersClient(f.Session.SubscriptionID),
@@ -33,24 +42,45 @@ func (lb *LoadBalancers) AssertExists(
 	poolname string,
 ) {
 	lb.f.Retrier.Run(newID("LoadBalancers", "AssertExists", name), func() error {
-		res, err := lb.client.List(lb.f.ResGroupName)
+		loadbalancer, err := lb.getLoadBalancer(t, name)
 		if err != nil {
 			return err
 		}
-		if res.Value == nil {
-			return errors.New("no load balancers found")
-		}
-		lbs := *res.Value
-		for _, l := range lbs {
-			if l.Name == nil {
-				continue
-			}
-			if name == *l.Name {
-				return assertConfig(t, l, frontendipName, privateIP, poolname)
-			}
-		}
-		return fmt.Errorf("unable to find %s in %s", name, res.Value)
+		return assertConfig(t, loadbalancer, frontendipName, privateIP, poolname)
 	})
+}
+
+// AssertProbeExists checks if load balancer exists and it has the given probe.
+// Fail tests otherwise.
+func (lb *LoadBalancers) AssertProbeExists(t *testing.T, lbname string, p LoadBalancerProbe) {
+	lb.f.Retrier.Run(newID("LoadBalancers", "AssertProbeExists", p.Name), func() error {
+		_, err := lb.getLoadBalancer(t, lbname)
+		if err != nil {
+			return err
+		}
+		// TODO
+		return nil
+	})
+}
+
+func (lb *LoadBalancers) getLoadBalancer(t *testing.T, name string) (network.LoadBalancer, error) {
+	res, err := lb.client.List(lb.f.ResGroupName)
+	if err != nil {
+		return network.LoadBalancer{}, err
+	}
+	if res.Value == nil {
+		return network.LoadBalancer{}, errors.New("no load balancers found")
+	}
+	lbs := *res.Value
+	for _, l := range lbs {
+		if l.Name == nil {
+			continue
+		}
+		if name == *l.Name {
+			return l, nil
+		}
+	}
+	return network.LoadBalancer{}, fmt.Errorf("unable to find %s in %s", name, res.Value)
 }
 
 func assertFrontendIp(
