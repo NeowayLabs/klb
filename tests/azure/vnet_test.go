@@ -82,7 +82,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 		routeTable,
 	)
 	vnets := azure.NewVnet(f)
-	vnets.AssertExists(t, vnet, vnetAddress, routeTable)
+	vnets.AssertExists(t, vnet, vnetAddress, routeTable, dnsAddresses)
 }
 
 func TestVnet(t *testing.T) {
