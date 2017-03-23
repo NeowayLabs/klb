@@ -1,6 +1,7 @@
 package azure_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
@@ -32,18 +33,18 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 
 	probes := []azure.LoadBalancerProbe{
 		{
-			Name:     "tcp",
-			Protocol: "tcp",
-			Port:     "7777",
-			Interval: "60",
-			Count:    "10",
+			Name:     "tcpprobe",
+			Protocol: "Tcp",
+			Port:     7777,
+			Interval: 60,
+			Count:    10,
 		},
 		{
-			Name:     "http",
-			Protocol: "http",
-			Port:     "7776",
-			Interval: "120",
-			Count:    "20",
+			Name:     "httpprobe",
+			Protocol: "Http",
+			Port:     7776,
+			Interval: 120,
+			Count:    20,
 			Path:     "/healthz",
 		},
 	}
@@ -53,10 +54,10 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 			f.ResGroupName,
 			p.Name,
 			lbname,
-			p.Port,
+			strconv.Itoa(int(p.Port)),
 			p.Protocol,
-			p.Interval,
-			p.Count,
+			strconv.Itoa(int(p.Interval)),
+			strconv.Itoa(int(p.Count)),
 		}
 		if p.Path != "" {
 			args = append(args, p.Path)

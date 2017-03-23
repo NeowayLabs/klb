@@ -17,9 +17,9 @@ type LoadBalancers struct {
 type LoadBalancerProbe struct {
 	Name     string
 	Protocol string
-	Port     string
-	Interval string
-	Count    string
+	Port     int32
+	Interval int32
+	Count    int32
 	Path     string
 }
 
@@ -54,13 +54,88 @@ func (lb *LoadBalancers) AssertExists(
 // Fail tests otherwise.
 func (lb *LoadBalancers) AssertProbeExists(t *testing.T, lbname string, p LoadBalancerProbe) {
 	lb.f.Retrier.Run(newID("LoadBalancers", "AssertProbeExists", p.Name), func() error {
-		_, err := lb.getLoadBalancer(t, lbname)
+		loadbalancer, err := lb.getLoadBalancer(t, lbname)
 		if err != nil {
 			return err
 		}
-		// TODO
-		return nil
+		prop := loadbalancer.LoadBalancerPropertiesFormat
+		if prop == nil {
+			return fmt.Errorf("no properties found on: %s", loadbalancer)
+		}
+		if prop.Probes == nil {
+			return fmt.Errorf("no probes found on: %s", prop)
+		}
+
+		for _, probe := range *prop.Probes {
+			if probe.Name == nil {
+				continue
+			}
+			name := *probe.Name
+			lb.f.Logger.Printf("analyzing probe: %q", name)
+			if name != p.Name {
+				continue
+			}
+			probeProperties, err := checkProbePropertiesFormat(probe.ProbePropertiesFormat)
+			if err != nil {
+				return err
+			}
+			protocol := string(probeProperties.Protocol)
+			port := *probeProperties.Port
+			path := *probeProperties.RequestPath
+			interval := *probeProperties.IntervalInSeconds
+			if string(probeProperties.Protocol) != p.Protocol {
+				return fmt.Errorf(
+					"expected probe protocol: %q, got: %q",
+					p.Protocol,
+					protocol,
+				)
+			}
+			if port != p.Port {
+				return fmt.Errorf(
+					"expected probe port: %d, got: %d",
+					p.Port,
+					port,
+				)
+			}
+			if interval != p.Interval {
+				return fmt.Errorf(
+					"expected probe interval: %d, interval: %d",
+					p.Interval,
+					interval,
+				)
+			}
+			if path != p.Path {
+				return fmt.Errorf(
+					"expected probe port: %s, got: %s",
+					p.Path,
+					path,
+				)
+			}
+			return nil
+		}
+		return fmt.Errorf("unable to find probe: %+v on lb: %s", p, lbname)
 	})
+}
+
+func checkProbePropertiesFormat(p *network.ProbePropertiesFormat) (*network.ProbePropertiesFormat, error) {
+	if p == nil {
+		return nil, fmt.Errorf("probe %q got no properties", p)
+	}
+	// Missing a struct validator here, if we lock to Go 1.8 could
+	// Initialize struct with same layout and validation tags.
+	if p.Port == nil {
+		return nil, fmt.Errorf("absent Port on %q ", p)
+	}
+	if p.IntervalInSeconds == nil {
+		return nil, fmt.Errorf("absent IntervalInSeconds on %q ", p)
+	}
+	if p.RequestPath == nil {
+		if p.Protocol == "Http" {
+			return nil, fmt.Errorf("absent RequestPath on %q ", p)
+		}
+		p.RequestPath = new(string)
+	}
+	return p, nil
 }
 
 func (lb *LoadBalancers) getLoadBalancer(t *testing.T, name string) (network.LoadBalancer, error) {
