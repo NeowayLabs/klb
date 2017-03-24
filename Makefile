@@ -11,11 +11,8 @@ endif
 all:
 	@echo "did you mean 'make test' ?"
 
-bootstrapci:
-	@echo "bootstraping CI host"
-	sudo apt-get install jq
-	sudo pip install --user awscli
-	sudo npm install -g azure-cli
+bootstrapci: deps
+	@echo "bootstrapped CI host"
 
 deps: aws-deps azure-deps jq-dep
 
@@ -23,7 +20,7 @@ aws-deps:
 	pip install --user awscli
 
 azure-deps: jq-dep
-	sudo npm install -g azure-cli
+	npm install -g azure-cli
 
 jq-dep: $(GOPATH)/bin/jq
 
