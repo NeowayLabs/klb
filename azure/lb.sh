@@ -14,6 +14,16 @@ fn azure_lb_delete(name, group) {
 	)
 }
 
+fn azure_lb_get_id(name, group) {
+	resp <= (
+		azure network lb show --name $name --resource-group $group --json
+	)
+
+	id   <= echo $resp | jq -r ".id"
+
+	return $id
+}
+
 # FRONTEND IP functions
 
 fn azure_lb_frontend_ip_new(name, group) {
@@ -95,6 +105,18 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 						--resource-group $group
 						--lb-name $lbname
 	)
+}
+
+fn azure_lb_addresspool_get_id(lbname, group) {
+	resp <= (
+		azure network lb address-pool list $group $lbname
+								--json
+								
+	)
+
+	id   <= echo $resp | jq -r ".[0].id"
+
+	return $id
 }
 
 # RULE functions
