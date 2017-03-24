@@ -13,8 +13,7 @@ all:
 
 bootstrapci:
 	@echo "bootstraping CI host"
-	curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
-	sudo apt-get install nodejs jq
+	sudo apt-get install jq
 	sudo pip install --user awscli
 	sudo npm install -g azure-cli
 
