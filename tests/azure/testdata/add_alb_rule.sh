@@ -1,16 +1,19 @@
 #!/usr/bin/env nash
 
 import ../../azure/login
+import ../../azure/lb
 
 resgroup        = $ARGS[1]
 rulename        = $ARGS[2]
 lbname          = $ARGS[3]
 probename       = $ARGS[4]
 frontendipname  = $ARGS[5]
-frontendport    = $ARGS[6]
-backendport     = $ARGS[7]
-protocol        = $ARGS[8]
-addresspoolname = $ARGS[9]
+addresspoolname = $ARGS[6]
+protocol        = $ARGS[7]
+frontendport    = $ARGS[8]
+backendport     = $ARGS[9]
+
+azure_login()
 
 rule <= azure_lb_rule_new($rulename, $resgroup)
 rule <= azure_lb_rule_set_lbname($rule, $lbname)

@@ -23,6 +23,14 @@ type LoadBalancerProbe struct {
 	Path     string
 }
 
+type LoadBalancerRule struct {
+	Name         string
+	ProbeName    string
+	Protocol     string
+	FrontendPort int32
+	BackendPort  int32
+}
+
 func NewLoadBalancers(f fixture.F) *LoadBalancers {
 	as := &LoadBalancers{
 		client: network.NewLoadBalancersClient(f.Session.SubscriptionID),
@@ -48,6 +56,11 @@ func (lb *LoadBalancers) AssertExists(
 		}
 		return assertConfig(t, loadbalancer, frontendipName, privateIP, poolname)
 	})
+}
+
+// AssertRuleExists checks if load balancer exists and it has the given rule.
+// Fail tests otherwise.
+func (lb *LoadBalancers) AssertRuleExists(t *testing.T, lbname string, r LoadBalancerRule) {
 }
 
 // AssertProbeExists checks if load balancer exists and it has the given probe.

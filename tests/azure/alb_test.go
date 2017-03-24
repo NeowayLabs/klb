@@ -12,8 +12,8 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 	const cidr = "10.120.0.0/16"
 	const subnetaddr = "10.120.1.0/24"
 	const lbname = "loadbalancer"
-	const frontendip_name = "lbfrontendip"
-	const lb_private_ip = "10.120.1.4"
+	const frontendIPName = "lbfrontendip"
+	const lbPrivateIP = "10.120.1.4"
 	const poolname = "lbpool"
 
 	f.Shell.Run(
@@ -23,26 +23,29 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 		cidr,
 		subnetaddr,
 		lbname,
-		frontendip_name,
-		lb_private_ip,
+		frontendIPName,
+		lbPrivateIP,
 		poolname,
 	)
 
 	loadbalancer := azure.NewLoadBalancers(f)
-	loadbalancer.AssertExists(t, lbname, frontendip_name, lb_private_ip, poolname)
+	loadbalancer.AssertExists(t, lbname, frontendIPName, lbPrivateIP, poolname)
+
+	const tcpprobePort int32 = 8080
+	const httpprobePort int32 = 8081
 
 	probes := []azure.LoadBalancerProbe{
 		{
 			Name:     "tcpprobe",
 			Protocol: "Tcp",
-			Port:     7777,
+			Port:     tcpprobePort,
 			Interval: 60,
 			Count:    10,
 		},
 		{
 			Name:     "httpprobe",
 			Protocol: "Http",
-			Port:     7776,
+			Port:     httpprobePort,
 			Interval: 120,
 			Count:    20,
 			Path:     "/healthz",
@@ -64,6 +67,39 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 		}
 		f.Shell.Run("./testdata/add_alb_probe.sh", args...)
 		loadbalancer.AssertProbeExists(t, lbname, p)
+	}
+
+	rules := []azure.LoadBalancerRule{
+		{
+			Name:         "tcprule",
+			ProbeName:    "tcpprobe",
+			Protocol:     "Tcp",
+			FrontendPort: tcpprobePort,
+			BackendPort:  tcpprobePort,
+		},
+		{
+			Name:         "httprule",
+			ProbeName:    "httpprobe",
+			Protocol:     "Tcp",
+			FrontendPort: httpprobePort,
+			BackendPort:  httpprobePort,
+		},
+	}
+
+	for _, r := range rules {
+		args := []string{
+			f.ResGroupName,
+			r.Name,
+			lbname,
+			r.ProbeName,
+			frontendIPName,
+			poolname,
+			r.Protocol,
+			strconv.Itoa(int(r.FrontendPort)),
+			strconv.Itoa(int(r.BackendPort)),
+		}
+		f.Shell.Run("./testdata/add_alb_rule.sh", args...)
+		loadbalancer.AssertRuleExists(t, lbname, r)
 	}
 }
 

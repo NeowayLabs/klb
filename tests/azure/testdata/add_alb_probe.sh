@@ -1,4 +1,5 @@
 #!/usr/bin/env nash
+
 import ../../azure/login
 import ../../azure/lb
 
