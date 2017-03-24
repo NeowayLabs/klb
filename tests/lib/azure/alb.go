@@ -61,6 +61,62 @@ func (lb *LoadBalancers) AssertExists(
 // AssertRuleExists checks if load balancer exists and it has the given rule.
 // Fail tests otherwise.
 func (lb *LoadBalancers) AssertRuleExists(t *testing.T, lbname string, r LoadBalancerRule) {
+	lb.f.Retrier.Run(newID("LoadBalancers", "AssertRuleExists", r.Name), func() error {
+		loadbalancer, err := lb.getLoadBalancer(t, lbname)
+		if err != nil {
+			return err
+		}
+		prop := loadbalancer.LoadBalancerPropertiesFormat
+		if prop == nil {
+			return fmt.Errorf("no properties found on: %s", loadbalancer)
+		}
+		if prop.LoadBalancingRules == nil {
+			return fmt.Errorf("no rules found on: %s", prop)
+		}
+
+		for _, rule := range *prop.LoadBalancingRules {
+			if rule.Name == nil {
+				continue
+			}
+			name := *rule.Name
+			lb.f.Logger.Printf("analyzing rule: %q", rule)
+			if name != r.Name {
+				continue
+			}
+			ruleProperties, err := checkRulePropertiesFormat(
+				rule.LoadBalancingRulePropertiesFormat,
+			)
+			if err != nil {
+				return err
+			}
+			protocol := string(ruleProperties.Protocol)
+			backendPort := *ruleProperties.BackendPort
+			frontendPort := *ruleProperties.FrontendPort
+			if protocol != r.Protocol {
+				return fmt.Errorf(
+					"expected probe protocol: %q, got: %q",
+					r.Protocol,
+					protocol,
+				)
+			}
+			if backendPort != r.BackendPort {
+				return fmt.Errorf(
+					"expected backend port: %d, got: %d",
+					r.BackendPort,
+					backendPort,
+				)
+			}
+			if frontendPort != r.FrontendPort {
+				return fmt.Errorf(
+					"expected frontend port: %d, got: %d",
+					r.FrontendPort,
+					frontendPort,
+				)
+			}
+			return nil
+		}
+		return fmt.Errorf("unable to find probe: %+v on lb: %s", r, lbname)
+	})
 }
 
 // AssertProbeExists checks if load balancer exists and it has the given probe.
@@ -96,7 +152,7 @@ func (lb *LoadBalancers) AssertProbeExists(t *testing.T, lbname string, p LoadBa
 			port := *probeProperties.Port
 			path := *probeProperties.RequestPath
 			interval := *probeProperties.IntervalInSeconds
-			if string(probeProperties.Protocol) != p.Protocol {
+			if protocol != p.Protocol {
 				return fmt.Errorf(
 					"expected probe protocol: %q, got: %q",
 					p.Protocol,
@@ -130,9 +186,25 @@ func (lb *LoadBalancers) AssertProbeExists(t *testing.T, lbname string, p LoadBa
 	})
 }
 
+func checkRulePropertiesFormat(
+	r *network.LoadBalancingRulePropertiesFormat,
+) (*network.LoadBalancingRulePropertiesFormat, error) {
+	if r == nil {
+		return nil, errors.New("nil load balancing rule")
+	}
+	// More crappy validating code :-(
+	if r.FrontendPort == nil {
+		return nil, fmt.Errorf("absent FrontendPort on %q ", r)
+	}
+	if r.BackendPort == nil {
+		return nil, fmt.Errorf("absent BackendPort on %q ", r)
+	}
+	return r, nil
+}
+
 func checkProbePropertiesFormat(p *network.ProbePropertiesFormat) (*network.ProbePropertiesFormat, error) {
 	if p == nil {
-		return nil, fmt.Errorf("probe %q got no properties", p)
+		return nil, errors.New("nil probe properties")
 	}
 	// Missing a struct validator here, if we lock to Go 1.8 could
 	// Initialize struct with same layout and validation tags.
