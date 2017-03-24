@@ -110,8 +110,8 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 fn azure_lb_addresspool_get_id(lbname, group) {
 	resp <= (
 		azure network lb address-pool list $group $lbname
-							--json
-
+								--json
+								
 	)
 
 	id   <= echo $resp | jq -r ".[0].id"
