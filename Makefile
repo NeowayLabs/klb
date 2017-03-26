@@ -11,9 +11,6 @@ endif
 all:
 	@echo "did you mean 'make test' ?"
 
-bootstrapci: deps
-	@echo "bootstrapped CI host"
-
 deps: aws-deps azure-deps jq-dep
 
 aws-deps:
