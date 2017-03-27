@@ -1,0 +1,15 @@
+language: go
+
+go:
+  - 1.7
+  - 1.8
+  - tip
+
+before_install:
+  - nvm install 7.7.4
+
+install:
+  - make deps
+
+script:
+  - travis_wait 60 make test
