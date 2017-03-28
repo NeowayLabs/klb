@@ -71,6 +71,26 @@ fn azure_vm_set_nic(instance, nic) {
 	return $instance
 }
 
+fn azure_vm_set_nics(instance, nicnames) {
+	fn join(list, sep) {
+		out = ""
+
+		for l in $list {
+			out = $out+$l+$sep
+		}
+
+		out <= echo $out | sed "s/"+$sep+"$//g"
+
+		return $out
+	}
+
+	nics     <= join($nicnames, ",")
+	instance <= append($instance, "--nic-names")
+	instance <= append($instance, $nics)
+
+	return $instance
+}
+
 fn azure_vm_set_storageaccount(instance, storageaccount) {
 	instance <= append($instance, "--storage-account-name")
 	instance <= append($instance, $storageaccount)
@@ -138,8 +158,10 @@ fn azure_vm_delete(name, group) {
 }
 
 fn azure_vm_get_ip_address(name, group, iface_index, ip_index) {
-        info <= azure vm list-ip-address $group --json
-        #echo $ips
-        ip <= echo $info | jq -r ".[0].networkProfile.networkInterfaces[" + $iface_index + "].expanded.ipConfigurations[" + $ip_index + "].privateIPAddress"
-        return $ip
+	info <= azure vm list-ip-address $group --json
+
+	#echo $ips
+	ip <= echo $info | jq -r ".[0].networkProfile.networkInterfaces["+$iface_index+"].expanded.ipConfigurations["+$ip_index+"].privateIPAddress"
+
+	return $ip
 }
