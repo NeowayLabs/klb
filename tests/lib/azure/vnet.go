@@ -2,6 +2,7 @@ package azure
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -23,11 +24,58 @@ func NewVnet(f fixture.F) *Vnet {
 	return as
 }
 
+func validateVnetDnsServers(
+	t *testing.T,
+	expectedDnsServers []string,
+	net network.VirtualNetwork,
+) error {
+	if net.DhcpOptions == nil {
+		return errors.New("The field DhcpOptions is nil!")
+	}
+	if net.DhcpOptions.DNSServers == nil {
+		return errors.New("The field DNSServers is nil!")
+	}
+
+	dnsServers := *net.DhcpOptions.DNSServers
+	err := fmt.Errorf(
+		"expected DNS servers[%s], got [%s]",
+		expectedDnsServers,
+		dnsServers,
+	)
+	if len(dnsServers) != len(expectedDnsServers) {
+		return err
+	}
+	for _, expectedDnsServer := range expectedDnsServers {
+		found := false
+		for _, dnsServer := range dnsServers {
+			if dnsServer == expectedDnsServer {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return err
+		}
+	}
+	return nil
+}
+
 // AssertExists checks if virtual network exists in the resource group.
 // Fail tests otherwise.
-func (vnet *Vnet) AssertExists(t *testing.T, name, expectedAddress, expectedRouteTable string) {
+func (vnet *Vnet) AssertExists(
+	t *testing.T,
+	name string,
+	expectedAddress string,
+	expectedRouteTable string,
+	expectedDnsServers []string,
+) {
 	vnet.f.Retrier.Run(newID("Vnet", "AssertExists", name), func() error {
 		net, err := vnet.client.Get(vnet.f.ResGroupName, name, "")
+		if err != nil {
+			return err
+		}
+
+		err = validateVnetDnsServers(t, expectedDnsServers, net)
 		if err != nil {
 			return err
 		}
