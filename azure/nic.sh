@@ -21,38 +21,84 @@ fn azure_nic_set_vnet(instance, vnet) {
 }
 
 fn azure_nic_set_subnet(instance, subnet) {
-        instance <= append($instance, "--subnet-name")
-        instance <= append($instance, $subnet)
-        return $instance
+	instance <= append($instance, "--subnet-name")
+	instance <= append($instance, $subnet)
+
+	return $instance
 }
 
 fn azure_nic_set_subnet_id(instance, subnetid) {
 	instance <= append($instance, "--subnet-id")
 	instance <= append($instance, $subnetid)
+
 	return $instance
 }
 
 fn azure_nic_set_privateip(instance, privateip) {
 	instance <= append($instance, "--private-ip-address")
 	instance <= append($instance, $privateip)
+
 	return $instance
 }
 
 fn azure_nic_set_publicip(instance, publicip) {
 	instance <= append($instance, "--public-ip-name")
 	instance <= append($instance, $publicip)
+
 	return $instance
 }
 
 fn azure_nic_set_secgrp(instance, secgrp) {
 	instance <= append($instance, "--network-security-group-name")
 	instance <= append($instance, $secgrp)
+
 	return $instance
 }
 
 fn azure_nic_set_ipfw(instance, ipfw) {
 	instance <= append($instance, "--enable-ip-forwarding")
 	instance <= append($instance, $ipfw)
+
+	return $instance
+}
+
+fn azure_nic_set_lb_address_pool_ids(instance, addresspoolids) {
+	fn join(list, sep) {
+		out = ""
+
+		for l in $list {
+			out = $out+$l+$sep
+		}
+
+		out <= echo $out | sed "s/"+$sep+"$//g"
+
+		return $out
+	}
+
+	poolids    <= join($addresspoolids, ",")
+	instance <= append($instance, "--lb-address-pool-ids")
+	instance <= append($instance, $poolids)
+
+	return $instance
+}
+
+fn azure_nic_set_lb_inbound_nat_rule_ids(instance, natruleids) {
+	fn join(list, sep) {
+		out = ""
+
+		for l in $list {
+			out = $out+$l+$sep
+		}
+
+		out <= echo $out | sed "s/"+$sep+"$//g"
+
+		return $out
+	}
+
+	natids   <= join($natruleids, ",")
+	instance <= append($instance, "--lb-inbound-nat-rule-ids")
+	instance <= append($instance, $natids)
+
 	return $instance
 }
 
