@@ -11,13 +11,21 @@ endif
 all:
 	@echo "did you mean 'make test' ?"
 
-deps: aws-deps azure-deps jq-dep
+deps: aws-deps azure-deps doctl-deps jq-dep
 
 aws-deps:
 	pip install --user awscli
 
-azure-deps: jq-dep
+azure-deps:
 	npm install --no-optional -g azure-cli
+
+doctl-deps: $(GOPATH)/bin/doctl
+
+$(GOPATH)/bin/doctl:
+	@echo "Downloading doctl..."
+	mkdir -p $(GOPATH)/bin
+	wget -qO- https://github.com/digitalocean/doctl/releases/download/v1.6.0/doctl-1.6.0-linux-amd64.tar.gz  | tar xz -C $(GOPATH)/bin
+	chmod "+x" $(GOPATH)/bin/doctl
 
 jq-dep: $(GOPATH)/bin/jq
 

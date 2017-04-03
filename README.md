@@ -5,7 +5,7 @@
 Nash library to mimic the life of [@lborguetti](https://github.com/lborguetti) (aka `klb`).
 
 Ok, just kidding, use `klb` to automate the creation of your
-infrastructure on AWS or Azure.
+infrastructure on AWS, Azure or Digital Ocean.
 
 ## Demo
 
@@ -17,6 +17,7 @@ infrastructure on AWS or Azure.
 - [jq](https://stedolan.github.io/jq/)
 - [awscli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
 - [azure-cli](https://github.com/Azure/azure-xplat-cli)
+- [doctl](https://github.com/digitalocean/doctl)
 
 You can run the following command to install deps:
 
@@ -61,6 +62,7 @@ Just run `make testall logger=stdout`.
 
 * [Microsoft Azure](docs/Azure.md)
 * [Amazon Web Services](docs/Aws.md)
+* [Digital Ocean](docs/DigitalOcean.md)
 
 P.S.:
 - barefoot running is not implemented.
