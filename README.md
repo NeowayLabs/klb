@@ -16,6 +16,7 @@ infrastructure on AWS or Azure.
 - [nash](https://github.com/NeowayLabs/nash)
 - [jq](https://stedolan.github.io/jq/)
 - [awscli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
+- [azure-cli](https://github.com/Azure/azure-xplat-cli)
 
 You can run the following command to install deps:
 
