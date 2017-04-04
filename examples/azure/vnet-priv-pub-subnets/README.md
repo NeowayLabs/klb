@@ -1,7 +1,7 @@
 Vnet with Private an Public Subnets
 ==
 
-This scenario creates a Vnet with two subnets, one private and other private.
+This scenario creates a Vnet with two subnets, one public and other private.
 The Public Subnet has a route table with default route to "Internet" and Private subnet a route table with default route to Nat Virtual Appliance.
 
 Virtual Appliance into Public Subnet have access granted from/to "Internet".
