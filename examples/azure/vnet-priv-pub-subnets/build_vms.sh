@@ -7,7 +7,6 @@ import klb/azure/public-ip
 import klb/azure/availset
 import klb/azure/storage
 import klb/azure/disk
-import map
 
 # londing configs from config.sh
 import config.sh
