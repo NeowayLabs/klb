@@ -1,5 +1,6 @@
 #!/usr/bin/env nash
 
+import klb/azure/login
 import klb/azure/group
 import klb/azure/vnet
 import klb/azure/subnet
@@ -8,6 +9,8 @@ import klb/azure/nsg
 
 # londing configs from config.sh
 import config.sh
+
+azure_login()
 
 # create resource group
 azure_group_create($group, $location)

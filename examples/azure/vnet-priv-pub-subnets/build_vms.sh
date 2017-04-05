@@ -1,5 +1,6 @@
 #!/usr/bin/env nash
 
+import klb/azure/login
 import klb/azure/nic
 import klb/azure/subnet
 import klb/azure/vm
@@ -10,6 +11,8 @@ import klb/azure/disk
 
 # londing configs from config.sh
 import config.sh
+
+azure_login()
 
 # create vm
 fn build_vms_create(name, subnet, address) {
