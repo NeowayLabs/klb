@@ -208,7 +208,7 @@ fn azure_vm_set_storagesku(instance, storagesku) {
 # azure_vm_create creates an Azure "Virtual Machine".
 # `instance` is the name of the instance.
 fn azure_vm_create(instance) {
-	azure vm create $instance
+	az vm create $instance
 }
 
 fn azure_vm_delete(name, group) {
