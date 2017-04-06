@@ -20,12 +20,11 @@ fn azure_vm_new(name, group, location) {
 # azure_vm_set_ostype sets ostype of "virtual machine".
 # `instance` is the name of the instance.
 # `ostype` is the type of OS installed on a custom VHD.
-fn azure_vm_set_ostype(instance, ostype){
+fn azure_vm_set_ostype(instance, ostype) {
 	instance <= append($instance, "--os-type")
 	instance <= append($instance, $ostype)
 
 	return $instance
-
 }
 
 # azure_vm_set_vmsize sets the size of "Virtual Machine".
@@ -211,10 +210,10 @@ fn azure_vm_set_storagesku(instance, storagesku) {
 	return $instance
 }
 
-# azure_vm_create creates an Azure "Virtual Machine".
+# azure_vm_create creates a "Virtual Machine".
 # `instance` is the name of the instance.
 fn azure_vm_create(instance) {
-	az vm create $instance
+	az vm create --output table $instance
 }
 
 fn azure_vm_delete(name, group) {
@@ -232,4 +231,57 @@ fn azure_vm_get_ip_address(name, group, iface_index, ip_index) {
 	ip <= echo $info | jq -r ".[0].networkProfile.networkInterfaces["+$iface_index+"].expanded.ipConfigurations["+$ip_index+"].privateIPAddress"
 
 	return $ip
+}
+
+# azure_vm_avset_create creates a new instance of Avset.
+# `name` is the name of the Avset.
+# `group` is name of resource group.
+# `location` is the Azure Region.
+fn azure_vm_avset_new(name, group, location) {
+	instance = (
+		"--name"
+		$name
+		"--resource-group"
+		$group
+		"--location"
+		$location
+	)
+
+	return $instance
+}
+
+# azure_vm_avset_set_faultdomain sets Fault Domain of Avset.
+# `instance` is the name of the instance.
+# `count` is the Fault Domain count. Example: 2.
+fn azure_vm_avset_set_faultdomain(instance, count) {
+	instance <= append($instance, "--platform-fault-domain-count")
+	instance <= append($instance, $cout)
+
+	return $instance
+}
+
+# azure_vm_avset_set_updatedomain sets Update Domain of Avset.
+# `instance` is the name of the instance.
+# `count` is the Update Domain count. Example: 2.
+fn azure_vm_avset_set_updatedomain(instance, count) {
+	instance <= append($instance, "--platform-update-domain-count")
+	instance <= append($instance, $cout)
+
+	return $instance
+}
+
+# azure_vm_avset_set_unmanaged sets Contained VMs should use unmanaged disks.
+# `instance` is the name of the instance.
+fn azure_vm_avset_set_unmanaged(instance) {
+	instance <= append($instance, "--unmanaged")
+
+	return $instance
+}
+
+# azure_vm_avset_create creates a Avset.
+# `instance` is the name of the instance.
+fn azure_vm_avset_create(instance) {
+
+    az vm availability-set create --output table $instace
+
 }
