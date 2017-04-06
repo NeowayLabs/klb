@@ -25,7 +25,7 @@ func NewVM(f fixture.F) *VM {
 
 // AssertExists checks if VM exists in the resource group.
 // Fail tests otherwise.
-func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize, expectedOsType, expectedNic string) {
+func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize, expectedNic string) {
 	vm.f.Retrier.Run(newID("VM", "AssertExists", name), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, name, "")
 		if err != nil {
@@ -58,11 +58,6 @@ func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize,
 		}
 		if properties.StorageProfile.OsDisk == nil {
 			return errors.New("Field OsDisk is nil!")
-		}
-		osDisk := *properties.StorageProfile.OsDisk
-		gotOsType := string(osDisk.OsType)
-		if gotOsType != expectedOsType {
-			return errors.New("OS type expected is " + expectedOsType + " but got " + gotOsType)
 		}
 		if properties.NetworkProfile == nil {
 			return errors.New("Field NetworkProfile is nil!")

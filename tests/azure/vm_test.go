@@ -19,13 +19,11 @@ type VMResources struct {
 	vnet     string
 	subnet   string
 	nic      string
-	storAcc  string
 }
 
 func testVMCreate(t *testing.T, f fixture.F) {
 
 	vm := genVMName()
-	osType := "Linux"
 	vmSize := "Standard_DS4_v2"
 	username := "core"
 	osDisk := "test.vhd"
@@ -39,20 +37,16 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		vm,
 		f.ResGroupName,
 		f.Location,
-		osType,
 		vmSize,
 		username,
 		resources.availSet,
-		resources.vnet,
-		resources.subnet,
 		resources.nic,
-		resources.storAcc,
 		osDisk,
 		imageUrn,
 		keyFile,
 	)
 	vms := azure.NewVM(f)
-	vms.AssertExists(t, vm, resources.availSet, vmSize, osType, resources.nic)
+	vms.AssertExists(t, vm, resources.availSet, vmSize, resources.nic)
 }
 
 func createVMResources(t *testing.T, f fixture.F) VMResources {
@@ -62,18 +56,21 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 	resources.vnet = genVnetName()
 	resources.subnet = genSubnetName()
 	resources.nic = genNicName()
-	resources.storAcc = genStorageAccountName()
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
 	subnetAddress := "10.116.1.0/24"
 	addrnic := "10.116.1.100"
+	updatedomain := "3"
+	faultdomain := "3"
 
 	f.Shell.Run(
-		"./testdata/create_avail_set.sh",
+		"./testdata/create_vm_avail_set.sh",
 		f.ResGroupName,
 		resources.availSet,
 		f.Location,
+		updatedomain,
+		faultdomain,
 	)
 
 	createVNet(t, f, vnetDescription{
@@ -105,13 +102,6 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 		resources.vnet,
 		resources.subnet,
 		addrnic,
-	)
-
-	f.Shell.Run(
-		"./testdata/create_storage_account.sh",
-		f.ResGroupName,
-		resources.storAcc,
-		f.Location,
 	)
 
 	return resources
