@@ -20,7 +20,7 @@ fn azure_vm_new(name, group, location) {
 # azure_vm_set_ostype sets ostype of "virtual machine".
 # `instance` is the name of the instance.
 # `ostype` is the type of OS installed on a custom VHD.
-azure_vm_set_ostype(instance, ostype){
+fn azure_vm_set_ostype(instance, ostype){
 	instance <= append($instance, "--os-type")
 	instance <= append($instance, $ostype)
 
