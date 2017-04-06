@@ -233,11 +233,11 @@ fn azure_vm_get_ip_address(name, group, iface_index, ip_index) {
 	return $ip
 }
 
-# azure_vm_avset_create creates a new instance of Avset.
-# `name` is the name of the Avset.
+# azure_vm_availset_create creates a new instance of Availset.
+# `name` is the name of the Availset.
 # `group` is name of resource group.
 # `location` is the Azure Region.
-fn azure_vm_avset_new(name, group, location) {
+fn azure_vm_availset_new(name, group, location) {
 	instance = (
 		"--name"
 		$name
@@ -250,37 +250,37 @@ fn azure_vm_avset_new(name, group, location) {
 	return $instance
 }
 
-# azure_vm_avset_set_faultdomain sets Fault Domain of Avset.
+# azure_vm_availset_set_faultdomain sets Fault Domain of Availset.
 # `instance` is the name of the instance.
 # `count` is the Fault Domain count. Example: 2.
-fn azure_vm_avset_set_faultdomain(instance, count) {
+fn azure_vm_availset_set_faultdomain(instance, count) {
 	instance <= append($instance, "--platform-fault-domain-count")
 	instance <= append($instance, $cout)
 
 	return $instance
 }
 
-# azure_vm_avset_set_updatedomain sets Update Domain of Avset.
+# azure_vm_availset_set_updatedomain sets Update Domain of Availset.
 # `instance` is the name of the instance.
 # `count` is the Update Domain count. Example: 2.
-fn azure_vm_avset_set_updatedomain(instance, count) {
+fn azure_vm_availset_set_updatedomain(instance, count) {
 	instance <= append($instance, "--platform-update-domain-count")
 	instance <= append($instance, $cout)
 
 	return $instance
 }
 
-# azure_vm_avset_set_unmanaged sets Contained VMs should use unmanaged disks.
+# azure_vm_availset_set_unmanaged sets Contained VMs should use unmanaged disks.
 # `instance` is the name of the instance.
-fn azure_vm_avset_set_unmanaged(instance) {
+fn azure_vm_availset_set_unmanaged(instance) {
 	instance <= append($instance, "--unmanaged")
 
 	return $instance
 }
 
-# azure_vm_avset_create creates a Avset.
+# azure_vm_availset_create creates a Availset.
 # `instance` is the name of the instance.
-fn azure_vm_avset_create(instance) {
+fn azure_vm_availset_create(instance) {
 
     az vm availability-set create --output table $instace
 
