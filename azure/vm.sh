@@ -4,9 +4,7 @@
 # `name` is the name of the virtual machine.
 # `group` is name of resource group.
 # `location` is the Azure Region.
-# `ostype` is the type of OS installed on a custom VHD.
-# Accepted values: linux, windows
-fn azure_vm_new(name, group, location, ostype) {
+fn azure_vm_new(name, group, location) {
 	instance = (
 		"--name"
 		$name
@@ -14,11 +12,20 @@ fn azure_vm_new(name, group, location, ostype) {
 		$group
 		"--location"
 		$location
-		"--os-type"
-		$ostype
 	)
 
 	return $instance
+}
+
+# azure_vm_set_ostype sets ostype of "virtual machine".
+# `instance` is the name of the instance.
+# `ostype` is the type of OS installed on a custom VHD.
+azure_vm_set_ostype(instance, ostype){
+	instance <= append($instance, "--os-type")
+	instance <= append($instance, $ostype)
+
+	return $instance
+
 }
 
 # azure_vm_set_vmsize sets the size of "Virtual Machine".
@@ -196,8 +203,7 @@ fn azure_vm_set_imageurn(instance, imageurn) {
 
 # azure_vm_set_storagesku sets the SKU storage account of "Virtual Machine".
 # `instance` is the name of the instance.
-# `storagesku` is the the sku of storage account to persist VM. By default, only
-# Standard_LRS and Premium_LRS are allowed.
+# `storagesku` is the the sku of storage account to persist VM.
 fn azure_vm_set_storagesku(instance, storagesku) {
 	instance <= append($instance, "--storage-sku")
 	instance <= append($instance, $imageurn)
