@@ -255,7 +255,7 @@ fn azure_vm_availset_new(name, group, location) {
 # `count` is the Fault Domain count. Example: 2.
 fn azure_vm_availset_set_faultdomain(instance, count) {
 	instance <= append($instance, "--platform-fault-domain-count")
-	instance <= append($instance, $cout)
+	instance <= append($instance, $count)
 
 	return $instance
 }
@@ -265,7 +265,7 @@ fn azure_vm_availset_set_faultdomain(instance, count) {
 # `count` is the Update Domain count. Example: 2.
 fn azure_vm_availset_set_updatedomain(instance, count) {
 	instance <= append($instance, "--platform-update-domain-count")
-	instance <= append($instance, $cout)
+	instance <= append($instance, $count)
 
 	return $instance
 }
@@ -281,7 +281,12 @@ fn azure_vm_availset_set_unmanaged(instance) {
 # azure_vm_availset_create creates a Availset.
 # `instance` is the name of the instance.
 fn azure_vm_availset_create(instance) {
+	az vm availability-set create --output table $instance
+}
 
-    az vm availability-set create --output table $instace
-
+# azure_vm_availset_delete deletes a Availset.
+# `name` is the name of the Availset.
+# `group` is name of resource group.
+fn azure_vm_availset_delete(name, group) {
+	az vm availability-set delete --output table --name $name --resource-group $group
 }
