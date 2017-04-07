@@ -15,7 +15,6 @@ imageurn = $ARGS[9]
 keyfile  = $ARGS[10]
 
 azure_login()
-az_login()
 
 vm <= azure_vm_new($name, $resgroup, $location)
 vm <= azure_vm_set_vmsize($vm, $vmsize)
