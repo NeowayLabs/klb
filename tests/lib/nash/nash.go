@@ -69,7 +69,7 @@ func newNashShell(t *testing.T, output io.Writer) *nash.Shell {
 	if err != nil {
 		t.Fatal(err)
 	}
-	nashPath := os.Getenv("dir") + "/.nash"
+	nashPath := os.Getenv(dir) + "/.nash"
 	os.MkdirAll(nashPath, 0655)
 	shell.SetDotDir(nashPath)
 
