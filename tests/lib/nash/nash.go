@@ -64,7 +64,14 @@ func newNashShell(t *testing.T, output io.Writer) *nash.Shell {
 	shell.SetStdout(output)
 	shell.SetStderr(output)
 
-	nashPath := os.Getenv("HOME") + "/.nash"
+	dir, err := ioutil.TempDir("", "nash")
+	if err != nil {
+		return fmt.Errorf(
+			"error: %s, creating tmp home dir",
+			err,
+		)
+	}
+	nashPath := os.Getenv("dir") + "/.nash"
 	os.MkdirAll(nashPath, 0655)
 	shell.SetDotDir(nashPath)
 
