@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -66,10 +67,7 @@ func newNashShell(t *testing.T, output io.Writer) *nash.Shell {
 
 	dir, err := ioutil.TempDir("", "nash")
 	if err != nil {
-		return fmt.Errorf(
-			"error: %s, creating tmp home dir",
-			err,
-		)
+		t.Fatal(err)
 	}
 	nashPath := os.Getenv("dir") + "/.nash"
 	os.MkdirAll(nashPath, 0655)
