@@ -28,7 +28,7 @@ fn azure_disk_set_size(instance, size) {
 }
 
 # azure_disk_set_sku sets the kind of "managed disk".
-# `instance` is the name of the instance.
+# `instance` is the disk instance.
 # `sku` is the underlying storage sku. Allowed values: Premium_LRS,
 #  Standard_LRS. Default: Premium_LRS.
 fn azure_disk_set_sku(instance, sku) {
@@ -39,7 +39,7 @@ fn azure_disk_set_sku(instance, sku) {
 }
 
 # azure_disk_set_source sets the source of "managed disk".
-# `instance` is the name of the instance.
+# `instance` is the disk instance.
 # `source` is the source to create the disk from, including a sas uri
 # to a blob, managed disk id or name, or snapshot id or name.
 fn azure_disk_set_source(instance, source) {
@@ -50,7 +50,7 @@ fn azure_disk_set_source(instance, source) {
 }
 
 # azure_disk_new creates a new "managed disk".
-# `instance` is the name of the instance.
+# `instance` is the disk instance.
 fn azure_disk_create(instance) {
 	az disk create --output table $instance
 }
