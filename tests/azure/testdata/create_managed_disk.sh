@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
 import ../../azure/login
-import ../../azure/storage
+import ../../azure/disk
 
 resgroup = $ARGS[1]
 location = $ARGS[2]

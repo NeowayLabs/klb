@@ -20,7 +20,7 @@ func NewDisk(f fixture.F) *Disks {
 		f:      f,
 		client: disk.NewDisksClient(f.Session.SubscriptionID),
 	}
-	//as.client.Authorizer = f.Session.Token
+	as.client.Authorizer = f.Session.Token
 	return as
 }
 
@@ -32,19 +32,19 @@ func (d *Disks) AssertExists(t *testing.T, name string, size string, sku string)
 		if err != nil {
 			return err
 		}
-		if res.Type == nil {
-			return errors.New("type is absent")
-		}
-		if *res.Type != sku {
-			return fmt.Errorf(
-				"expected type %q got %q",
-				*res.Type,
-				sku,
-			)
-		}
 		if res.Properties == nil {
 			return errors.New("no properties found on disk")
 		}
+		gotSKU := string(res.Properties.AccountType)
+		if gotSKU != sku {
+			return fmt.Errorf(
+				"expected type %q got %q",
+				sku,
+				gotSKU,
+			)
+		}
+		d.f.Logger.Println(res.Properties.AccountType)
+
 		wantSizeInt, err := strconv.Atoi(size)
 		if err != nil {
 			return err
