@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
@@ -15,20 +16,20 @@ func diskname() string {
 
 func testDiskCreate(t *testing.T, f fixture.F) {
 
-	//name := diskname()
-	//size := "10"
-	//sku := "Standard_LRS"
+	name := diskname()
+	size := "10"
+	sku := "Standard_LRS"
 
-	//f.Shell.Run(
-	//"./testdata/create_managed_disk.sh",
-	//f.ResGroupName,
-	//f.Location,
-	//name,
-	//size,
-	//sku,
-	//)
-	//disk := azure.NewDisk(f)
-	//disk.AssertExists(t, name, size, sku)
+	f.Shell.Run(
+		"./testdata/create_managed_disk.sh",
+		f.ResGroupName,
+		f.Location,
+		name,
+		size,
+		sku,
+	)
+	disk := azure.NewDisk(f)
+	disk.AssertExists(t, name, size, sku)
 }
 
 func TestDisk(t *testing.T) {
