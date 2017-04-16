@@ -11,4 +11,4 @@ pip install azure-cli
 echo "installing aws cli"
 pip install awscli
 echo "installing nash"
-go get github.com/NeowayLabs/nash
+go install github.com/NeowayLabs/nash
