@@ -205,7 +205,7 @@ fn azure_vm_set_imageurn(instance, imageurn) {
 # `storagesku` is the the sku of storage account to persist VM.
 fn azure_vm_set_storagesku(instance, storagesku) {
 	instance <= append($instance, "--storage-sku")
-	instance <= append($instance, $imageurn)
+	instance <= append($instance, $storagesku)
 
 	return $instance
 }
