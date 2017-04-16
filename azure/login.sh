@@ -20,7 +20,7 @@ fn azure_login() {
 	username = $AZURE_SERVICE_PRINCIPAL
 
 	# azure cli 2.0
-	# az account clear
+	az account clear
 	az login --service-principal -u $username -p $secretID --tenant $tenantID --output table
 
 	# azure cli 1.0

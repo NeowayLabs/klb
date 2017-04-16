@@ -3,15 +3,14 @@ package nash
 import (
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
-	"github.com/NeowayLabs/nash"
 )
 
 type Shell struct {
@@ -38,42 +37,28 @@ func (s *Shell) Run(
 	scriptpath string,
 	args ...string,
 ) {
-	nashshell := newNashShell(s.t, &logWriter{
-		logger: s.logger,
-	})
 	s.retrier.Run("Shell.Run:"+scriptpath, func() error {
 		completeargs := []string{scriptpath}
 		completeargs = append(completeargs, args...)
-		err := nashshell.ExecFile(scriptpath, completeargs...)
+
+		dir, err := ioutil.TempDir("", "klb-tests")
+		defer func() {
+			err := os.RemoveAll(dir)
+			if err != nil {
+				s.t.Errorf("error removing tmp dir: %s", err)
+			}
+		}()
 		if err != nil {
-			return fmt.Errorf(
-				"error: %s, executing script: %s",
-				err,
-				scriptpath,
-			)
+			s.t.Fatalf("unable to create tmp dir: %s", err)
 		}
-		return nil
+		log := &logWriter{logger: s.logger}
+		cmd := exec.Command(scriptpath, args...)
+		env := getEnvWithoutHome()
+		cmd.Env = append(env, fmt.Sprintf("HOME=%s", dir))
+		cmd.Stdout = log
+		cmd.Stderr = log
+		return cmd.Run()
 	})
-}
-
-func newNashShell(t *testing.T, output io.Writer) *nash.Shell {
-	shell, err := nash.New()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	shell.SetStdout(output)
-	shell.SetStderr(output)
-
-	dir, err := ioutil.TempDir("", "nash")
-	if err != nil {
-		t.Fatal(err)
-	}
-	nashPath := dir + "/.nash"
-	os.MkdirAll(nashPath, 0655)
-	shell.SetDotDir(nashPath)
-	//shell.Setvar("HOME", dir)
-	return shell
 }
 
 type logWriter struct {
@@ -81,6 +66,16 @@ type logWriter struct {
 }
 
 func (l *logWriter) Write(b []byte) (int, error) {
-	l.logger.Println(strings.TrimSuffix(string(b), "\n"))
+	l.logger.Println("nash:" + strings.TrimSuffix(string(b), "\n"))
 	return len(b), nil
+}
+
+func getEnvWithoutHome() []string {
+	env := []string{}
+	for _, v := range os.Environ() {
+		if !strings.HasPrefix(v, "HOME=") {
+			env = append(env, v)
+		}
+	}
+	return env
 }

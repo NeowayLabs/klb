@@ -13,16 +13,24 @@ infrastructure on AWS or Azure.
 
 ## Dependencies
 
+- python pip
+- nodejs npm
 - [nash](https://github.com/NeowayLabs/nash)
 - [jq](https://stedolan.github.io/jq/)
 - [awscli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
-- [azure-cli](https://github.com/Azure/azure-xplat-cli)
+- [azure-cli 1.0](https://github.com/Azure/azure-xplat-cli)
+- azure-cli 2.0
 
-You can run the following command to install deps:
+To aid you we provide some scripts to install the deps, per distro.
+For arch linux you can use:
 
 ```sh
-make deps
+sudo ./deps/arch.sh
 ```
+
+Contributions for other distros are welcomed.
+The scripts can assume that Go is already installed, all the
+other dependencies will be installed automatically.
 
 ## Install
 

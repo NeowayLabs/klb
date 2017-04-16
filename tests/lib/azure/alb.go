@@ -79,7 +79,6 @@ func (lb *LoadBalancers) AssertRuleExists(t *testing.T, lbname string, r LoadBal
 				continue
 			}
 			name := *rule.Name
-			lb.f.Logger.Printf("analyzing rule: %q", rule)
 			if name != r.Name {
 				continue
 			}
@@ -113,6 +112,7 @@ func (lb *LoadBalancers) AssertRuleExists(t *testing.T, lbname string, r LoadBal
 					frontendPort,
 				)
 			}
+			lb.f.Logger.Println("success validating ALB rule")
 			return nil
 		}
 		return fmt.Errorf("unable to find probe: %+v on lb: %s", r, lbname)
