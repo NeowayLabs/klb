@@ -12,4 +12,4 @@ install:
   - make deps
 
 script:
-  - travis_wait 60 make test
+  - travis_wait 60 make test logger=stdout
