@@ -3,7 +3,7 @@
 set -o nounset
 set -o errexit
 echo "installing python pip and nodejs npm"
-apt-get install python-pip jq
+apt-get install python-pip jq nvm
 echo "installing nodejs"
 nvm install 7.7.4
 echo "installing azure cli 1.0"
