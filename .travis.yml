@@ -15,9 +15,10 @@ addons:
     - jq
 
 install:
-  - npm install --no-optional -g azure-cli
   - pip install --upgrade pip
-  - pip install azure-cli aws-cli
+  - pip install azure-cli
+  - pip install aws-cli
+  - npm install --no-optional -g azure-cli
   - go install github.com/NeowayLabs/nash
 
 script:
