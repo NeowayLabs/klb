@@ -3,12 +3,12 @@
 set -o nounset
 set -o errexit
 echo "installing python pip and nodejs npm"
-pacman -S python-pip npm jq
+sudo pacman -S python-pip npm jq
 echo "installing azure cli 1.0"
-npm install --no-optional -g azure-cli
+sudo npm install --no-optional -g azure-cli
 echo "installing azure cli 2.0"
-pip install azure-cli
+sudo pip install azure-cli
 echo "installing aws cli"
-pip install awscli
+sudo pip install awscli
 echo "installing nash"
 go get github.com/NeowayLabs/nash
