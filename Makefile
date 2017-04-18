@@ -16,6 +16,9 @@ guard-%:
                 exit 1; \
         fi
 
+image:
+	docker build . -t neowaylabs/klb
+
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin
 install: guard-NASHPATH
