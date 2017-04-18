@@ -42,6 +42,21 @@ make install
 
 To install klb on your **NASHPATH**.
 
+## Running with Docker
+
+A **neowaylabs/klb** image is also provided with the project,
+saving you the hussle of installing the dependencies on
+your machine.
+
+To create a fast nash shell where you can play around with
+klb you can run:
+
+```
+make shell
+```
+
+The image is ready to run nash scripts that import klb modules.
+
 
 ### Updating vendored dependencies
 

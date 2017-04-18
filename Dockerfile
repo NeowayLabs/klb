@@ -18,5 +18,5 @@ RUN wget https://github.com/NeowayLabs/nash/releases/download/v${NASH_VERSION}/n
 
 ENV NASHPATH=/root/.nash
 
-COPY ./aws ${NASHPATH}/klb/aws
-COPY ./azure ${NASHPATH}/klb/aws
+COPY ./aws ${NASHPATH}/lib/klb/aws
+COPY ./azure ${NASHPATH}/lib/klb/azure
