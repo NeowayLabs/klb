@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
-import ../../azure/login
-import ../../azure/group
+import klb/azure/login
+import klb/azure/group
 
 resgroup = $ARGS[1]
 

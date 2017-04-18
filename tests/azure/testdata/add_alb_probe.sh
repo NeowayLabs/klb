@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
-import ../../azure/login
-import ../../azure/lb
+import klb/azure/login
+import klb/azure/lb
 
 resgroup  = $ARGS[1]
 probename = $ARGS[2]
@@ -20,8 +20,9 @@ probe <= azure_lb_probe_set_protocol($probe, $protocol)
 probe <= azure_lb_probe_set_interval($probe, $interval)
 
 if len($ARGS) == "9" {
-        path = $ARGS[8]
-        probe <= azure_lb_probe_set_path($probe, $path)
+	path = $ARGS[8]
+	
+	probe <= azure_lb_probe_set_path($probe, $path)
 }
 
 azure_lb_probe_create($probe)
