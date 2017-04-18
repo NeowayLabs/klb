@@ -5,12 +5,14 @@ go:
   - 1.8
   - tip
 
+dist: trusty
+
 sudo: required
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq nvm
-  - sudo nvm install 7.7.4
+  - curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
+  - sudo apt-get install -y nodejs
   - sudo pip install -U pip wheel
   - sudo pip install azure-cli
   - sudo pip install awscli
