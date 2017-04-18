@@ -9,7 +9,11 @@ before_install:
   - nvm install 7.7.4
 
 install:
-  - ./deps/debian.sh
+  - pip install -U pip wheel
+  - pip install azure-cli
+  - pip install awscli
+  - npm install --no-optional -g azure-cli
+  - go install github.com/NeowayLabs/nash
 
 script:
   - travis_wait 60 make test logger=stdout

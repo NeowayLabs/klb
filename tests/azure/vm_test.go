@@ -3,6 +3,7 @@ package azure_test
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 
@@ -54,21 +55,29 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	diskname := "createVMExtraDisk"
 	size := 10
 	sku := "Standard_LRS"
-	createDisk(t, f, diskname, size, sku)
-	f.Logger.Println("created disk, attaching it")
 
-	attachDiskOnVM(t, f, vm, diskname)
+	attachDiskOnVM(t, f, vm, diskname, size, sku)
+	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku)
+
 	f.Logger.Println("VM with attached disk created with success")
 }
 
-func attachDiskOnVM(t *testing.T, f fixture.F, vmname string, diskname string) {
-	// TODO: Improve attached disk validation
-	//f.Shell.Run(
-	//"./testdata/attach_disk.sh",
-	//f.ResGroupName,
-	//vmname,
-	//diskname,
-	//)
+func attachDiskOnVM(
+	t *testing.T,
+	f fixture.F,
+	vmname string,
+	diskname string,
+	diskSizeGB int,
+	sku string,
+) {
+	f.Shell.Run(
+		"./testdata/attach_new_disk.sh",
+		f.ResGroupName,
+		vmname,
+		diskname,
+		strconv.Itoa(diskSizeGB),
+		sku,
+	)
 }
 
 func createVMResources(t *testing.T, f fixture.F) VMResources {
@@ -131,5 +140,5 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "CreateVM", 25*time.Minute, location, testVMCreate)
+	fixture.Run(t, "VMWithAttachedDisk", 25*time.Minute, location, testVMCreate)
 }

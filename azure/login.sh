@@ -24,6 +24,7 @@ fn azure_login() {
 	az login --service-principal -u $username -p $secretID --tenant $tenantID --output table
 
 	# azure cli 1.0
+	azure telemetry --disable
 	azure config mode arm
 	azure login -q -u $clientID --service-principal --tenant $tenantID -p $secretID
 }

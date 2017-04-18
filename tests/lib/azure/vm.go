@@ -2,6 +2,7 @@ package azure
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -23,9 +24,73 @@ func NewVM(f fixture.F) *VM {
 	return as
 }
 
+// AssertAttachedDisk checks if VM has the following disk attached
+func (vm *VM) AssertAttachedDataDisk(
+	t *testing.T,
+	vmname string,
+	diskname string,
+	diskSizeGB int,
+	storageAccountType string,
+) {
+	vm.f.Retrier.Run(newID("VM", "AssertExists", vmname), func() error {
+		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
+		if err != nil {
+			return err
+		}
+		if v.VirtualMachineProperties == nil {
+			return fmt.Errorf("no virtual machine properties found on vm %s", vmname)
+		}
+		if v.VirtualMachineProperties.StorageProfile == nil {
+			return fmt.Errorf("no storage profile found on vm %s", vmname)
+		}
+
+		storageProfile := v.VirtualMachineProperties.StorageProfile
+		if storageProfile.DataDisks == nil {
+			return fmt.Errorf("no data disks found on vm %s", vmname)
+		}
+
+		for _, disk := range *storageProfile.DataDisks {
+			if disk.Name == nil {
+				continue
+			}
+			if disk.DiskSizeGB == nil {
+				continue
+			}
+			if disk.ManagedDisk == nil {
+				continue
+			}
+			gotName := *disk.Name
+			gotDiskSize := int(*disk.DiskSizeGB)
+			gotStorageAccountType := string(disk.ManagedDisk.StorageAccountType)
+
+			s.f.Logger.Printf("got disk %q size[%d] %q", gotName, gotDiskSize, gotStorageAccountType)
+
+			if gotName != diskname {
+				continue
+			}
+			if gotDiskSize != diskSizeGB {
+				continue
+			}
+			if gotStorageAccountType != storageAccountType {
+				continue
+			}
+
+			return nil
+		}
+
+		return fmt.Errorf("unable to find disk %q on vm %q", diskname, vmname)
+	})
+}
+
 // AssertExists checks if VM exists in the resource group.
 // Fail tests otherwise.
-func (vm *VM) AssertExists(t *testing.T, name, expectedAvailSet, expectedVMSize, expectedNic string) {
+func (vm *VM) AssertExists(
+	t *testing.T,
+	name string,
+	expectedAvailSet string,
+	expectedVMSize string,
+	expectedNic string,
+) {
 	vm.f.Retrier.Run(newID("VM", "AssertExists", name), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, name, "")
 		if err != nil {
