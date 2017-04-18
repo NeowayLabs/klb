@@ -32,7 +32,7 @@ func (vm *VM) AssertAttachedDataDisk(
 	diskSizeGB int,
 	storageAccountType string,
 ) {
-	vm.f.Retrier.Run(newID("VM", "AssertExists", vmname), func() error {
+	vm.f.Retrier.Run(newID("VM", "AssertAttachedDataDisk", vmname), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
 		if err != nil {
 			return err
@@ -49,6 +49,7 @@ func (vm *VM) AssertAttachedDataDisk(
 			return fmt.Errorf("no data disks found on vm %s", vmname)
 		}
 
+		vm.f.Logger.Printf("expected disk %q size[%d] %q", diskname, diskSizeGB, storageAccountType)
 		for _, disk := range *storageProfile.DataDisks {
 			if disk.Name == nil {
 				continue
@@ -63,7 +64,7 @@ func (vm *VM) AssertAttachedDataDisk(
 			gotDiskSize := int(*disk.DiskSizeGB)
 			gotStorageAccountType := string(disk.ManagedDisk.StorageAccountType)
 
-			s.f.Logger.Printf("got disk %q size[%d] %q", gotName, gotDiskSize, gotStorageAccountType)
+			vm.f.Logger.Printf("got disk %q size[%d] %q", gotName, gotDiskSize, gotStorageAccountType)
 
 			if gotName != diskname {
 				continue
