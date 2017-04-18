@@ -64,6 +64,7 @@ func (s *Shell) Run(
 		nashdir := homedir + "/.nash"
 		env := append(
 			s.env,
+			fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 			fmt.Sprintf("HOME=%s", homedir),
 			fmt.Sprintf("NASHPATH=%s", nashdir),
 		)

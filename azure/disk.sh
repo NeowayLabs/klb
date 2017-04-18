@@ -59,7 +59,7 @@ fn azure_disk_create(instance) {
 # disk. This id is used to attach the disk on a VM.
 fn azure_disk_get_id(resgroup, name) {
 	res <= az disk show -g $resgroup -n $name --query "id"
-	return res
+	return $res
 }
 
 # FIXME: These last 3 functions seems to belong to the vm package.
