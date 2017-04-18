@@ -25,6 +25,7 @@ func New(
 	t *testing.T,
 	logger *log.Logger,
 ) *Shell {
+	// TODO: inject credentials on env here
 	return &Shell{
 		ctx:     ctx,
 		t:       t,
@@ -41,9 +42,9 @@ func (s *Shell) Run(
 		completeargs := []string{scriptpath}
 		completeargs = append(completeargs, args...)
 
-		dir, err := ioutil.TempDir("", "klb-tests")
+		homedir, err := ioutil.TempDir("", "klb-tests")
 		defer func() {
-			err := os.RemoveAll(dir)
+			err := os.RemoveAll(homedir)
 			if err != nil {
 				s.t.Errorf("error removing tmp dir: %s", err)
 			}
@@ -51,10 +52,16 @@ func (s *Shell) Run(
 		if err != nil {
 			s.t.Fatalf("unable to create tmp dir: %s", err)
 		}
+		nashdir := homedir + "/.nash"
+		// TODO: copy klb to nashdir
+
 		log := &logWriter{logger: s.logger}
 		cmd := exec.Command(scriptpath, args...)
-		env := getEnvWithoutHome()
-		cmd.Env = append(env, fmt.Sprintf("HOME=%s", dir))
+		// TODO: inject credentials on env here
+		env := []string{
+			fmt.Sprintf("HOME=%s", homedir),
+			fmt.Sprintf("NASHPATH=%s", nashdir),
+		}
 		cmd.Stdout = log
 		cmd.Stderr = log
 		return cmd.Run()
@@ -68,14 +75,4 @@ type logWriter struct {
 func (l *logWriter) Write(b []byte) (int, error) {
 	l.logger.Println("nash:" + strings.TrimSuffix(string(b), "\n"))
 	return len(b), nil
-}
-
-func getEnvWithoutHome() []string {
-	env := []string{}
-	for _, v := range os.Environ() {
-		if !strings.HasPrefix(v, "HOME=") {
-			env = append(env, v)
-		}
-	}
-	return env
 }
