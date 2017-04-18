@@ -1,5 +1,5 @@
 # Machine related functions
-import azure/disk
+import klb/azure/disk
 
 # azure_vm_new creates a new instance of "virtual machine".
 # `name` is the name of the virtual machine.

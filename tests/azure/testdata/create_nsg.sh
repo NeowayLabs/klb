@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
-import ../../azure/login
-import ../../azure/nsg
+import klb/azure/login
+import klb/azure/nsg
 
 name     = $ARGS[1]
 resgroup = $ARGS[2]

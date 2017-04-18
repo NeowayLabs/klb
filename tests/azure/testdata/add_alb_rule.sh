@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
-import ../../azure/login
-import ../../azure/lb
+import klb/azure/login
+import klb/azure/lb
 
 resgroup        = $ARGS[1]
 rulename        = $ARGS[2]

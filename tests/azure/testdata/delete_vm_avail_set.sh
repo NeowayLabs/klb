@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
-import ../../azure/login
-import ../../azure/vm
+import klb/azure/login
+import klb/azure/vm
 
 resgroup = $ARGS[1]
 availset = $ARGS[2]

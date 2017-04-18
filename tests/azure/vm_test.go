@@ -63,12 +63,12 @@ func testVMCreate(t *testing.T, f fixture.F) {
 
 func attachDiskOnVM(t *testing.T, f fixture.F, vmname string, diskname string) {
 	// TODO: Improve attached disk validation
-	f.Shell.Run(
-		"./testdata/attach_disk.sh",
-		f.ResGroupName,
-		vmname,
-		diskname,
-	)
+	//f.Shell.Run(
+	//"./testdata/attach_disk.sh",
+	//f.ResGroupName,
+	//vmname,
+	//diskname,
+	//)
 }
 
 func createVMResources(t *testing.T, f fixture.F) VMResources {

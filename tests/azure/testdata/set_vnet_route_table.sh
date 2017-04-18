@@ -1,6 +1,6 @@
 #!/usr/bin/env nash
 
-import ../../azure/all
+import klb/azure/all
 
 vnet       = $ARGS[1]
 subnet     = $ARGS[2]

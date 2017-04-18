@@ -34,7 +34,7 @@ func testResourceGroupCreate(t *testing.T) {
 		resources.Delete(t, resgroup)
 	}()
 
-	shell := nash.New(ctx, t, logger)
+	shell := nash.New(ctx, t, logger, session.Env())
 	shell.Run(
 		"./testdata/create_resource_group.sh",
 		resgroup,
@@ -56,7 +56,7 @@ func testResourceGroupDelete(t *testing.T) {
 	session := fixture.NewSession(t)
 	resources := fixture.NewResourceGroup(ctx, t, session, logger)
 
-	shell := nash.New(ctx, t, logger)
+	shell := nash.New(ctx, t, logger, session.Env())
 	shell.Run(
 		"./testdata/create_resource_group.sh",
 		resgroup,

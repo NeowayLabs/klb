@@ -1,6 +1,6 @@
 #!/usr/bin/env nash
 
-import ../../azure/all
+import klb/azure/all
 
 routetable = $ARGS[1]
 name       = $ARGS[2]
