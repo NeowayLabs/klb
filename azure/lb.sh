@@ -96,7 +96,7 @@ fn azure_lb_addresspool_create(name, group, lbname) {
 						--lb-name $lbname
 						--name $name
 						--json
-
+						
 	)
 
 	addresspoolid <= echo -n $out | jq -r ".id"
@@ -114,6 +114,10 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 }
 
 # RULE functions
+
+# session persistence constants for rules
+SESSION_PERSISTENCE_SOURCEIP         = "SourceIP"
+SESSION_PERSISTENCE_SOURCEIPPROTOCOL = "SourceIPProtocol"
 
 fn azure_lb_rule_new(name, group) {
 	instance = ("--name" $name "--resource-group" $group)
@@ -173,6 +177,16 @@ fn azure_lb_rule_set_addresspoolname(instance, addresspoolname) {
 fn azure_lb_rule_set_probename(instance, probename) {
 	instance <= append($instance, "--probe-name")
 	instance <= append($instance, $probename)
+
+	return $instance
+}
+
+# Set a client session persistence for rule with the possible values:
+# SESSION_PERSISTENCE_SOURCEIP
+# SESSION_PERSISTENCE_SOURCEIPPROTOCOL
+fn azure_lb_rule_set_sessionpersistence(instance, sessionpersistence) {
+	instance <= append($instance, "--load-distribution")
+	instance <= append($instance, $sessionpersistence)
 
 	return $instance
 }
