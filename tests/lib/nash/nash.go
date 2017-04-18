@@ -18,19 +18,28 @@ type Shell struct {
 	t       *testing.T
 	retrier *retrier.Retrier
 	logger  *log.Logger
+	env     []string
 }
 
+// New creates a new Shell instance.
+// This shell instance will automatically retry until
+// success or until the given context gets cancelled.
+//
+// You can inject the environment that will be used to
+// run scripts. You should not provide a HOME, NASHPATH variables,
+// each test is executed on a isolated HOME/NASHPATH.
 func New(
 	ctx context.Context,
 	t *testing.T,
 	logger *log.Logger,
+	env []string,
 ) *Shell {
-	// TODO: inject credentials on env here
 	return &Shell{
 		ctx:     ctx,
 		t:       t,
 		retrier: retrier.New(ctx, t, logger),
 		logger:  logger,
+		env:     env,
 	}
 }
 
@@ -53,19 +62,40 @@ func (s *Shell) Run(
 			s.t.Fatalf("unable to create tmp dir: %s", err)
 		}
 		nashdir := homedir + "/.nash"
-		// TODO: copy klb to nashdir
-
-		log := &logWriter{logger: s.logger}
-		cmd := exec.Command(scriptpath, args...)
-		// TODO: inject credentials on env here
-		env := []string{
+		env := append(
+			s.env,
 			fmt.Sprintf("HOME=%s", homedir),
 			fmt.Sprintf("NASHPATH=%s", nashdir),
-		}
-		cmd.Stdout = log
-		cmd.Stderr = log
-		return cmd.Run()
+		)
+		s.installKLB(env)
+		return s.newcmd(env, scriptpath, args...).Run()
 	})
+}
+
+func (s *Shell) newcmd(env []string, name string, args ...string) *exec.Cmd {
+	log := &logWriter{logger: s.logger}
+	cmd := exec.Command(name, args...)
+	cmd.Env = env
+	cmd.Stdout = log
+	cmd.Stderr = log
+	return cmd
+}
+
+func (s *Shell) installKLB(env []string) {
+	s.logger.Println("installing klb on isolated test NASHPATH")
+	cmd := s.newcmd(env, "make", "install")
+	cmd.Dir = klbprojectdir()
+	err := cmd.Run()
+	if err != nil {
+		s.t.Fatalf("unable to install klb on tmp isolated NASHPATH: %s", err)
+		return
+	}
+	s.logger.Println("successfully installed klb")
+
+}
+
+func klbprojectdir() string {
+	return os.Getenv("GOPATH") + "/src/github.com/NeowayLabs/klb"
 }
 
 type logWriter struct {

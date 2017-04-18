@@ -97,7 +97,7 @@ func Run(
 			Session:      session,
 			Location:     location,
 			Logger:       logger,
-			Shell:        nash.New(ctx, t, logger),
+			Shell:        nash.New(ctx, t, logger, session.Env()),
 			Retrier:      retrier.New(ctx, t, logger),
 		})
 		logger.Printf("fixture: finished, failed=%t", t.Failed())
