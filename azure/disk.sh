@@ -55,6 +55,14 @@ fn azure_disk_create(instance) {
 	az disk create --output table $instance
 }
 
+# azure_disk_get_id returns the id of a previously created
+# disk. This id is used to attach the disk on a VM.
+fn azure_disk_get_id(resgroup, name) {
+	res <= az disk show -g $resgroup -n $name --query "id"
+	return res
+}
+
+# FIXME: These last 3 functions seems to belong to the vm package.
 fn azure_disk_attach_new(group, vm, storageaccount, size, name) {
 	(
 		azure vm disk attach-new --resource-group $group --vm-name $vm --storage-account-name $storageaccount --size-in-gb $size --vhd-name $name

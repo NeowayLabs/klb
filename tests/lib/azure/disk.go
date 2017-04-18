@@ -3,7 +3,6 @@ package azure
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/disk"
@@ -26,7 +25,7 @@ func NewDisk(f fixture.F) *Disks {
 
 // AssertExists checks if disk exists in the resource group.
 // Fail tests otherwise.
-func (d *Disks) AssertExists(t *testing.T, name string, size string, sku string) {
+func (d *Disks) AssertExists(t *testing.T, name string, size int, sku string) {
 	d.f.Retrier.Run(newID("Disk", "AssertExists", name), func() error {
 		res, err := d.client.Get(d.f.ResGroupName, name)
 		if err != nil {
@@ -44,12 +43,7 @@ func (d *Disks) AssertExists(t *testing.T, name string, size string, sku string)
 			)
 		}
 		d.f.Logger.Println(res.Properties.AccountType)
-
-		wantSizeInt, err := strconv.Atoi(size)
-		if err != nil {
-			return err
-		}
-		wantSize := int32(wantSizeInt)
+		wantSize := int32(size)
 		gotSize := *res.Properties.DiskSizeGB
 		if wantSize != gotSize {
 			return fmt.Errorf(

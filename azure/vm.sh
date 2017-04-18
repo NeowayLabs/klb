@@ -1,4 +1,5 @@
 # Machine related functions
+import azure/disk
 
 # azure_vm_new creates a new instance of "virtual machine".
 # `name` is the name of the virtual machine.
@@ -289,4 +290,19 @@ fn azure_vm_availset_create(instance) {
 # `group` is name of resource group.
 fn azure_vm_availset_delete(name, group) {
 	az vm availability-set delete --output table --name $name --resource-group $group
+}
+
+# azure_vm_disk_attach attaches a new disk to the VM.
+# The disk id can be obtained using the
+# azure_disk_get_id function from the disk package.
+fn azure_vm_disk_attach(name, resgroup, diskID) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskID
+}
+
+# azure_vm_disk_attach_by_name attaches a new disk to the VM
+# based on the disk name. It will automatically get the disk id for you.
+fn azure_vm_disk_attach_by_name(name, resgroup, diskname) {
+	diskID <= azure_disk_get_id($resgroup, $diskname)
+
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskID
 }
