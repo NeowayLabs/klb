@@ -1,1 +1,2 @@
 tests/azure/testdata/logs/
+run-docker-env*
