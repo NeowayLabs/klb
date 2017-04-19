@@ -109,9 +109,9 @@ fn azure_vm_set_subnet(instance, subnet) {
 # an existing NIC is specified, do not specify subnet, vnet, public IP or NSG.
 #
 # Deprecated, use: azure_vm_set_nics
-fn azure_vm_set_nic(instance, nicnames) {
+fn azure_vm_set_nic(instance, nic) {
 	instance <= append($instance, "--nics")
-	instance <= append($instance, $nics)
+	instance <= append($instance, $nic)
 
 	echo "azure_vm_set_nic() is deprecated, use azure_vm_set_nics()"
 

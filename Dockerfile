@@ -6,7 +6,7 @@ RUN apt-get install -y curl
 
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 
-RUN apt-get install -y nodejs python3 python3-pip libffi-dev golang-go
+RUN apt-get install -y nodejs python3 python3-pip libffi-dev golang-go openssh-server
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 

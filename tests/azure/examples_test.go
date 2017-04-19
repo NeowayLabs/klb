@@ -1,0 +1,29 @@
+package azure_test
+
+import (
+	"testing"
+
+	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
+)
+
+// TestExamples aims to just keep our examples working,
+// but it does not validates if infrastructure has really been built.
+// Only one parameter is supported on the examples, the resource group.
+func TestExamples(t *testing.T) {
+	t.Parallel()
+	examples := []struct {
+		name   string
+		script string
+	}{
+		{
+			name:   "managedDisks",
+			script: "../../examples/azure/managed-disks/build.sh",
+		},
+	}
+
+	for _, example := range examples {
+		fixture.Run(t, example.name, timeout, location, func(t *testing.T, f fixture.F) {
+			f.Shell.Run(example.script, f.ResGroupName)
+		})
+	}
+}
