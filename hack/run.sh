@@ -6,8 +6,8 @@ set -o nounset
 DOCKER_ENV=$(mktemp run-docker-env.XXXXXXX)
 trap "rm -f $DOCKER_ENV" EXIT
 
-GOPATH=/go/src
-WORKDIR=$GOPATH/github.com/NeowayLabs/klb
+GOPATH=/go
+WORKDIR=$GOPATH/src/github.com/NeowayLabs/klb
 
 echo GOPATH=$GOPATH >> $DOCKER_ENV
 echo AZURE_SUBSCRIPTION_ID=$AZURE_SUBSCRIPTION_ID >> $DOCKER_ENV
