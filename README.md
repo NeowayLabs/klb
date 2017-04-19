@@ -55,6 +55,11 @@ klb you can run:
 make shell
 ```
 
+To enter the shell you need to export the required variables
+that will enable you to use klb. More details on getting
+your credentials and exporting them on your environment
+can be found bellow.
+
 The image is ready to run nash scripts that import klb modules.
 
 ### Updating vendored dependencies

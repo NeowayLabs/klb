@@ -20,7 +20,7 @@ image:
 	docker build . -t neowaylabs/klb
 
 shell: image
-	docker run -ti neowaylabs/klb /usr/bin/nash
+	./hack/run.sh /usr/bin/nash
 
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin

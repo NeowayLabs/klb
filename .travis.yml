@@ -9,15 +9,5 @@ dist: trusty
 
 sudo: required
 
-install:
-  - sudo apt-get update -qq
-  - curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
-  - sudo apt-get install -y nodejs
-  - sudo pip install -U pip wheel
-  - sudo pip install azure-cli
-  - sudo pip install awscli
-  - sudo npm install --no-optional -g azure-cli
-  - go install github.com/NeowayLabs/nash
-
 script:
   - travis_wait 60 make test logger=stdout
