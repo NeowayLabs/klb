@@ -21,7 +21,7 @@ image:
 	docker build . -t neowaylabs/klb
 
 shell: image
-	./hack/run.sh /usr/bin/nash
+	./hack/run-tty.sh /usr/bin/nash
 
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin
@@ -41,4 +41,7 @@ gotest=go test ./tests/azure -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
 test: image
-	./hack/run-ci.sh $(gotest) -run=$(run) ./... $(gotestargs)
+	./hack/run.sh $(gotest) -run=$(run) ./... $(gotestargs)
+
+testhost:
+	$(gotest) -run=$(run) ./... $(gotestargs)

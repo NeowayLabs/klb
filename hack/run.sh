@@ -2,7 +2,5 @@
 
 set -o errexit
 set -o nounset
-
 source ./hack/loadenv.sh
-
-docker run -ti -v `pwd`:$WORKDIR -w $WORKDIR --env-file $DOCKER_ENV neowaylabs/klb "$@"
+docker run -v `pwd`:$WORKDIR -w $WORKDIR --env-file $DOCKER_ENV neowaylabs/klb "$@"
