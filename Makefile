@@ -17,6 +17,7 @@ guard-%:
         fi
 
 image:
+	export TERMINFO=""
 	docker build . -t neowaylabs/klb
 
 shell: image
