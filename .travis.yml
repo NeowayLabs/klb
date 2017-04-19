@@ -2,5 +2,8 @@ dist: trusty
 
 sudo: required
 
+install:
+  - make image
+
 script:
   - travis_wait 60 ./hack/run.sh "make test logger=stdout"
