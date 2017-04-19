@@ -141,5 +141,5 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "VMWithAttachedDisk", 25*time.Minute, location, testVMCreate)
+	fixture.Run(t, "VMWithAttachedDisk", 30*time.Minute, location, testVMCreate)
 }
