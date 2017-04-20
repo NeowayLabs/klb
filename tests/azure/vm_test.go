@@ -25,7 +25,7 @@ type VMResources struct {
 func testVMCreate(t *testing.T, f fixture.F) {
 
 	vm := genVMName()
-	vmSize := "Standard_DS4_v2"
+	vmSize := "Basic_A0"
 	username := "core"
 	osDisk := "test.vhd"
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"

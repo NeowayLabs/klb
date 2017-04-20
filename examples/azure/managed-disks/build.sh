@@ -58,15 +58,17 @@ fn create_vm(name, subnet) {
 	azure_vm_create($vm)
 }
 
-if len($ARGS) == "2" {
-	group = $ARGS[1]
-}
-
 azure_login()
 
-echo "creating resource group: "+$group
-
-azure_group_create($group, $location)
+if len($ARGS) == "2" {
+	group = $ARGS[1]
+	
+	echo "using existent resource group: "+$group
+} else {
+	echo "creating new resource group"
+	
+	azure_group_create($group, $location)
+}
 
 echo "creating VNET"
 
@@ -79,7 +81,9 @@ create_subnet($subnet_name, $subnet_cidr)
 echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name)
-azure_vm_disk_attach_new($vm_name, $group, "disk1", "10", "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Standard_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "10", "Premium_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "20", "Standard_LRS")
 
 echo "done, created VM info: "
+echo
+az vm show -n $vm_name -g $group

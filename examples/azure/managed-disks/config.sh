@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
 ## Resource Group Settings
-group    = "klb-test-managed-disk"
+group    = "klb-examples-managed-disk"
 location = "eastus2"
 
 ## Vnet Settings
