@@ -13,6 +13,7 @@ nic      = ($ARGS[7])
 osdisk   = $ARGS[8]
 imageurn = $ARGS[9]
 keyfile  = $ARGS[10]
+sku      = $ARGS[11]
 
 azure_login()
 
@@ -24,5 +25,6 @@ vm <= azure_vm_set_nics($vm, $nic)
 vm <= azure_vm_set_osdiskname($vm, $osdisk)
 vm <= azure_vm_set_imageurn($vm, $imageurn)
 vm <= azure_vm_set_publickeyfile($vm, $keyfile)
+vm <= azure_vm_set_storagesku($vm, $sku)
 
 azure_vm_create($vm)

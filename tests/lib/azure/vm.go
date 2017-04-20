@@ -72,10 +72,9 @@ func (vm *VM) AssertAttachedDataDisk(
 			if gotDiskSize != diskSizeGB {
 				continue
 			}
-			// FIXME: setting storage account type not working yet
-			//if gotStorageAccountType != storageAccountType {
-			//continue
-			//}
+			if gotStorageAccountType != storageAccountType {
+				continue
+			}
 			return nil
 		}
 

@@ -22,10 +22,9 @@ type VMResources struct {
 	nic      string
 }
 
-func testVMCreate(t *testing.T, f fixture.F) {
+func testVMCreation(t *testing.T, f fixture.F, vmSize string, sku string) {
 
 	vm := genVMName()
-	vmSize := "Basic_A0"
 	username := "core"
 	osDisk := "test.vhd"
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
@@ -45,6 +44,7 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		osDisk,
 		imageUrn,
 		keyFile,
+		sku,
 	)
 
 	f.Logger.Println("creating VM")
@@ -54,13 +54,20 @@ func testVMCreate(t *testing.T, f fixture.F) {
 	f.Logger.Println("created VM with success, attaching a disk")
 	diskname := "createVMExtraDisk"
 	size := 10
-	sku := "Standard_LRS"
 
 	attachDiskOnVM(t, f, vm, diskname, size, sku)
 
 	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku)
 
 	f.Logger.Println("VM with attached disk created with success")
+}
+
+func testStandardDiskVM(t *testing.T, f fixture.F) {
+	testVMCreation(t, f, "Basic_A0", "Standard_LRS")
+}
+
+func testPremiumDiskVM(t *testing.T, f fixture.F) {
+	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS")
 }
 
 func attachDiskOnVM(
@@ -141,5 +148,6 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "VMWithAttachedDisk", 30*time.Minute, location, testVMCreate)
+	fixture.Run(t, "VMCreationStandardDisk", 30*time.Minute, location, testStandardDiskVM)
+	fixture.Run(t, "VMCreationPremiumDisk", 30*time.Minute, location, testPremiumDiskVM)
 }
