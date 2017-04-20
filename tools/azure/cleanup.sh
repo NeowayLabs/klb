@@ -34,6 +34,17 @@ for resgroup in $filtered {
 
 echo
 echo "==============================================="
+echo
+echo "from credentials:"
+echo "==============================================="
+echo
+echo "AZURE_SUBSCRIPTION_NAME: "+$AZURE_SUBSCRIPTION_NAME
+echo "AZURE_TENANT_ID: "+$AZURE_TENANT_ID
+echo "AZURE_CLIENT_ID: "+$AZURE_CLIENT_ID
+echo "AZURE_SERVICE_PRINCIPAL"+$AZURE_SERVICE_PRINCIPAL
+echo
+echo "==============================================="
+echo
 echo "are you sure you want to go on ?(Y/N)"
 
 res <= head -n1 /dev/stdin
