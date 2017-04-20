@@ -45,22 +45,25 @@ func (r *Retrier) Run(
 	name string,
 	work WorkFunc,
 ) {
-	r.l.Printf("retrier: starting retry loop for work %q", name)
+	r.l.Printf("retrier: starting work %q", name)
 	errs := retryUntilDone(r.ctx, r.l, name, work)
-	if len(errs) > 0 {
-		errmsgs := []string{
-			"\n",
-			fmt.Sprintf("work %q failed, errors in order:", name),
-		}
-		for i, err := range errs {
-			errmsgs = append(
-				errmsgs,
-				fmt.Sprintf("error[%d]: %s", i, err),
-			)
-		}
-		r.t.Fatal(r.t, strings.Join(errmsgs, "\n"))
+
+	if len(errs) == 0 {
+		r.l.Printf("retrier: success running work %q", name)
+		return
 	}
-	r.l.Printf("retrier: success running work %q", name)
+	errmsgs := []string{
+		"\n",
+		fmt.Sprintf("work %q failed, errors in order:", name),
+	}
+	for i, err := range errs {
+		errmsgs = append(
+			errmsgs,
+			fmt.Sprintf("error[%d]: %s", i, err),
+		)
+	}
+	r.t.Fatalf(strings.Join(errmsgs, "\n"))
+	return
 }
 
 const backoff = 10 * time.Second
@@ -73,11 +76,11 @@ func retryUntilDone(
 ) []error {
 	var errs []error
 	for {
-		// buffered channel avoid goroutine leak
+		// WHY: buffered channel avoid goroutine leak
 		result := make(chan error, 1)
 
 		go func() {
-			l.Printf("retrier: executing work: %s", name)
+			l.Printf("executing work: %s", name)
 			result <- work()
 		}()
 
@@ -95,7 +98,7 @@ func retryUntilDone(
 				l.Printf("retrier: %s: timeouted, returning all errors", name)
 				return append(
 					errs,
-					errors.New("retrier timeout"),
+					errors.New("operation timeouted"),
 				)
 			}
 		}

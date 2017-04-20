@@ -3,7 +3,8 @@
 import klb/azure/login
 import klb/azure/group
 
-resgroup = $ARGS[1]
+# londing configs from config.sh
+import config.sh
 
 azure_login()
-azure_group_delete($resgroup)
+azure_group_delete($group)

@@ -3,6 +3,7 @@ package azure_test
 import (
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
@@ -105,5 +106,5 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 
 func TestLoadBalancer(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "LoadBalancer", timeout, location, testLoadBalancer)
+	fixture.Run(t, "LoadBalancer", 20*time.Minute, location, testLoadBalancer)
 }

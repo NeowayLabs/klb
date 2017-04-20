@@ -1,41 +1,27 @@
-.PHONY: deps aws-deps azure-deps testazure test vendor
+.PHONY: test vendor
 
 ifndef TESTRUN
 TESTRUN=".*"
 endif
 
-ifndef GOPATH
-$(error $$GOPATH is not set)
-endif
-
 all:
 	@echo "did you mean 'make test' ?"
 
-deps: aws-deps azure-deps jq-dep
-
-aws-deps:
-	pip install --user awscli
-
-azure-deps: jq-dep
-	npm install --no-optional -g azure-cli
-
-jq-dep: $(GOPATH)/bin/jq
-
-$(GOPATH)/bin/jq:
-	@echo "Downloading jq..."
-	mkdir -p $(GOPATH)/bin
-	wget "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O $(GOPATH)/bin/jq
-	chmod "+x" $(GOPATH)/bin/jq
-
 vendor:
 	./hack/vendor.sh
-
 
 guard-%:
 	@ if [ "${${*}}" = "" ]; then \
                 echo "Env var '$*' not set"; \
                 exit 1; \
         fi
+
+image:
+	export TERMINFO=""
+	docker build . -t neowaylabs/klb
+
+shell: image
+	./hack/run-tty.sh /usr/bin/nash
 
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin
@@ -48,11 +34,17 @@ install: guard-NASHPATH
 	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-timeout=30m
+timeout=60m
 logger=file
 parallel=30 #Explore I/O parallelization
-gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
+gotest=go test ./tests/azure -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
-test:
+test: image
+	./hack/run.sh $(gotest) -run=$(run) ./... $(gotestargs)
+
+cleanup: image
+	./hack/run-tty.sh ./tools/azure/cleanup.sh
+
+testhost:
 	$(gotest) -run=$(run) ./... $(gotestargs)

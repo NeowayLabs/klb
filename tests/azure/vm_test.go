@@ -3,6 +3,7 @@ package azure_test
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 
@@ -19,14 +20,11 @@ type VMResources struct {
 	vnet     string
 	subnet   string
 	nic      string
-	storAcc  string
 }
 
-func testVMCreate(t *testing.T, f fixture.F) {
+func testVMCreation(t *testing.T, f fixture.F, vmSize string, sku string) {
 
 	vm := genVMName()
-	osType := "Linux"
-	vmSize := "Standard_DS4_v2"
 	username := "core"
 	osDisk := "test.vhd"
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
@@ -39,20 +37,55 @@ func testVMCreate(t *testing.T, f fixture.F) {
 		vm,
 		f.ResGroupName,
 		f.Location,
-		osType,
 		vmSize,
 		username,
 		resources.availSet,
-		resources.vnet,
-		resources.subnet,
 		resources.nic,
-		resources.storAcc,
 		osDisk,
 		imageUrn,
 		keyFile,
+		sku,
 	)
+
+	f.Logger.Println("creating VM")
 	vms := azure.NewVM(f)
-	vms.AssertExists(t, vm, resources.availSet, vmSize, osType, resources.nic)
+	vms.AssertExists(t, vm, resources.availSet, vmSize, resources.nic)
+
+	f.Logger.Println("created VM with success, attaching a disk")
+	diskname := "createVMExtraDisk"
+	size := 10
+
+	attachDiskOnVM(t, f, vm, diskname, size, sku)
+
+	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku)
+
+	f.Logger.Println("VM with attached disk created with success")
+}
+
+func testStandardDiskVM(t *testing.T, f fixture.F) {
+	testVMCreation(t, f, "Basic_A0", "Standard_LRS")
+}
+
+func testPremiumDiskVM(t *testing.T, f fixture.F) {
+	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS")
+}
+
+func attachDiskOnVM(
+	t *testing.T,
+	f fixture.F,
+	vmname string,
+	diskname string,
+	diskSizeGB int,
+	sku string,
+) {
+	f.Shell.Run(
+		"./testdata/attach_new_disk.sh",
+		f.ResGroupName,
+		vmname,
+		diskname,
+		strconv.Itoa(diskSizeGB),
+		sku,
+	)
 }
 
 func createVMResources(t *testing.T, f fixture.F) VMResources {
@@ -62,18 +95,21 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 	resources.vnet = genVnetName()
 	resources.subnet = genSubnetName()
 	resources.nic = genNicName()
-	resources.storAcc = genStorageAccountName()
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
 	subnetAddress := "10.116.1.0/24"
 	addrnic := "10.116.1.100"
+	updatedomain := "3"
+	faultdomain := "3"
 
 	f.Shell.Run(
-		"./testdata/create_avail_set.sh",
+		"./testdata/create_vm_avail_set.sh",
 		f.ResGroupName,
 		resources.availSet,
 		f.Location,
+		updatedomain,
+		faultdomain,
 	)
 
 	createVNet(t, f, vnetDescription{
@@ -107,17 +143,11 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 		addrnic,
 	)
 
-	f.Shell.Run(
-		"./testdata/create_storage_account.sh",
-		f.ResGroupName,
-		resources.storAcc,
-		f.Location,
-	)
-
 	return resources
 }
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "VM_Create", 25*time.Minute, location, testVMCreate)
+	fixture.Run(t, "VMCreationStandardDisk", 30*time.Minute, location, testStandardDiskVM)
+	fixture.Run(t, "VMCreationPremiumDisk", 30*time.Minute, location, testPremiumDiskVM)
 }
