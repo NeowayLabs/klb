@@ -5,6 +5,8 @@ import klb/azure/group
 
 klbtests_prefix = "klb-*"
 
+echo
+echo "========================================================================="
 echo "this script will attempt to cleanup all pending klb tests resource groups"
 
 azure_login()
