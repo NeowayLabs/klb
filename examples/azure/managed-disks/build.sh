@@ -79,7 +79,7 @@ create_subnet($subnet_name, $subnet_cidr)
 echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name)
-azure_vm_disk_attach_new($vm_name, $group, $datadisk_name, $datadisk_size, "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, $datadisk_name, $datadisk_size, "Standard_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "disk1", "10", "Premium_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Standard_LRS")
 
 echo "done, created VM info: "

@@ -4,6 +4,11 @@ This release added support to work with managed disks.
 It added a dependency on the new azure cli tool **az**
 since manages disks can only be created using it.
 
+## Cleanup
+
+We have new tooling on the project to cleanup test
+resources that sometimes leak. Infrastructure is not free ;-).
+
 ## Login
 
 We need set new var **AZURE_SERVICE_PRINCIPAL** to authenticate with **Azure CLI 2.0**

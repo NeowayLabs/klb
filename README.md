@@ -91,3 +91,21 @@ Just run `make test logger=stdout`.
 
 P.S.:
 - barefoot running is not implemented.
+
+## Cleanup
+
+The automated tests strives to always cleanup ALL created resources.
+But sometimes it may fail to delete resources, it can happen even
+because of a intermitent cloud service failure.
+
+If you want to be absolutely sure to delete all test resources
+created by klb run:
+
+```
+make cleanup
+```
+
+Do not worry, resources are just going to be deleted
+after you carefully check the list of resources and
+accept it, it won't go beserk deleting everything on
+your account.

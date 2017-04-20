@@ -12,3 +12,11 @@ fn azure_group_create(name, location) {
 fn azure_group_delete(name) {
 	azure group delete -q --name $name
 }
+
+# azure_group_get_names returns a list with the names
+# of all available resource groups
+fn azure_group_get_names() {
+	res <= az group list --query "[*].name" | jq -r ".[]"
+
+	return split($res, "\n")
+}
