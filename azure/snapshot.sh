@@ -14,7 +14,7 @@ fn azure_snapshot_create(name, resgroup, srcid) {
 				-g $resgroup
 				-n $name
 				--source $srcid |
-		jq ".id"
+		jq -r ".id"
 	)
 
 	return $res
