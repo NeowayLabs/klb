@@ -113,10 +113,21 @@ for id in $ids {
 	snapshotid <= azure_snapshot_create($snapshot_name, $group, $id)
 
 	echo "created snapshot id: "+$snapshotid
-	echo "attaching it to backup vm"
 
-	# TODO: attach not working
-	# azure_vm_disk_attach($vm_backup_name, $group, $snapshotid)
+	disk_name <= addsuffix("disk")
+
+	echo "creating disk: "+$disk_name+" from snapshot"
+
+	disk <= azure_disk_new($disk_name, $group, $location)
+	disk <= azure_disk_set_source($disk, $snapshotid)
+
+	azure_disk_create($disk)
+
+	echo "created disk with success, attaching it to backup vm"
+
+	azure_vm_disk_attach($vm_backup_name, $group, $disk_name)
+
+	echo "attached disk with success"
 }
 
 echo

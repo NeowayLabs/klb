@@ -120,11 +120,11 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 		t.Fatalf("expected %d snapshots, got %d", len(disks), len(ids))
 	}
 
-	vmbackup := createVM(t, f, vmSize, sku)
-	for _, id := range ids {
-		// attachDiskOnVM(t, f, vmbackup, id)
-		// TODO: Check the attached disk properties
-	}
+	//vmbackup := createVM(t, f, vmSize, sku)
+	//for _, id := range ids {
+	//// attachDiskOnVM(t, f, vmbackup, id)
+	//// TODO: Check the attached disk properties
+	//}
 }
 
 func testVMSnapshotStandard(t *testing.T, f fixture.F) {
