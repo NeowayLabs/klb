@@ -70,6 +70,28 @@ func testPremiumDiskVM(t *testing.T, f fixture.F) {
 	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS")
 }
 
+func testDuplicatedAvailabilitySet(t *testing.T, f fixture.F) {
+	name := "duplicatedAvSet"
+
+	createAvSet := func() {
+		f.Shell.Run(
+			"./testdata/create_vm_avail_set.sh",
+			f.ResGroupName,
+			name,
+			f.Location,
+			"1",
+			"1",
+		)
+	}
+
+	createAvSet()
+	availSets := azure.NewAvailSet(f)
+	availSets.AssertExists(t, name)
+
+	createAvSet()
+	availSets.AssertExists(t, name)
+}
+
 func attachDiskOnVM(
 	t *testing.T,
 	f fixture.F,
@@ -150,4 +172,5 @@ func TestVM(t *testing.T) {
 	t.Parallel()
 	fixture.Run(t, "VMCreationStandardDisk", 30*time.Minute, location, testStandardDiskVM)
 	fixture.Run(t, "VMCreationPremiumDisk", 30*time.Minute, location, testPremiumDiskVM)
+	fixture.Run(t, "VMDuplicatedAvSet", 10*time.Minute, location, testDuplicatedAvailabilitySet)
 }
