@@ -300,3 +300,22 @@ fn azure_vm_disk_attach(name, resgroup, diskID) {
 fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskname --new --size-gb $size --sku $sku
 }
+
+# azure_vm_get_datadisks_ids will returns a list with the
+# id's of all the managed data disks of the given VM.
+# If the VM has no data disk it will return an empty list.
+# The id of the OSDisk will not be returned.
+#
+# These ID's are well suited to be used on snapshot creation.
+fn azure_vm_get_datadisks_ids(name, resgroup) {
+	ids_raw <= (
+		az vm show
+			--resource-group $resgroup
+			--name $name |
+		jq -r ".storageProfile.dataDisks[].managedDisk.id"
+	)
+
+	ids     <= split($ids_raw, "\n")
+
+	return $ids
+}

@@ -5,6 +5,17 @@
 # running VM.
 #
 # Read more here: https://azure.microsoft.com/en-us/blog/azure-cli-managed-disks
+#
+# On success, returns the ID of the created snapshot.
+# On failure it will explode in your face.
 fn azure_snapshot_create(name, resgroup, srcid) {
-	az snapshot create -g $resgroup -n $name --source $srcid
+	res <= (
+		az snapshot create
+				-g $resgroup
+				-n $name
+				--source $srcid |
+		jq ".id"
+	)
+
+	return $res
 }
