@@ -15,9 +15,9 @@ resgroup = $ARGS[1]
 vmname   = $ARGS[2]
 results  = $ARGS[3]
 
-ids      <= azure_vm_get_datadisks_ids($vmname, $resgroup)
+azure_login()
 
-echo "vm data disks: "+$ids
+ids      <= azure_vm_get_datadisks_ids($vmname, $resgroup)
 
 for id in $ids {
 	snapshot_name <= addsuffix("snapshot")
