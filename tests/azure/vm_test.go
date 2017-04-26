@@ -120,15 +120,17 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 		t.Fatalf("expected %d snapshots, got %d", len(disks), len(ids))
 	}
 
-	//vmbackup := createVM(t, f, vmSize, sku)
-	//for _, id := range ids {
-	//// attachDiskOnVM(t, f, vmbackup, id)
-	//// TODO: Check the attached disk properties
-	//}
+	vmbackup := createVM(t, f, vmSize, sku)
+	for _, id := range ids {
+		attachDiskOnVM(t, f, vmbackup, id)
+	}
+	for _, disk := range disks {
+		vms.AssertAttachedDataDisk(t, vmbackup, disk.name, disk.size, sku)
+	}
 }
 
 func testVMSnapshotStandard(t *testing.T, f fixture.F) {
-	testVMSnapshot(t, f, "Basic_A0", "Standard_LRS")
+	testVMSnapshot(t, f, "Standard_DS4_v2", "Standard_LRS")
 }
 
 func testVMSnapshotPremium(t *testing.T, f fixture.F) {
