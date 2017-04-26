@@ -14,8 +14,8 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
-func genVMName() string {
-	return fmt.Sprintf("klbvmtests%d", rand.Intn(1000))
+func genUniqName() string {
+	return fmt.Sprintf("klbvmtests-%d", rand.Intn(9999999))
 }
 
 type VMResources struct {
@@ -25,14 +25,19 @@ type VMResources struct {
 	nic      string
 }
 
-func createVM(t *testing.T, f fixture.F, vmSize string, sku string) string {
-	vm := genVMName()
+func createVM(
+	t *testing.T,
+	f fixture.F,
+	availset string,
+	nic string,
+	vmSize string,
+	sku string,
+) string {
+	vm := genUniqName()
 	username := "core"
-	osDisk := "test.vhd"
+	osDisk := genUniqName()
 	imageUrn := "OpenLogic:CentOS:7.2:7.2.20161026"
 	keyFile := "./testdata/key.pub"
-
-	resources := createVMResources(t, f)
 
 	f.Shell.Run(
 		"./testdata/create_vm.sh",
@@ -41,8 +46,8 @@ func createVM(t *testing.T, f fixture.F, vmSize string, sku string) string {
 		f.Location,
 		vmSize,
 		username,
-		resources.availSet,
-		resources.nic,
+		availset,
+		nic,
 		osDisk,
 		imageUrn,
 		keyFile,
@@ -51,15 +56,15 @@ func createVM(t *testing.T, f fixture.F, vmSize string, sku string) string {
 
 	f.Logger.Println("creating VM")
 	vms := azure.NewVM(f)
-	vms.AssertExists(t, vm, resources.availSet, vmSize, resources.nic)
+	vms.AssertExists(t, vm, availset, vmSize, nic)
 	f.Logger.Println("created VM with success, attaching a disk")
-
 	return vm
 }
 
 func testVMCreation(t *testing.T, f fixture.F, vmSize string, sku string) {
 
-	vm := createVM(t, f, vmSize, sku)
+	resources := createVMResources(t, f)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 
 	diskname := "createVMExtraDisk"
 	size := 10
@@ -81,15 +86,16 @@ func testPremiumDiskVM(t *testing.T, f fixture.F) {
 }
 
 func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
-	vm := createVM(t, f, vmSize, sku)
+	resources := createVMResources(t, f)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 
 	disks := []struct {
 		name string
 		size int
 	}{
-		{name: "disk1", size: 10},
-		{name: "disk2", size: 20},
-		{name: "disk3", size: 30},
+		{name: genUniqName(), size: 10},
+		{name: genUniqName(), size: 20},
+		{name: genUniqName(), size: 30},
 	}
 
 	vms := azure.NewVM(f)
@@ -113,19 +119,35 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 		t.Fatalf("error reading output file: %s", err)
 	}
 
-	ids := strings.Split(string(idsraw), "\n")
+	ids := strings.Split(strings.Trim(string(idsraw), "\n"), "\n")
 	f.Logger.Printf("parsed ids: %s", ids)
 
 	if len(ids) != len(disks) {
 		t.Fatalf("expected %d snapshots, got %d", len(disks), len(ids))
 	}
 
-	vmbackup := createVM(t, f, vmSize, sku)
-	for _, id := range ids {
-		attachDiskOnVM(t, f, vmbackup, id)
-	}
+	recoveredDisks := map[int]bool{}
 	for _, disk := range disks {
-		vms.AssertAttachedDataDisk(t, vmbackup, disk.name, disk.size, sku)
+		if _, ok := recoveredDisks[disk.size]; ok {
+			t.Fatal("snapshot test can't have disks with same size")
+		}
+		recoveredDisks[disk.size] = false
+	}
+
+	nic := genNicName()
+	createVMNIC(f, nic, resources.vnet, resources.subnet)
+	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, sku)
+
+	for _, id := range ids {
+		diskname := attachSnapshotOnVM(t, f, vmbackup, id, sku)
+		size := vms.DataDiskSize(t, vmbackup, diskname)
+		recoveredDisks[size] = true
+	}
+
+	for diskinfo, got := range recoveredDisks {
+		if !got {
+			t.Fatalf("disk with size %d not recevered from snapshot", diskinfo)
+		}
 	}
 }
 
@@ -155,8 +177,24 @@ func attachNewDiskOnVM(
 	)
 }
 
-func attachDiskOnVM(t *testing.T, f fixture.F, vmname string, diskid string) {
-	f.Shell.Run("./testdata/attach_disk.sh", f.ResGroupName, vmname, diskid)
+func attachSnapshotOnVM(
+	t *testing.T,
+	f fixture.F,
+	vmname string,
+	snapshotid string,
+	disksku string,
+) string {
+	diskname := genUniqName()
+	f.Shell.Run(
+		"./testdata/attach_snapshot.sh",
+		f.ResGroupName,
+		f.Location,
+		vmname,
+		diskname,
+		disksku,
+		snapshotid,
+	)
+	return diskname
 }
 
 func createVMResources(t *testing.T, f fixture.F) VMResources {
@@ -170,7 +208,6 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"
 	subnetAddress := "10.116.1.0/24"
-	addrnic := "10.116.1.100"
 	updatedomain := "3"
 	faultdomain := "3"
 
@@ -204,17 +241,20 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 		nsg,
 	)
 
+	createVMNIC(f, resources.nic, resources.vnet, resources.subnet)
+
+	return resources
+}
+
+func createVMNIC(f fixture.F, nic string, vnet string, subnet string) {
 	f.Shell.Run(
 		"./testdata/create_nic.sh",
 		f.ResGroupName,
-		resources.nic,
+		nic,
 		f.Location,
-		resources.vnet,
-		resources.subnet,
-		addrnic,
+		vnet,
+		subnet,
 	)
-
-	return resources
 }
 
 func TestVM(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 )
 
 func genNicName() string {
-	return fmt.Sprintf("klb-nic-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-nic-tests-%d", rand.Intn(99999999))
 }
 
 func testNicCreate(t *testing.T, f fixture.F) {

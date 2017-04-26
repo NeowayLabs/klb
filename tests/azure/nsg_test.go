@@ -10,7 +10,7 @@ import (
 )
 
 func genNsgName() string {
-	return fmt.Sprintf("klb-nsg-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-nsg-tests-%d", rand.Intn(999999999))
 }
 
 func testNsgCreate(t *testing.T, f fixture.F) {
