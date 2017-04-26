@@ -2,6 +2,7 @@ package azure_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
@@ -20,6 +21,8 @@ func TestExamples(t *testing.T) {
 			script: "../../examples/azure/managed-disks/build.sh",
 		},
 	}
+
+	timeout := 30 * time.Minute
 
 	for _, example := range examples {
 		fixture.Run(t, example.name, timeout, location, func(t *testing.T, f fixture.F) {
