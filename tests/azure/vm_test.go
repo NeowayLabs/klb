@@ -130,7 +130,7 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 }
 
 func testVMSnapshotStandard(t *testing.T, f fixture.F) {
-	testVMSnapshot(t, f, "Standard_DS4_v2", "Standard_LRS")
+	testVMSnapshot(t, f, "Basic_A2", "Standard_LRS")
 }
 
 func testVMSnapshotPremium(t *testing.T, f fixture.F) {
