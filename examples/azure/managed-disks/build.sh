@@ -72,10 +72,10 @@ if len($ARGS) == "2" {
 	# WHY: Automation runs this build, it must ensure
 	# all resources are cleaned up, so it injects a
 	# pre existent resource group that will be deleted
-	echo "using existent resource group: "+$group
-	group = $ARGS[1]
+	group           = $ARGS[1]
 	snapshots_group = $group
 	
+	echo "using existent resource group: "+$group
 } else {
 	echo "creating new resource group"
 	
@@ -108,9 +108,8 @@ echo "getting ID of original VM data disks"
 
 ids <= azure_vm_get_datadisks_ids($vm_name, $group)
 
-
 echo "generating snapshots from original VM"
-echo "snapshots will be located at: " + $snapshots_group
+echo "snapshots will be located at: "+$snapshots_group
 
 for id in $ids {
 	snapshot_name <= addsuffix("snapshot")

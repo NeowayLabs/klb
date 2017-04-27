@@ -12,6 +12,9 @@ import (
 // Only one parameter is supported on the examples, the resource group.
 func TestExamples(t *testing.T) {
 	t.Parallel()
+	t.Skip()
+	// FIXME: Try again must destroy the entire resgroup
+	// Not sure if this is a good idea x_x
 	examples := []struct {
 		name   string
 		script string
