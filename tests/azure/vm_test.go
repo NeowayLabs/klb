@@ -146,7 +146,7 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 
 	for diskinfo, got := range recoveredDisks {
 		if !got {
-			t.Fatalf("disk with size %d not recevered from snapshot", diskinfo)
+			t.Fatalf("disk with size %d not recovered from snapshot", diskinfo)
 		}
 	}
 }
