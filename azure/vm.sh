@@ -344,3 +344,53 @@ fn azure_vm_get_disks_ids(name, resgroup) {
 
 	return $disks
 }
+
+# azure_vm_backup_create will create a full backup from the given VM.
+# The backup is created following a naming pattern for the resources
+# that it creates, this enables the azure_vm_backup_recover function to work.
+# Conceptually we are encoding information required for proper recover (metadata)
+# on the name of the resources, so we don't need a third party storage.
+#
+# The "prefix" parameter gives you a namespace that you can use to organize
+# backups of different applications on the same subscription. This namespace
+# is built by appending the provided string as a prefix on the name of
+# the resource group that will be created to hold the backup.
+#
+# When you call this function, the first step is to create a resource
+# group with the name following this pattern:
+#
+# <prefix>-klb-backup-<timestamp>-<vmname>
+#
+# Where the prefix is the one you passed as a parameter.
+# If there is already a resource group with this name, the
+# creation will fail. It is paramount to the proper work of
+# the backup functions that the ONLY thing inside the resource
+# group are the VM disks snapshots.
+#
+# The <timestamp> will follow this pattern:
+#
+# <year>.<month>.<day>.<hour>
+#
+# Calling: azure_vm_backup_create("test", "testgroup", "staging")
+#
+# Could (timestamp may vary) create the resource group:
+#
+# "staging-klb-backup-2017.05.28.1930-test"
+#
+# The resource group name pattern is important to be know since
+# you must manage these resource groups and delete them.
+# There will be also patterns on how snapshots are stored inside
+# this resource group but they are not documented and you should not
+# rely on them, they are implementation details.
+#
+# Backup resource groups should never be changed, because of that
+# they are read only locked after all snapshots are added. There is
+# also a delete lock to avoid deleting backups on accident.
+# The azure_vm_backup_delete function will release the locks and delete
+# a backup resource group for you.
+#
+# During the backup procedure the VM will be shutdown, and restarted
+# after all snapshots are taken.
+fn azure_vm_backup_create(vmname, group, prefix) {
+
+}

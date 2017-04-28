@@ -68,20 +68,9 @@ fn create_vm(name, subnet) {
 
 azure_login()
 
-if len($ARGS) == "2" {
-	# WHY: Automation runs this build, it must ensure
-	# all resources are cleaned up, so it injects a
-	# pre existent resource group that will be deleted
-	group           = $ARGS[1]
-	snapshots_group = $group
-	
-	echo "using existent resource group: "+$group
-} else {
-	echo "creating new resource group"
-	
-	azure_group_create($group, $location)
-	azure_group_create($snapshots_group, $location)
-}
+echo "creating new resource group"
+
+azure_group_create($group, $location)
 
 echo "creating VNET"
 
@@ -94,47 +83,12 @@ create_subnet($subnet_name, $subnet_cidr)
 echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name)
-azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "10", "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "20", "Standard_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "disk1", "10", "Premium_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Premium_LRS")
 
-echo "created main VM"
-echo "creating backup VM"
+echo "created VM, starting backup"
 
-vm_backup_name = $vm_name+"-backup"
+backup_resgroup <= azure_vm_backup_create($vmname, $group, $backup_prefix)
 
-create_vm($vm_backup_name, $subnet_name)
-
-echo "getting ID of original VM data disks"
-
-ids <= azure_vm_get_datadisks_ids($vm_name, $group)
-
-echo "generating snapshots from original VM"
-echo "snapshots will be located at: "+$snapshots_group
-
-for id in $ids {
-	snapshot_name <= addsuffix("snapshot")
-
-	echo "creating snapshot: "+$snapshot_name+" from id: "+$id
-
-	snapshotid <= azure_snapshot_create($snapshot_name, $snapshots_group, $id)
-
-	echo "created snapshot id: "+$snapshotid
-
-	disk_name <= addsuffix("disk")
-
-	echo "creating disk: "+$disk_name+" from snapshot"
-
-	disk <= azure_disk_new($disk_name, $group, $location)
-	disk <= azure_disk_set_source($disk, $snapshotid)
-
-	azure_disk_create($disk)
-
-	echo "created disk with success, attaching it to backup vm"
-
-	azure_vm_disk_attach($vm_backup_name, $group, $disk_name)
-
-	echo "attached disk with success"
-}
-
-echo
-echo "finished with no errors lol"
+# TODO: check resgroup exists
+# TODO: list all disks on resgroup
