@@ -28,7 +28,7 @@ func TestExamples(t *testing.T) {
 		},
 	}
 
-	timeout := 30 * time.Minute
+	timeout := time.Hour
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 

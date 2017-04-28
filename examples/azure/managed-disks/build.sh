@@ -68,20 +68,10 @@ fn create_vm(name, subnet) {
 
 azure_login()
 
-if len($ARGS) == "2" {
-	# WHY: Automation runs this build, it must ensure
-	# all resources are cleaned up, so it injects a
-	# pre existent resource group that will be deleted
-	group           = $ARGS[1]
-	snapshots_group = $group
-	
-	echo "using existent resource group: "+$group
-} else {
-	echo "creating new resource group"
-	
-	azure_group_create($group, $location)
-	azure_group_create($snapshots_group, $location)
-}
+echo "creating new resource group"
+
+azure_group_create($group, $location)
+azure_group_create($snapshots_group, $location)
 
 echo "creating VNET"
 

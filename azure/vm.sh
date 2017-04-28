@@ -319,3 +319,28 @@ fn azure_vm_get_datadisks_ids(name, resgroup) {
 
 	return $ids
 }
+
+# azure_vm_get_osdisk_id will return the osdisk ID.
+#
+# This ID is well suited to be used on snapshot creation.
+fn azure_vm_get_osdisk_id(name, resgroup) {
+	id <= (
+		az vm show
+			--resource-group $resgroup
+			--name $name |
+		jq -r ".storageProfile.dataDisks[].managedDisk.id"
+	)
+
+	return $id
+}
+
+# azure_vm_get_disks_ids will return the id of all disks on the VM.
+#
+# It will be a list including the osdisk id and the datadisks id's.
+fn azure_vm_get_disks_ids(name, resgroup) {
+	osdiskid  <= azure_vm_get_osdisk_id($name, $resgroup)
+	datadisks <= azure_vm_get_datadisks_ids($name, $resgroup)
+	disks     <= append($datadisks, $osdiskid)
+
+	return $disks
+}
