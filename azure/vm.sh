@@ -328,7 +328,7 @@ fn azure_vm_get_osdisk_id(name, resgroup) {
 		az vm show
 			--resource-group $resgroup
 			--name $name |
-		jq -r ".storageProfile.dataDisks[].managedDisk.id"
+		jq -r ".storageProfile.osDisk.managedDisk.id"
 	)
 
 	return $id

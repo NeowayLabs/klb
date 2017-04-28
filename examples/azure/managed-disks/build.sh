@@ -94,9 +94,9 @@ vm_backup_name = $vm_name+"-backup"
 
 create_vm($vm_backup_name, $subnet_name)
 
-echo "getting ID of original VM data disks"
+echo "getting IDs of the VM disks"
 
-ids <= azure_vm_get_datadisks_ids($vm_name, $group)
+ids <= azure_vm_get_disks_ids($vm_name, $group)
 
 echo "generating snapshots from original VM"
 echo "snapshots will be located at: "+$snapshots_group
