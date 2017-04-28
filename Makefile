@@ -43,6 +43,9 @@ gotestargs=-args -logger $(logger)
 test: image
 	./hack/run.sh $(gotest) -run=$(run) ./... $(gotestargs)
 
+test-examples: image
+	./hack/run.sh $(gotest) -tags=examples -run=TestExamples $(gotestargs)
+
 cleanup: image
 	./hack/run-tty.sh ./tools/azure/cleanup.sh
 

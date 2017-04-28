@@ -1,3 +1,5 @@
+// +build examples
+
 package azure_test
 
 import (
