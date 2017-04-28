@@ -88,7 +88,8 @@ azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Premium_LRS")
 
 echo "created VM, starting backup"
 
-backup_resgroup <= azure_vm_backup_create($vmname, $group, $backup_prefix)
+backup_resgroup <= azure_vm_backup_create($vm_name, $group, $backup_prefix)
 
 # TODO: check resgroup exists
 # TODO: list all disks on resgroup
+# TODO: restore will use azure_vm_set_osdisk_id(instance, id)

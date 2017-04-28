@@ -17,6 +17,15 @@ fn azure_vm_new(name, group, location) {
 	return $instance
 }
 
+# azure_vm_set_osdisk_id sets os disk ID of the virtual machine.
+# If the this is called you should not set other OS parameters.
+fn azure_vm_set_osdisk_id(instance, id) {
+	instance <= append($instance, "--attach-os-disk")
+	instance <= append($instance, $id)
+
+	return $instance
+}
+
 # azure_vm_set_ostype sets ostype of "virtual machine".
 # `instance` is the name of the instance.
 # `ostype` is the type of OS installed on a custom VHD.
@@ -308,6 +317,11 @@ fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
 #
 # These ID's are well suited to be used on snapshot creation.
 fn azure_vm_get_datadisks_ids(name, resgroup) {
+	# TODO: need a way to get (ID, LUN) tuples to use on backup procedure.
+	# The only place that have LUN information is the VM (not on the disk).
+	# Perhaps it is cool to get the name too.
+	# hint: jq -r ".storageProfile.dataDisks[].lun"
+	# hint: jq -r ".storageProfile.dataDisks[].name"
 	ids_raw <= (
 		az vm show
 			--resource-group $resgroup
