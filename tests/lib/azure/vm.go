@@ -24,6 +24,53 @@ func NewVM(f fixture.F) *VM {
 	return as
 }
 
+func (vm *VM) DataDiskSize(t *testing.T, vmname string, diskname string) int {
+
+	size := 0
+
+	vm.f.Retrier.Run(newID("VM", "DataDiskSize", vmname), func() error {
+		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
+		if err != nil {
+			return err
+		}
+		if v.VirtualMachineProperties == nil {
+			return fmt.Errorf("no virtual machine properties found on vm %s", vmname)
+		}
+		if v.VirtualMachineProperties.StorageProfile == nil {
+			return fmt.Errorf("no storage profile found on vm %s", vmname)
+		}
+
+		storageProfile := v.VirtualMachineProperties.StorageProfile
+		if storageProfile.DataDisks == nil {
+			return fmt.Errorf("no data disks found on vm %s", vmname)
+		}
+
+		for _, disk := range *storageProfile.DataDisks {
+			if disk.Name == nil {
+				continue
+			}
+			if disk.DiskSizeGB == nil {
+				continue
+			}
+			gotName := *disk.Name
+			gotDiskSize := int(*disk.DiskSizeGB)
+			vm.f.Logger.Printf("got disk %q", gotName)
+
+			if gotName == diskname {
+				size = gotDiskSize
+				return nil
+			}
+		}
+		return fmt.Errorf("unable to find disk %q on vm %q", diskname, vmname)
+	})
+
+	if size == 0 {
+		t.Fatal("unable to get data disk %q size", diskname)
+	}
+
+	return size
+}
+
 // AssertAttachedDisk checks if VM has the following disk attached
 func (vm *VM) AssertAttachedDataDisk(
 	t *testing.T,

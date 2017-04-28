@@ -34,7 +34,7 @@ install: guard-NASHPATH
 	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-timeout=60m
+timeout=90m
 logger=file
 parallel=30 #Explore I/O parallelization
 gotest=go test ./tests/azure -parallel $(parallel) -timeout $(timeout) -race
@@ -42,6 +42,9 @@ gotestargs=-args -logger $(logger)
 
 test: image
 	./hack/run.sh $(gotest) -run=$(run) ./... $(gotestargs)
+
+test-examples: image
+	./hack/run.sh $(gotest) -tags=examples -run=TestExamples $(gotestargs)
 
 cleanup: image
 	./hack/run-tty.sh ./tools/azure/cleanup.sh

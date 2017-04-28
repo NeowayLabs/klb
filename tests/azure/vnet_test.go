@@ -11,7 +11,7 @@ import (
 )
 
 func genVnetName() string {
-	return fmt.Sprintf("klb-vnet-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-vnet-tests-%d", rand.Intn(9999999999))
 }
 
 type vnetDescription struct {

@@ -4,5 +4,5 @@ import "time"
 
 const (
 	location = "eastus"
-	timeout  = 10 * time.Minute
+	timeout  = 30 * time.Minute
 )

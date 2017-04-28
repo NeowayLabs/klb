@@ -10,7 +10,7 @@ import (
 )
 
 func genSubnetName() string {
-	return fmt.Sprintf("klb-subnet-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-subnet-tests-%d", rand.Intn(9999999999))
 }
 
 func testSubnetCreate(t *testing.T, f fixture.F) {

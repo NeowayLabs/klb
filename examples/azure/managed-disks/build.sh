@@ -11,7 +11,15 @@ import klb/azure/disk
 import klb/azure/vnet
 import klb/azure/nsg
 import klb/azure/route
+import klb/azure/snapshot
 import config.sh
+
+fn addsuffix(name) {
+	# Providing true uniqueness with the limits on the names is pretty hard :-)
+	s <= head -n1 /dev/urandom | md5sum | tr -dc A-Za-z0-9 | cut -b 1-10
+
+	return $name+"-"+$s
+}
 
 fn create_subnet(name, cidr) {
 	azure_nsg_create($name, $group, $location)
@@ -51,7 +59,7 @@ fn create_vm(name, subnet) {
 	nics = ($name)
 
 	vm   <= azure_vm_set_nics($vm, $nics)
-	vm   <= azure_vm_set_osdiskname($vm, $name+".vhd")
+	vm   <= azure_vm_set_osdiskname($vm, $name)
 	vm   <= azure_vm_set_imageurn($vm, $vm_image_urn)
 	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
 
@@ -60,15 +68,10 @@ fn create_vm(name, subnet) {
 
 azure_login()
 
-if len($ARGS) == "2" {
-	group = $ARGS[1]
-	
-	echo "using existent resource group: "+$group
-} else {
-	echo "creating new resource group"
-	
-	azure_group_create($group, $location)
-}
+echo "creating new resource group"
+
+azure_group_create($group, $location)
+azure_group_create($snapshots_group, $location)
 
 echo "creating VNET"
 
@@ -84,6 +87,44 @@ create_vm($vm_name, $subnet_name)
 azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "10", "Premium_LRS")
 azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "20", "Standard_LRS")
 
-echo "done, created VM info: "
+echo "created main VM"
+echo "creating backup VM"
+
+vm_backup_name = $vm_name+"-backup"
+
+create_vm($vm_backup_name, $subnet_name)
+
+echo "getting IDs of the VM disks"
+
+ids <= azure_vm_get_disks_ids($vm_name, $group)
+
+echo "generating snapshots from original VM"
+echo "snapshots will be located at: "+$snapshots_group
+
+for id in $ids {
+	snapshot_name <= addsuffix("snapshot")
+
+	echo "creating snapshot: "+$snapshot_name+" from id: "+$id
+
+	snapshotid <= azure_snapshot_create($snapshot_name, $snapshots_group, $id)
+
+	echo "created snapshot id: "+$snapshotid
+
+	disk_name <= addsuffix("disk")
+
+	echo "creating disk: "+$disk_name+" from snapshot"
+
+	disk <= azure_disk_new($disk_name, $group, $location)
+	disk <= azure_disk_set_source($disk, $snapshotid)
+
+	azure_disk_create($disk)
+
+	echo "created disk with success, attaching it to backup vm"
+
+	azure_vm_disk_attach($vm_backup_name, $group, $disk_name)
+
+	echo "attached disk with success"
+}
+
 echo
-az vm show -n $vm_name -g $group
+echo "finished with no errors lol"

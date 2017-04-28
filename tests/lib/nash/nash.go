@@ -48,29 +48,36 @@ func (s *Shell) Run(
 	args ...string,
 ) {
 	s.retrier.Run("Shell.Run:"+scriptpath, func() error {
-		completeargs := []string{scriptpath}
-		completeargs = append(completeargs, args...)
-
-		homedir, err := ioutil.TempDir("", "klb-tests")
-		defer func() {
-			err := os.RemoveAll(homedir)
-			if err != nil {
-				s.t.Errorf("error removing tmp dir: %s", err)
-			}
-		}()
-		if err != nil {
-			s.t.Fatalf("unable to create tmp dir: %s", err)
-		}
-		nashdir := homedir + "/.nash"
-		env := append(
-			s.env,
-			fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
-			fmt.Sprintf("HOME=%s", homedir),
-			fmt.Sprintf("NASHPATH=%s", nashdir),
-		)
-		s.installKLB(env)
-		return s.newcmd(env, scriptpath, args...).Run()
+		return s.RunOnce(scriptpath, args...)
 	})
+}
+
+func (s *Shell) RunOnce(
+	scriptpath string,
+	args ...string,
+) error {
+	completeargs := []string{scriptpath}
+	completeargs = append(completeargs, args...)
+
+	homedir, err := ioutil.TempDir("", "klb-tests")
+	defer func() {
+		err := os.RemoveAll(homedir)
+		if err != nil {
+			s.t.Errorf("error removing tmp dir: %s", err)
+		}
+	}()
+	if err != nil {
+		s.t.Fatalf("unable to create tmp dir: %s", err)
+	}
+	nashdir := homedir + "/.nash"
+	env := append(
+		s.env,
+		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
+		fmt.Sprintf("HOME=%s", homedir),
+		fmt.Sprintf("NASHPATH=%s", nashdir),
+	)
+	s.installKLB(env)
+	return s.newcmd(env, scriptpath, args...).Run()
 }
 
 func (s *Shell) newcmd(env []string, name string, args ...string) *exec.Cmd {
