@@ -22,21 +22,22 @@ func TestExamples(t *testing.T) {
 		cleanup string
 	}{
 		{
-			name:    "managedDisks",
-			script:  "../../examples/azure/managed-disks/build.sh",
-			cleanup: "../../examples/azure/managed-disks/cleanup.sh",
+			name:    "snapshots",
+			script:  "../../examples/azure/snapshots/build.sh",
+			cleanup: "../../examples/azure/snapshots/cleanup.sh",
 		},
 	}
 
-	timeout := 30 * time.Minute
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	env := fixture.NewSession(t).Env()
+	timeout := time.Hour
 
 	for _, e := range examples {
 		example := e
 		t.Run(example.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+
+			env := fixture.NewSession(t).Env()
 			runExample(
 				ctx,
 				t,
