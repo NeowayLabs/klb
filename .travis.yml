@@ -4,4 +4,3 @@ sudo: required
 
 script:
   - travis_wait 90 make test logger=stdout
-  - travis_wait 90 make test-examples logger=stdout
