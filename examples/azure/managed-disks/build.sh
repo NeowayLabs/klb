@@ -59,7 +59,7 @@ fn create_vm(name, subnet) {
 	nics = ($name)
 
 	vm   <= azure_vm_set_nics($vm, $nics)
-	vm   <= azure_vm_set_osdiskname($vm, $name+".vhd")
+	vm   <= azure_vm_set_osdiskname($vm, $name)
 	vm   <= azure_vm_set_imageurn($vm, $vm_image_urn)
 	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
 
