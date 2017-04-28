@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
 ## Resource Group Settings
-group    = "klb-examples-backup"
+group    = "klb-examples-snapshots"
 location = "eastus2"
 
 ## Vnet Settings
@@ -12,8 +12,8 @@ subnet_name      = "network"
 subnet_cidr      = "10.50.1.0/24"
 
 ## VMs Settings
-vm_name       = "backup-example-vm"
-vm_size       = "Standard_L4s"
-vm_username   = "core"
-vm_image_urn  = "CoreOS:CoreOS:Stable:1298.6.0"
-backup_prefix = "klb-backup-example"
+vm_name         = "snapshots-test-vm"
+vm_size         = "Standard_L4s"
+vm_username     = "core"
+vm_image_urn    = "CoreOS:CoreOS:Stable:1298.6.0"
+snapshots_group = $group+"-snapshots"
