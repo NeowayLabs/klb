@@ -29,7 +29,6 @@ func TestExamples(t *testing.T) {
 	}
 
 	timeout := time.Hour
-
 	for _, e := range examples {
 		example := e
 		t.Run(example.name, func(t *testing.T) {

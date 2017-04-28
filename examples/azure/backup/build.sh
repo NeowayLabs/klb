@@ -59,7 +59,7 @@ fn create_vm(name, subnet) {
 	nics = ($name)
 
 	vm   <= azure_vm_set_nics($vm, $nics)
-	vm   <= azure_vm_set_osdiskname($vm, $name)
+	vm   <= azure_vm_set_osdiskname($vm, $name+".vhd")
 	vm   <= azure_vm_set_imageurn($vm, $vm_image_urn)
 	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
 
@@ -68,10 +68,20 @@ fn create_vm(name, subnet) {
 
 azure_login()
 
-echo "creating new resource group"
-
-azure_group_create($group, $location)
-azure_group_create($snapshots_group, $location)
+if len($ARGS) == "2" {
+	# WHY: Automation runs this build, it must ensure
+	# all resources are cleaned up, so it injects a
+	# pre existent resource group that will be deleted
+	group           = $ARGS[1]
+	snapshots_group = $group
+	
+	echo "using existent resource group: "+$group
+} else {
+	echo "creating new resource group"
+	
+	azure_group_create($group, $location)
+	azure_group_create($snapshots_group, $location)
+}
 
 echo "creating VNET"
 
@@ -94,9 +104,9 @@ vm_backup_name = $vm_name+"-backup"
 
 create_vm($vm_backup_name, $subnet_name)
 
-echo "getting IDs of the VM disks"
+echo "getting ID of original VM data disks"
 
-ids <= azure_vm_get_disks_ids($vm_name, $group)
+ids <= azure_vm_get_datadisks_ids($vm_name, $group)
 
 echo "generating snapshots from original VM"
 echo "snapshots will be located at: "+$snapshots_group
