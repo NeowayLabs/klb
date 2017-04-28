@@ -75,8 +75,11 @@ func runExample(
 		logger.Printf("cleanup script: %s", cleanup)
 		e := shell.RunOnce(cleanup)
 
-		t.Errorf("unexpected error on cleanup: %s", e)
-		t.Error("resources may have leaked")
+		if e != nil {
+			t.Errorf("unexpected error on cleanup: %s", e)
+			t.Error("resources may have leaked")
+		}
+
 		result <- err
 	}()
 
