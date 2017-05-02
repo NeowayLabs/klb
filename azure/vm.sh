@@ -1,5 +1,6 @@
-import klb/azure/group
 # Machine related functions
+
+import klb/azure/group
 
 # azure_vm_new creates a new instance of "virtual machine".
 # `name` is the name of the virtual machine.
@@ -318,35 +319,59 @@ fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
 #
 # These ID's are well suited to be used on snapshot creation.
 fn azure_vm_get_datadisks_ids(name, resgroup) {
-	# TODO: need a way to get (ID, LUN) tuples to use on backup procedure.
-	# The only place that have LUN information is the VM (not on the disk).
-	# Perhaps it is cool to get the name too.
-	# hint: jq -r ".storageProfile.dataDisks[].lun"
-	# hint: jq -r ".storageProfile.dataDisks[].name"
-	ids_raw <= (
-		az vm show
-			--resource-group $resgroup
-			--name $name |
-		jq -r ".storageProfile.dataDisks[].managedDisk.id"
-	)
-
+	info    <= azure_vm_get_rawinfo($name, $resgroup)
+	ids_raw <= echo $info | jq -r ".storageProfile.dataDisks[].managedDisk.id"
 	ids     <= split($ids_raw, "\n")
 
 	return $ids
+}
+
+# azure_vm_get_datadisks_ids_lun will returns a list
+# of pairs (diskid, disklun).
+#
+# The LUN is only useful if you are trying to replicate
+# a VM exact state, so you need to know the disks LUN so
+# they will be attached on the new VM with the same device names.
+#
+# These ID's are the same returned by azure_vm_get_datadisks_ids
+fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
+	info <= azure_vm_get_rawinfo($name, $resgroup)
+
+	# disks_raw <= echo $info | jq -r ".storageProfile.dataDisks[].managedDisk.id"
+	disks_raw <= echo $info | jq -r ".storageProfile.dataDisks[]"
+	disks     <= split($disks_raw, "\n")
+
+	ids_luns  = ()
+
+	for disk in $disks {
+		# FIXME: Parse not working :-(
+		id       <= echo $disk | jq -r ".managedDisk.id"
+		lun      <= echo $disk | jq -r ".lun"
+
+		idlun    = ($id $lun)
+
+		ids_luns <= append($ids_luns, $idlun)
+	}
+
+	return $ids_luns
 }
 
 # azure_vm_get_osdisk_id will return the osdisk ID.
 #
 # This ID is well suited to be used on snapshot creation.
 fn azure_vm_get_osdisk_id(name, resgroup) {
-	id <= (
-		az vm show
-			--resource-group $resgroup
-			--name $name |
-		jq -r ".storageProfile.osDisk.managedDisk.id"
-	)
+	info <= azure_vm_get_rawinfo($name, $resgroup)
+	id   <= echo $info | jq -r ".storageProfile.osDisk.managedDisk.id"
 
 	return $id
+}
+
+# azure_vm_get_rawinfo will return the raw encoded JSON data with
+# all the VM info.
+fn azure_vm_get_rawinfo(name, resgroup) {
+	info <= az vm show --resource-group $resgroup --name $name
+
+	return $info
 }
 
 # azure_vm_get_disks_ids will return the id of all disks on the VM.
@@ -406,17 +431,39 @@ fn azure_vm_get_disks_ids(name, resgroup) {
 #
 # During the backup procedure the VM will be shutdown, and restarted
 # after all snapshots are taken.
-fn azure_vm_backup_create(vmname, prefix, resgroup, location) {
+fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
+	timestamp <= date "+%Y.%m.%d.%H%M"
 
-        timestamp <= date "+%Y.%m.%d.%H%M"
-        bkp_resgroup = $prefix + "-klb-backup-" + $timestamp + "-" + $vmname
+	bkp_resgroup = $prefix+"-klb-backup-"+$timestamp+"-"+$vmname
 
-        if azure_group_exists($bkp_resgroup) == "0" {
-                # TODO: FAIL
-        }
+	if azure_group_exists($bkp_resgroup) == "0" {
+		echo "fatal error: resource group already exists: "+$bkp_resgroup
+		
+		exit("1")
+	}
 
-        echo "creating resource group: " + $bkp_resgroup
-        azure_group_create($bkp_resgroup, $location)
+	echo "getting VM disks IDs"
 
-        # disks <= azure_vm_get_disks_ids($vmname, $group)
+	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
+
+	if len($disks_ids_luns) == "0" {
+		echo "fatal error: unable to get disk ids from VM"
+		echo "VM name: "+$vmname
+		echo "VM resource group: "+$resgroup
+		
+		exit("1")
+	}
+
+	echo "creating resource group: "+$bkp_resgroup
+	echo "at location: "+$location
+
+	azure_group_create($bkp_resgroup, $location)
+
+	echo "created backup resource group, starting snapshots"
+
+	for idlun in $disks_ids_luns {
+		# TODO: Validate if there is a LUN 0
+		# https://docs.microsoft.com/en-us/azure/virtual-machines/linux/add-disk?toc=%2fazure%2fvirtual-machines%2flinux%2ftoc.json
+		echo $idlun
+	}
 }
