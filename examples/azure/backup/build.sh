@@ -90,6 +90,8 @@ echo "created VM, starting backup"
 
 backup_resgroup <= azure_vm_backup_create($vm_name, $group, $backup_prefix)
 
+echo "created backup resgroup: " + $backup_resgroup
+
 # TODO: check resgroup exists
 # TODO: list all disks on resgroup
 # TODO: restore will use azure_vm_set_osdisk_id(instance, id)

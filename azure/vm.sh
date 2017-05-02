@@ -1,3 +1,4 @@
+import klb/azure/group
 # Machine related functions
 
 # azure_vm_new creates a new instance of "virtual machine".
@@ -405,6 +406,17 @@ fn azure_vm_get_disks_ids(name, resgroup) {
 #
 # During the backup procedure the VM will be shutdown, and restarted
 # after all snapshots are taken.
-fn azure_vm_backup_create(vmname, group, prefix) {
+fn azure_vm_backup_create(vmname, prefix, resgroup, location) {
 
+        timestamp <= date "+%Y.%m.%d.%H%M"
+        bkp_resgroup = $prefix + "-klb-backup-" + $timestamp + "-" + $vmname
+
+        if azure_group_exists($bkp_resgroup) == "0" {
+                # TODO: FAIL
+        }
+
+        echo "creating resource group: " + $bkp_resgroup
+        azure_group_create($bkp_resgroup, $location)
+
+        # disks <= azure_vm_get_disks_ids($vmname, $group)
 }

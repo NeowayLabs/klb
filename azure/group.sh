@@ -20,3 +20,15 @@ fn azure_group_get_names() {
 
 	return split($res, "\n")
 }
+
+# azure_group_exists returns "0" if a resource group
+# already exists, "1" otherwise.
+fn azure_group_exists(name) {
+        groups <= azure_group_get_names()
+        for group in $groups {
+            if $group == $name {
+                return "0"
+            }
+        }
+        return "1"
+}
