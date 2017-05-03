@@ -98,7 +98,5 @@ if $stats != "0" {
 
 echo "created backup resgroup: "+$backup_resgroup
 
-# TODO: check resgroup exists
-# TODO: list all disks on resgroup
 # TODO: restore will use azure_vm_set_osdisk_id(instance, id)
 # TODO: restore should create the VM but not turn it on automatically

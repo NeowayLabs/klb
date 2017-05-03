@@ -1,6 +1,9 @@
 # Machine related functions
 
 import klb/azure/group
+import klb/azure/lock
+import klb/azure/snapshot
+import klb/azure/disk
 
 # azure_vm_new creates a new instance of "virtual machine".
 # `name` is the name of the virtual machine.
@@ -504,7 +507,29 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	azure_vm_start($vmname, $resgroup)
 
-	echo "backup finished with success"
+	echo "backup finished with success, creating lock"
+
+	azure_lock_create("lock-nodelete-"+$bkp_resgroup, "CanNotDelete", $bkp_resgroup)
+
+	echo "created lock, finished with success"
 
 	return $bkp_resgroup, "0"
+}
+
+# azure_vm_backup_recover will recover a previously generated
+# backup. The backup must have been generated using
+# azure_vm_backup_create, since a whole pattern on resource
+# naming will be required in the recovery process.
+#
+# The vminstance parameter is a instance of the vm object,
+# created with azure_vm_new and configured just like you
+# would do to create a new VM. The only main difference is
+# that no os disk should be configured, since the os disk and
+# datadisks will be obtained from the backup_resgroup.
+#
+# The backup_resgroup is the name of the resource group
+# where the disks are stored just as it is returned by
+# azure_vm_backup_create.
+fn azure_vm_backup_recover(vminstance, backup_resgroup) {
+
 }
