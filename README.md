@@ -84,6 +84,17 @@ To run redirecting logs to stdout:
 
 Just run `make test logger=stdout`.
 
+There are also examples that can be run automatically, to validate
+if they are working. Just run:
+
+```
+make test-examples
+```
+
+They are not included on the CI or the common tests because they take
+too much time to run, but it is a good way to validate that complex
+scenarios are working fine.
+
 ## Docs
 
 * [Microsoft Azure](docs/Azure.md)

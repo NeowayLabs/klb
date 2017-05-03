@@ -386,6 +386,16 @@ fn azure_vm_get_disks_ids(name, resgroup) {
 	return $disks
 }
 
+# azure_vm_stop stops a running VM
+fn azure_vm_stop(vmname, resgroup) {
+	az vm stop -g $resgroup -n $vmname
+}
+
+# azure_vm_start starts a stopped VM
+fn azure_vm_start(vmname, resgroup) {
+	az vm start -g $resgroup -n $vmname
+}
+
 # azure_vm_backup_create will create a full backup from the given VM.
 # The backup is created following a naming pattern for the resources
 # that it creates, this enables the azure_vm_backup_recover function to work.
@@ -451,28 +461,48 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	echo "getting VM disks IDs"
 
+	osdiskid       <= azure_vm_get_osdisk_id($vmname, $resgroup)
 	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
 
-	if len($disks_ids_luns) == "0" {
-		echo "fatal error: unable to get disk ids from VM"
-		echo "VM name: "+$vmname
-		echo "VM resource group: "+$resgroup
-		
-		return "", "1"
-	}
+	echo "stopping VM"
+
+	azure_vm_stop($vmname, $resgroup)
 
 	echo "creating resource group: "+$bkp_resgroup
 	echo "at location: "+$location
 
 	azure_group_create($bkp_resgroup, $location)
 
-	echo "created backup resource group, starting snapshots"
+	echo "created backup resource group"
+
+	# WHY: name used later on the recover phase, do NOT change this
+	# unless you are absolutely SURE of what you are doing
+	snapshot_name = "osdisk"
+
+	echo "creating os disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
+
+	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid)
+
+	echo "created snapshot id: "+$snapshotid
 
 	for idlun in $disks_ids_luns {
-		# TODO: Validate if there is a LUN 0
-		# https://docs.microsoft.com/en-us/azure/virtual-machines/linux/add-disk?toc=%2fazure%2fvirtual-machines%2flinux%2ftoc.json
-		echo $idlun
+		id  = $idlun[0]
+		lun = $idlun[1]
+
+		# WHY: Encode lun on the name as metadata, use it later to restore
+		# Change this and the whole world will collapse :-)
+		snapshot_name = "datadisk-"+$lun
+
+		echo "creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
+
+		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id)
+
+		echo "created snapshot id: "+$snapshotid
 	}
+
+	echo "starting VM"
+
+	azure_vm_start($vmname, $resgroup)
 
 	echo "backup finished with success"
 
