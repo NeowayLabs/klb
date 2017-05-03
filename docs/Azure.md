@@ -1,5 +1,4 @@
-Microsoft Azure
-==
+# Microsoft Azure
 
 ## Service principal and Setting account
 
@@ -103,4 +102,21 @@ To register on the required providers you can run:
 
 ```sh
 λ> ./tools/azure/registerproviders.sh
+```
+
+## Examples
+
+There are some examples on the **examples/azure** dir. To build them
+you can call:
+
+```
+make example-<name>
+```
+
+Where **<name>** can be the name of any example on the dir.
+
+Running the backup example:
+
+```
+make example-backup
 ```

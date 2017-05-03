@@ -335,20 +335,21 @@ fn azure_vm_get_datadisks_ids(name, resgroup) {
 #
 # These ID's are the same returned by azure_vm_get_datadisks_ids
 fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
-	info <= azure_vm_get_rawinfo($name, $resgroup)
-
-	# disks_raw <= echo $info | jq -r ".storageProfile.dataDisks[].managedDisk.id"
+	info      <= azure_vm_get_rawinfo($name, $resgroup)
 	disks_raw <= echo $info | jq -r ".storageProfile.dataDisks[]"
-	disks     <= split($disks_raw, "\n")
+	ids_raw   <= echo $disks_raw | jq -r ".managedDisk.id"
+	ids       <= split($ids_raw, "\n")
+	luns_raw  <= echo $disks_raw | jq -r ".lun"
+	luns      <= split($luns_raw, "\n")
+	size      <= len($ids)
+	rangeend  <= expr $size - 1
+	sequence  <= seq "0" $rangeend
+	range     <= split($sequence, "\n")
 
 	ids_luns  = ()
 
-	for disk in $disks {
-		# FIXME: Parse not working :-(
-		id       <= echo $disk | jq -r ".managedDisk.id"
-		lun      <= echo $disk | jq -r ".lun"
-
-		idlun    = ($id $lun)
+	for i in $range {
+		idlun = ($ids[$i] $luns[$i])
 
 		ids_luns <= append($ids_luns, $idlun)
 	}
@@ -431,6 +432,12 @@ fn azure_vm_get_disks_ids(name, resgroup) {
 #
 # During the backup procedure the VM will be shutdown, and restarted
 # after all snapshots are taken.
+#
+# It will return two values, on success it returns the created resource
+# group name and the status of the operation, that on success will be "0".
+#
+# On error the status of the operation will be "1" and you should ignore
+# the first return value (the resource group).
 fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	timestamp <= date "+%Y.%m.%d.%H%M"
 
@@ -439,7 +446,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	if azure_group_exists($bkp_resgroup) == "0" {
 		echo "fatal error: resource group already exists: "+$bkp_resgroup
 		
-		exit("1")
+		return "", "1"
 	}
 
 	echo "getting VM disks IDs"
@@ -451,7 +458,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 		echo "VM name: "+$vmname
 		echo "VM resource group: "+$resgroup
 		
-		exit("1")
+		return "", "1"
 	}
 
 	echo "creating resource group: "+$bkp_resgroup
@@ -466,4 +473,8 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 		# https://docs.microsoft.com/en-us/azure/virtual-machines/linux/add-disk?toc=%2fazure%2fvirtual-machines%2flinux%2ftoc.json
 		echo $idlun
 	}
+
+	echo "backup finished with success"
+
+	return $bkp_resgroup, "0"
 }

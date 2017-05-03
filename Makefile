@@ -23,6 +23,9 @@ image:
 shell: image
 	./hack/run-tty.sh /usr/bin/nash
 
+example-%: image
+	./hack/run-tty.sh ./examples/azure/$*/build.sh
+
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin
 install: guard-NASHPATH
