@@ -37,8 +37,6 @@ type F struct {
 
 type Test func(*testing.T, F)
 
-const resourceCleanupTimeout = 20 * time.Minute
-
 // Run creates a unique resource group based on testname and calls
 // the given testfunc passing as argument all the resources required
 // to test integration with Azure cloud.
@@ -78,6 +76,7 @@ func Run(
 		resources := NewResourceGroup(ctx, t, session, logger)
 		defer func() {
 			// We cant use an expired context when cleaning up state from Azure.
+			const resourceCleanupTimeout = 30 * time.Second
 			ctx, cancel := context.WithTimeout(context.Background(), resourceCleanupTimeout)
 			defer cancel()
 			resources := NewResourceGroup(ctx, t, session, logger)

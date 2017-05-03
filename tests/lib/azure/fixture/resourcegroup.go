@@ -59,11 +59,34 @@ func (r *ResourceGroup) Create(t *testing.T, name string, location string) {
 	})
 }
 
+// Delete will delete an existing resource group.
+// It will NOT wait more than timeout to the resource group to be
+// completely destroyed because that takes a VERY long time
+// (much more then creating stuff).
+//
+// Exceeding the given timeout is not an error, if it happens it will check
+// if the resource group is on deprovisioning state.
 func (r *ResourceGroup) Delete(t *testing.T, name string) {
-	r.logger.Printf("ResourceGroup.Delete: %q", name)
-	r.retrier.Run("ResourceGroup.Delete", func() error {
-		_, err := r.client.Delete(name, nil)
-		return err
-	})
-	r.logger.Printf("ResourceGroup.Delete finished")
+	r.logger.Printf("ResourceGroup.Delete: deleting %q", name)
+
+	r.client.Delete(name, r.ctx.Done())
+
+	resgroup, err := r.client.Get(name)
+	if err != nil {
+		r.logger.Printf("ResourceGroup.Delete finished")
+		return
+	}
+	r.logger.Printf("ResourceGroup.Delete: still exists, checking if deprovisioning")
+	if resgroup.Properties == nil {
+		t.Fatal("ResourceGroup.Delete: resgroup does not have properties")
+	}
+	if resgroup.Properties.ProvisioningState == nil {
+		t.Fatal("ResourceGroup.Delete: resgroup does not have ProvisioningState")
+	}
+	provisioningState := *resgroup.Properties.ProvisioningState
+	expectedState := "Deleting"
+	if *resgroup.Properties.ProvisioningState != expectedState {
+		t.Fatalf("ResourceGroup.Delete: expected state[%s] got [%s]", expectedState, provisioningState)
+	}
+	r.logger.Printf("ResourceGroup.Delete: resgroup is deprovisioning, should be ok")
 }
