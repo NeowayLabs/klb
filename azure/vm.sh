@@ -582,6 +582,11 @@ fn azure_vm_backup_delete(backup_resgroup) {
 # where the disks are stored just as it is returned by
 # azure_vm_backup_create.
 fn azure_vm_backup_recover(instance, backup_resgroup) {
+
+	fn log(msg) {
+		echo "vm.backup.recover: " + $msg
+	}
+
 	resgroup <= _azure_vm_get($instance, "resource-group")
 	location <= _azure_vm_get($instance, "location")
 	vmname <= _azure_vm_get($instance, "name")
@@ -604,12 +609,12 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 	}
 
 	if $osdiskid == "" {
-		echo "unable to find osdisk id on backup: " + $backup_resgroup
+		log("unable to find osdisk id on backup: " + $backup_resgroup)
 		exit("1")
 	}
 
-	echo "os disk id: " + $osdiskid
-	echo "creating os disk"
+	log("os disk id: " + $osdiskid)
+	log("creating os disk")
 	osdiskname = $backup_resgroup + "-osdisk"
 	d <= azure_disk_new($osdiskname, $resgroup, $location)
 	d <= azure_disk_set_source($d, $osdiskid)
@@ -617,31 +622,34 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 
 	azure_vm_set_osdisk_id($instance, $osdisk)
 
-	# TODO: restore should create the VM but not turn it on automatically
-	echo "creating VM"
+	log("creating VM")
 	azure_vm_create($instance)
+	log("created VM, stopping it so we can attach disks")
+	# https://feedback.azure.com/forums/216843-virtual-machines/suggestions/6750456-allow-to-create-vm-without-starting-it-immediatell
+	azure_vm_stop($vmname, $resgroup)
 
-	echo "attaching datadisks"
+	log("attaching datadisks")
 	for datadisk in $datadisks {
 		id = $datadisk[0]
 		lun = $datadisk[1]
 
-		echo "creating disk from snapshot: " + $id
-		echo "disk will have LUN: " + $lun
+		log("creating disk from snapshot: " + $id)
+		log("disk will have LUN: " + $lun)
 
 		diskname = $backup_resgroup + "-disk-" + $lun
 		d <= azure_disk_new($diskname, $resgroup, $location)
 		d <= azure_disk_set_source($d, $id)
 		diskid <= azure_disk_create($d)
 
-		echo "created disk id: " + $diskid
-		echo "attaching on VM"
+		log("created disk id: " + $diskid)
+		log("attaching on VM")
 		azure_vm_disk_attach($vmname, $resgroup, $diskid)
-		echo "attached"
+		log("attached")
 	}
 
-	echo "finished recover with success"
-	# TODO : Start stopped VM, with all attached disks
+	log("starting VM with all disks attached")
+	azure_vm_start($vmname, $resgroup)
+	log("finished recover with success")
 }
 
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
@@ -685,14 +693,14 @@ fn _azure_vm_backup_datadisk_lun(name) {
 fn _azure_vm_get(instance, cfgname) {
 	cfgname = "--" + $cfgname
 	size      <= len($instance)
-	rangeend  <= expr $size - 2
+	rangeend  <= expr $size "-" "2"
 	sequence  <= seq "0" $rangeend
 	range     <= split($sequence, "\n")
 
 	ids_names = ()
 
 	for i in $range {
-		cfgval_index <= expr $i + 1
+		cfgval_index <= expr $i "+" "1"
 		name = $instance[$i]
 		if $name == $cfgname {
 			return $instance[$cfgval_index]
