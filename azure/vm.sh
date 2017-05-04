@@ -467,16 +467,14 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	osdiskid       <= azure_vm_get_osdisk_id($vmname, $resgroup)
 	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
 
-	echo "stopping VM"
-
-	azure_vm_stop($vmname, $resgroup)
-
 	echo "creating resource group: "+$bkp_resgroup
 	echo "at location: "+$location
 
 	azure_group_create($bkp_resgroup, $location)
 
-	echo "created backup resource group"
+	echo "created backup resource group, stopping running VM"
+
+	azure_vm_stop($vmname, $resgroup)
 
 	# WHY: name used later on the recover phase, do NOT change this
 	# unless you are absolutely SURE of what you are doing
@@ -509,11 +507,29 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	echo "backup finished with success, creating lock"
 
-	azure_lock_create("lock-nodelete-"+$bkp_resgroup, "CanNotDelete", $bkp_resgroup)
+	nodelete <= _azure_vm_backup_get_nodelete_lock($bkp_resgroup)
+
+	azure_lock_create($nodelete, "CanNotDelete", $bkp_resgroup)
+
+	readonly <= _azure_vm_backup_get_readonly_lock($bkp_resgroup)
+
+	azure_lock_create($readonly, "ReadOnly", $bkp_resgroup)
 
 	echo "created lock, finished with success"
 
 	return $bkp_resgroup, "0"
+}
+
+# azure_vm_backup_list returns the list of all backups
+# for the given vm name + prefix. They are the same parameters
+# you used to create the backup.
+#
+# The backup list is a list of resource groups names, where each
+# resource group is a backup.
+#
+# The list will be ordered, from the more recent to the oldest backup.
+fn azure_vm_backup_list(vmname, prefix) {
+
 }
 
 # azure_vm_backup_recover will recover a previously generated
@@ -532,4 +548,12 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 # azure_vm_backup_create.
 fn azure_vm_backup_recover(vminstance, backup_resgroup) {
 
+}
+
+fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
+	return "lock-nodelete-"+$bkp_resgroup
+}
+
+fn _azure_vm_backup_get_readonly_lock(bkp_resgroup) {
+	return "lock-readonly-"+$bkp_resgroup
 }
