@@ -310,6 +310,12 @@ fn azure_vm_disk_attach(name, resgroup, diskID) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskID
 }
 
+# azure_vm_disk_attach_lun does the same as azure_vm_disk_attach
+# but with the specificied LUN.
+fn azure_vm_disk_attach_lun(name, resgroup, diskID, lun) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun
+}
+
 # azure_vm_disk_attach_new creats a new disk and attaches to the VM.
 fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskname --new --size-gb $size --sku $sku
@@ -572,14 +578,14 @@ fn azure_vm_backup_delete(backup_resgroup) {
 # that no os disk should be configured, since the os disk and
 # datadisks will be obtained from the backup_resgroup.
 #
-# The resgroup and location parameters are the resource group
-# name and location where the disks will be created. After
-# the disks are created they will be attached to the VM.
-#
 # The backup_resgroup is the name of the resource group
 # where the disks are stored just as it is returned by
 # azure_vm_backup_create.
-fn azure_vm_backup_recover(instance, resgroup, location, backup_resgroup) {
+fn azure_vm_backup_recover(instance, backup_resgroup) {
+	resgroup <= _azure_vm_get($instance, "resource-group")
+	location <= _azure_vm_get($instance, "location")
+	vmname <= _azure_vm_get($instance, "name")
+
 	snapshots <= azure_snapshot_list($backup_resgroup)
 	osdiskid = ""
 	datadisks = ()
@@ -630,10 +636,11 @@ fn azure_vm_backup_recover(instance, resgroup, location, backup_resgroup) {
 
 		echo "created disk id: " + $diskid
 		echo "attaching on VM"
-		# TODO: where is vm name ?
-		# azure_vm_disk_attach($vm_backup_name, $resgroup, $diskid)
+		azure_vm_disk_attach($vmname, $resgroup, $diskid)
 		echo "attached"
 	}
+
+	echo "finished recover with success"
 	# TODO : Start stopped VM, with all attached disks
 }
 
@@ -673,4 +680,27 @@ fn _azure_vm_backup_datadisk_lun(name) {
 		exit("1")
 	}
 	return $tokens[1]
+}
+
+fn _azure_vm_get(instance, cfgname) {
+	cfgname = "--" + $cfgname
+	size      <= len($instance)
+	rangeend  <= expr $size - 2
+	sequence  <= seq "0" $rangeend
+	range     <= split($sequence, "\n")
+
+	ids_names = ()
+
+	for i in $range {
+		cfgval_index <= expr $i + 1
+		name = $instance[$i]
+		if $name == $cfgname {
+			return $instance[$cfgval_index]
+		}
+	}
+
+	echo "fatal error getting cfg: " + $cfgname
+	echo "vm instance: " + $instance
+	exit("1")
+	return ""
 }
