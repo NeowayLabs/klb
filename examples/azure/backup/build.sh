@@ -117,8 +117,6 @@ echo
 
 echo "restoring backup"
 backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
-azure_vm_backup_recover($backupvm, $bkup[0])
+azure_vm_backup_recover($backupvm, $group, $location, $bkup[0])
 echo "finished with success"
 
-# TODO: restore will use azure_vm_set_osdisk_id(instance, id)
-# TODO: restore should create the VM but not turn it on automatically

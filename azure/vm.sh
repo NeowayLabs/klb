@@ -572,6 +572,10 @@ fn azure_vm_backup_delete(backup_resgroup) {
 # that no os disk should be configured, since the os disk and
 # datadisks will be obtained from the backup_resgroup.
 #
+# The resgroup and location parameters are the resource group
+# name and location where the disks will be created. After
+# the disks are created they will be attached to the VM.
+#
 # The backup_resgroup is the name of the resource group
 # where the disks are stored just as it is returned by
 # azure_vm_backup_create.
@@ -607,11 +611,30 @@ fn azure_vm_backup_recover(instance, resgroup, location, backup_resgroup) {
 
 	azure_vm_set_osdisk_id($instance, $osdisk)
 
+	# TODO: restore should create the VM but not turn it on automatically
 	echo "creating VM"
 	azure_vm_create($instance)
 
 	echo "attaching datadisks"
-	# TODO
+	for datadisk in $datadisks {
+		id = $datadisk[0]
+		lun = $datadisk[1]
+
+		echo "creating disk from snapshot: " + $id
+		echo "disk will have LUN: " + $lun
+
+		diskname = $backup_resgroup + "-disk-" + $lun
+		d <= azure_disk_new($diskname, $resgroup, $location)
+		d <= azure_disk_set_source($d, $id)
+		diskid <= azure_disk_create($d)
+
+		echo "created disk id: " + $diskid
+		echo "attaching on VM"
+		# TODO: where is vm name ?
+		# azure_vm_disk_attach($vm_backup_name, $resgroup, $diskid)
+		echo "attached"
+	}
+	# TODO : Start stopped VM, with all attached disks
 }
 
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {

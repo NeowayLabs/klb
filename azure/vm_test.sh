@@ -49,6 +49,7 @@ for c in $cases {
 	expectation <= echo $c[2]
 	ordered <= _azure_vm_backup_order_list($input)
 	input_list <= split($input, "\n")
+
 	# WHY: easier to compare :-)
 	res <= echo $ordered
 
@@ -58,4 +59,4 @@ for c in $cases {
 	}
 }
 
-print("success")
+print("success\n")
