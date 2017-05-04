@@ -36,6 +36,11 @@ cases = (
 		"klb-ex-bkp-2017.05.04.1449-vm\nklb-ex-bkp-2017.05.04.1451-vm\nklb-ex-bkp-2017.05.04.1450-vm"
 		"klb-ex-bkp-2017.05.04.1451-vm klb-ex-bkp-2017.05.04.1450-vm klb-ex-bkp-2017.05.04.1449-vm"
 	)
+	(
+		"ignoreTrailingNewline"
+		"klb-ex-bkp-2017.05.04.1449-vm\nklb-ex-bkp-2017.05.04.1450-vm\n"
+		"klb-ex-bkp-2017.05.04.1450-vm klb-ex-bkp-2017.05.04.1449-vm"
+	)
 )
 
 for c in $cases {
@@ -44,16 +49,6 @@ for c in $cases {
 	expectation <= echo $c[2]
 	ordered <= _azure_vm_backup_order_list($input)
 	input_list <= split($input, "\n")
-	# WHY: regression with empty values appended
-	if len($input_list) != len($ordered) {
-		print(
-			"test %q expected len(%d) got len(%d)\n",
-			$name,
-			len($input_list),
-			len($ordered),
-		)
-		exit("1")
-	}
 	# WHY: easier to compare :-)
 	res <= echo $ordered
 

@@ -51,8 +51,11 @@ fn azure_disk_set_source(instance, source) {
 
 # azure_disk_new creates a new "managed disk".
 # `instance` is the disk instance.
+#
+# Returns the id of the created disk
 fn azure_disk_create(instance) {
-	az disk create --output table $instance
+	id <= az disk create --output json $instance | jq -r ".id"
+	return $id
 }
 
 # azure_disk_get_id returns the id of a previously created

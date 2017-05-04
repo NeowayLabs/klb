@@ -33,7 +33,7 @@ fn create_subnet(name, cidr) {
 	azure_route_table_route_create($route)
 }
 
-fn create_vm(name, subnet) {
+fn new_vm_nodisk(name, subnet) {
 	# create ssh key
 	accessdir = "/tmp/.config/ssh/"
 	accesskey = $accessdir+"id_rsa-"+$name
@@ -59,9 +59,16 @@ fn create_vm(name, subnet) {
 	nics = ($name)
 
 	vm   <= azure_vm_set_nics($vm, $nics)
+	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
+
+	return $vm
+}
+
+fn create_vm(name, subnet) {
+	# create ssh key
+	vm   <= new_vm_nodisk($name, $subnet)
 	vm   <= azure_vm_set_osdiskname($vm, $name)
 	vm   <= azure_vm_set_imageurn($vm, $vm_image_urn)
-	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
 
 	azure_vm_create($vm)
 }
@@ -107,6 +114,10 @@ for bkup in $backups {
 }
 
 echo
+
+echo "restoring backup"
+backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
+azure_vm_backup_recover($backupvm, $bkup[0])
 echo "finished with success"
 
 # TODO: restore will use azure_vm_set_osdisk_id(instance, id)

@@ -477,7 +477,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	# WHY: name used later on the recover phase, do NOT change this
 	# unless you are absolutely SURE of what you are doing
-	snapshot_name = "osdisk"
+	snapshot_name <= _azure_vm_backup_get_osdisk_name()
 
 	echo "vm.backup.create: creating os disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
 
@@ -491,7 +491,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 		# WHY: Encode lun on the name as metadata, use it later to restore
 		# Change this and the whole world will collapse :-)
-		snapshot_name = "datadisk-"+$lun
+		snapshot_name <= _azure_vm_backup_datadisk_name($lun)
 
 		echo "vm.backup.create: creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
 
@@ -575,8 +575,43 @@ fn azure_vm_backup_delete(backup_resgroup) {
 # The backup_resgroup is the name of the resource group
 # where the disks are stored just as it is returned by
 # azure_vm_backup_create.
-fn azure_vm_backup_recover(vminstance, backup_resgroup) {
+fn azure_vm_backup_recover(instance, resgroup, location, backup_resgroup) {
+	snapshots <= azure_snapshot_list($backup_resgroup)
+	osdiskid = ""
+	datadisks = ()
 
+	osdiskname <= _azure_vm_backup_get_osdisk_name()
+	for snapshot in $snapshots {
+		id = $snapshot[0]
+		name = $snapshot[1]
+		if $name == $osdiskname {
+			osdiskid = $id
+		} else {
+			lun <= _azure_vm_backup_datadisk_lun($snapshot)
+			idlun = ($snapshot[0] $lun)
+			datadisks <= append($datadisks, $idlun)
+		}
+	}
+
+	if $osdiskid == "" {
+		echo "unable to find osdisk id on backup: " + $backup_resgroup
+		exit("1")
+	}
+
+	echo "os disk id: " + $osdiskid
+	echo "creating os disk"
+	osdiskname = $backup_resgroup + "-osdisk"
+	d <= azure_disk_new($osdiskname, $resgroup, $location)
+	d <= azure_disk_set_source($d, $osdiskid)
+	osdisk <= azure_disk_create($d)
+
+	azure_vm_set_osdisk_id($instance, $osdisk)
+
+	echo "creating VM"
+	azure_vm_create($instance)
+
+	echo "attaching datadisks"
+	# TODO
 }
 
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
@@ -590,5 +625,29 @@ fn _azure_vm_backup_get_readonly_lock(bkp_resgroup) {
 fn _azure_vm_backup_order_list(backup_resgroups) {
 	ordered_raw <= echo $backup_resgroups | sort -r
 	ordered <= split($ordered_raw, "\n")
-	return $ordered
+	res = ()
+	# WHY: handle possible trailing newlines
+	for o in $ordered {
+		if $o != "" {
+			res <= append($res, $o)
+		}
+	}
+	return $res
+}
+
+fn _azure_vm_backup_get_osdisk_name() {
+	return "osdisk"
+}
+
+fn _azure_vm_backup_datadisk_name(lun) {
+	return "datadisk-"+$lun
+}
+
+fn _azure_vm_backup_datadisk_lun(name) {
+	tokens <= split($name, "-")
+	if len($tokens) != "2" {
+		echo "invalid backup datadisk name: " + $name
+		exit("1")
+	}
+	return $tokens[1]
 }
