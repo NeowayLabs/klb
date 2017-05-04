@@ -461,17 +461,17 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 		exit("1")
 	}
 
-	echo "getting VM disks IDs"
+	echo "vm.backup.create: getting VM disks IDs"
 
 	osdiskid       <= azure_vm_get_osdisk_id($vmname, $resgroup)
 	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
 
-	echo "creating resource group: "+$bkp_resgroup
-	echo "at location: "+$location
+	echo "vm.backup.create: creating resource group: "+$bkp_resgroup
+	echo "vm.backup.create: at location: "+$location
 
 	azure_group_create($bkp_resgroup, $location)
 
-	echo "created backup resource group, stopping running VM"
+	echo "vm.backup.create: created backup resource group, stopping running VM"
 
 	azure_vm_stop($vmname, $resgroup)
 
@@ -479,11 +479,11 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	# unless you are absolutely SURE of what you are doing
 	snapshot_name = "osdisk"
 
-	echo "creating os disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
+	echo "vm.backup.create: creating os disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
 
 	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid)
 
-	echo "created snapshot id: "+$snapshotid
+	echo "vm.backup.create: created snapshot id: "+$snapshotid
 
 	for idlun in $disks_ids_luns {
 		id  = $idlun[0]
@@ -493,18 +493,18 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 		# Change this and the whole world will collapse :-)
 		snapshot_name = "datadisk-"+$lun
 
-		echo "creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
+		echo "vm.backup.create: creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
 
 		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id)
 
-		echo "created snapshot id: "+$snapshotid
+		echo "vm.backup.create: created snapshot id: "+$snapshotid
 	}
 
-	echo "starting VM"
+	echo "vm.backup.create: starting VM"
 
 	azure_vm_start($vmname, $resgroup)
 
-	echo "backup finished with success, creating lock"
+	echo "vm.backup.create: backup finished with success, creating lock"
 
 	nodelete <= _azure_vm_backup_get_nodelete_lock($bkp_resgroup)
 
@@ -514,7 +514,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	azure_lock_create($readonly, "ReadOnly", $bkp_resgroup)
 
-	echo "created lock, finished with success"
+	echo "vm.backup.create: created lock, finished with success"
 
 	return $bkp_resgroup
 }
@@ -541,6 +541,7 @@ fn azure_vm_backup_list(vmname, prefix) {
 		}
 	}
 
+	echo "vm.backup.list: got: [" + $filtered + "], ordering"
 	return _azure_vm_backup_order_list($filtered)
 }
 

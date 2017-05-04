@@ -43,6 +43,18 @@ for c in $cases {
 	input = $c[1]
 	expectation <= echo $c[2]
 	ordered <= _azure_vm_backup_order_list($input)
+	input_list <= split($input, "\n")
+	# WHY: regression with empty values appended
+	if len($input_list) != len($ordered) {
+		print(
+			"test %q expected len(%d) got len(%d)\n",
+			$name,
+			len($input_list),
+			len($ordered),
+		)
+		exit("1")
+	}
+	# WHY: easier to compare :-)
 	res <= echo $ordered
 
 	if $expectation != $res {
