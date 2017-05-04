@@ -576,6 +576,8 @@ fn _azure_vm_backup_get_readonly_lock(bkp_resgroup) {
 	return "ro-"+$bkp_resgroup
 }
 
-fn _azure_vm_backup_order_list(backup_resgrops) {
-
+fn _azure_vm_backup_order_list(backup_resgroups) {
+	ordered_raw <= echo $backup_resgroups | sort -r
+	ordered <= split($ordered_raw, "\n")
+	return $ordered
 }
