@@ -47,6 +47,9 @@ gotest=go test ./tests/azure -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
 test: image
+	./hack/run.sh nash ./azure/vm_test.sh
+
+test-integration: image
 	./hack/run.sh $(gotest) -run=$(run) ./... $(gotestargs)
 
 test-examples: image

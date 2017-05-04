@@ -429,7 +429,7 @@ fn azure_vm_start(vmname, resgroup) {
 #
 # Could (timestamp may vary) create the resource group:
 #
-# "staging-klb-backup-2017.05.28.1930-test"
+# "staging-bkp-2017.05.28.1930-test"
 #
 # The resource group name pattern is important to be know since
 # you must manage these resource groups and delete them.
@@ -446,20 +446,19 @@ fn azure_vm_start(vmname, resgroup) {
 # During the backup procedure the VM will be shutdown, and restarted
 # after all snapshots are taken.
 #
-# It will return two values, on success it returns the created resource
-# group name and the status of the operation, that on success will be "0".
+# Be aware that resource group names have a lame limit of 64
+# characters. So avoid long names for VM's and prefixes.
 #
-# On error the status of the operation will be "1" and you should ignore
-# the first return value (the resource group).
+# It will return the name of the created resource group.
 fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	timestamp <= date "+%Y.%m.%d.%H%M"
 
-	bkp_resgroup = $prefix+"-klb-backup-"+$timestamp+"-"+$vmname
+	bkp_resgroup = $prefix+"-bkp-"+$timestamp+"-"+$vmname
 
 	if azure_group_exists($bkp_resgroup) == "0" {
 		echo "fatal error: resource group already exists: "+$bkp_resgroup
 		
-		return "", "1"
+		exit("1")
 	}
 
 	echo "getting VM disks IDs"
@@ -517,7 +516,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	echo "created lock, finished with success"
 
-	return $bkp_resgroup, "0"
+	return $bkp_resgroup
 }
 
 # azure_vm_backup_list returns the list of all backups
@@ -529,6 +528,25 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 #
 # The list will be ordered, from the more recent to the oldest backup.
 fn azure_vm_backup_list(vmname, prefix) {
+	resgroups <= azure_group_get_names()
+
+	filtered = ""
+
+	for resgroup in $resgroups {
+		hasprefix <= echo $resgroup | -grep "^"+$prefix
+		hasvmname <= echo $hasprefix | -grep $vmname+"$"
+
+		if $status == "0" {
+			filtered = $filtered+$resgroup+"\n"
+		}
+	}
+
+	return _azure_vm_backup_order_list($filtered)
+}
+
+# azure_vm_backup_delete deletes a backup. This function
+# will also remove the locks that prevents backups deletion.
+fn azure_vm_backup_delete(backup_resgroup) {
 
 }
 
@@ -551,9 +569,13 @@ fn azure_vm_backup_recover(vminstance, backup_resgroup) {
 }
 
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
-	return "lock-nodelete-"+$bkp_resgroup
+	return "del-"+$bkp_resgroup
 }
 
 fn _azure_vm_backup_get_readonly_lock(bkp_resgroup) {
-	return "lock-readonly-"+$bkp_resgroup
+	return "ro-"+$bkp_resgroup
+}
+
+fn _azure_vm_backup_order_list(backup_resgrops) {
+
 }

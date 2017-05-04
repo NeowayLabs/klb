@@ -88,15 +88,27 @@ azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Premium_LRS")
 
 echo "created VM, starting backup"
 
-backup_resgroup, stats <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
+backup <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
 
-if $stats != "0" {
-	echo "unable to create backup"
-	
-	exit($stats)
+echo "created backup: "+$backup
+echo "creating second backup"
+
+otherbackup <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
+
+echo "created second backup: "+$otherbackup
+
+backups <= azure_vm_backup_list($vm_name, $backup_prefix)
+
+print("backup list: %q\n", $backups)
+
+if $backups[0] != $backup {
+	print("expected %q == %q\n", $backups[0], $backup)
+}
+if $backups[1] != $otherbackup {
+	print("expected %q == %q\n", $backups[1], $otherbackup)
 }
 
-echo "created backup resgroup: "+$backup_resgroup
+echo "finished with success"
 
 # TODO: restore will use azure_vm_set_osdisk_id(instance, id)
 # TODO: restore should create the VM but not turn it on automatically
