@@ -7,6 +7,6 @@ fn azure_lock_create(lockname, locktype, resgroup) {
 }
 
 # azure_lock_delete deletes a lock with the given name.
-fn azure_lock_delete(lockname) {
-	az lock delete --name $lockname
+fn azure_lock_delete(lockname, resgroup) {
+	az lock delete --name $lockname --resource-group $resgroup
 }

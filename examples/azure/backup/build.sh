@@ -99,15 +99,14 @@ echo "created second backup: "+$otherbackup
 
 backups <= azure_vm_backup_list($vm_name, $backup_prefix)
 
-print("backup list: %q\n", $backups)
+echo "listing all created backups"
+echo
 
-if $backups[0] != $backup {
-	print("expected %q == %q\n", $backups[0], $backup)
-}
-if $backups[1] != $otherbackup {
-	print("expected %q == %q\n", $backups[1], $otherbackup)
+for bkup in $backups {
+	echo "backup: " + $bkup
 }
 
+echo
 echo "finished with success"
 
 # TODO: restore will use azure_vm_set_osdisk_id(instance, id)

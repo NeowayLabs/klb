@@ -61,6 +61,22 @@ func createVM(
 	return vm
 }
 
+func backupVM(t *testing.T, f fixture.F, vmname string, prefix string) {
+
+	// TODO need to get output
+	f.Shell.Run(
+		"./testdata/backup_vm.sh",
+		vmname,
+		f.ResGroupName,
+		prefix,
+		f.Location,
+	)
+}
+
+func deleteBackup(t *testing.T, f fixture.F, backupResgroup string) {
+	f.Shell.Run("./testdata/delete_vm_backup.sh", backupResgroup)
+}
+
 func testVMCreation(t *testing.T, f fixture.F, vmSize string, sku string) {
 
 	resources := createVMResources(t, f)
@@ -157,6 +173,19 @@ func testVMSnapshotStandard(t *testing.T, f fixture.F) {
 
 func testVMSnapshotPremium(t *testing.T, f fixture.F) {
 	testVMSnapshot(t, f, "Standard_DS4_v2", "Premium_LRS")
+}
+
+func testVMBackup(t *testing.T, f fixture.F) {
+	// TODO
+	//vmSize := "Basic_A2"
+	//sku := "Standard_LRS"
+	//resources := createVMResources(t, f)
+	//vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+	//backupResgroup := backupVM(t, f, vm, "kbkp")
+	//defer deleteBackup(t, f, backupResgroup)
+
+	// TODO: call restore procedure
+	// TODO: validate VMs have the same disks
 }
 
 func testDuplicatedAvailabilitySet(t *testing.T, f fixture.F) {
@@ -305,4 +334,5 @@ func TestVM(t *testing.T) {
 	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
 	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
 	fixture.Run(t, "VMDuplicatedAvSet", vmtesttimeout, location, testDuplicatedAvailabilitySet)
+	fixture.Run(t, "VMBackup", vmtesttimeout, location, testVMBackup)
 }
