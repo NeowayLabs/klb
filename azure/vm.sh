@@ -646,7 +646,7 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 
 	log("os disk id: " + $osdiskid)
 	log("creating os disk")
-	osdiskname = $backup_resgroup + "-osdisk"
+	osdiskname = $vmname + "-osdisk"
 	d <= azure_disk_new($osdiskname, $resgroup, $location)
 	d <= azure_disk_set_source($d, $osdiskid)
 	osdisk <= azure_disk_create($d)
@@ -668,7 +668,7 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 		log("creating disk from snapshot: " + $id)
 		log("disk will have LUN: " + $lun)
 
-		diskname = $backup_resgroup + "-disk-" + $lun
+		diskname = $vmname + "-disk-" + $lun
 		d <= azure_disk_new($diskname, $resgroup, $location)
 		d <= azure_disk_set_source($d, $id)
 		diskid <= azure_disk_create($d)

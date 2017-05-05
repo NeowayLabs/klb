@@ -122,26 +122,35 @@ func execWithIPC(t *testing.T, f fixture.F, exec func(string)) string {
 	return string(out)
 }
 
+type VMDisk struct {
+	Name string
+	Sku  string
+	Size int
+}
+
+func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
+	vms := azure.NewVM(f)
+
+	for _, disk := range disks {
+		attachNewDiskOnVM(t, f, vmname, disk.Name, disk.Size, disk.Sku)
+		vms.AssertAttachedDataDisk(t, vmname, disk.Name, disk.Size, disk.Sku)
+	}
+}
+
 func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 
-	disks := []struct {
-		name string
-		size int
-	}{
+	disks := []VMDisk{
 		// Different sizes is important to validate behavior
-		{name: genUniqName(), size: 10},
-		{name: genUniqName(), size: 20},
-		{name: genUniqName(), size: 30},
+		{Name: genUniqName(), Size: 10, Sku: sku},
+		{Name: genUniqName(), Size: 20, Sku: sku},
+		{Name: genUniqName(), Size: 30, Sku: sku},
 	}
 
 	vms := azure.NewVM(f)
 
-	for _, disk := range disks {
-		attachNewDiskOnVM(t, f, vm, disk.name, disk.size, sku)
-		vms.AssertAttachedDataDisk(t, vm, disk.name, disk.size, sku)
-	}
+	attachDisks(t, f, vm, disks)
 
 	idsraw := execWithIPC(t, f, func(outfile string) {
 		f.Shell.Run(
@@ -202,7 +211,6 @@ func testVMSnapshotPremium(t *testing.T, f fixture.F) {
 }
 
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
-	// TODO
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
 	resources := createVMResources(t, f)
@@ -215,13 +223,22 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 }
 
 func testVMBackup(t *testing.T, f fixture.F) {
-	// TODO
-	//vmSize := "Basic_A2"
-	//sku := "Standard_LRS"
-	//resources := createVMResources(t, f)
-	//vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
-	//backupResgroup := backupVM(t, f, vm, "kbkp")
-	//defer deleteBackup(t, f, backupResgroup)
+
+	vmSize := "Basic_A2"
+	sku := "Standard_LRS"
+	resources := createVMResources(t, f)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+
+	disks := []VMDisk{
+		// Different sizes is important to validate behavior
+		{Name: genUniqName(), Size: 50, Sku: sku},
+		{Name: genUniqName(), Size: 20, Sku: sku},
+		{Name: genUniqName(), Size: 100, Sku: sku},
+	}
+	attachDisks(t, f, vm, disks)
+
+	backupResgroup := backupVM(t, f, vm, "kbkp")
+	defer deleteBackup(t, f, backupResgroup)
 
 	// TODO: call restore procedure
 	// TODO: validate VMs have the same osdisk
