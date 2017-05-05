@@ -344,18 +344,32 @@ fn azure_vm_get_datadisks_ids(name, resgroup) {
 #
 # These ID's are the same returned by azure_vm_get_datadisks_ids
 fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
+	ids_luns  = ()
 	info      <= azure_vm_get_rawinfo($name, $resgroup)
 	disks_raw <= echo $info | jq -r ".storageProfile.dataDisks[]"
-	ids_raw   <= echo $disks_raw | jq -r ".managedDisk.id"
+	ids_raw <= echo $disks_raw | jq -r ".managedDisk.id"
+
+	if $ids_raw == "" {
+		echo "no datadisks found for vm: " + $name
+		return $ids_luns
+	}
 	ids       <= split($ids_raw, "\n")
+
 	luns_raw  <= echo $disks_raw | jq -r ".lun"
+	if $luns_raw == "" {
+		echo "no datadisks found for vm: " + $name
+		return $ids_luns
+	}
+
 	luns      <= split($luns_raw, "\n")
 	size      <= len($ids)
+
+	echo "KMLO: " + $size
+	echo "KMLO: " + $ids_raw
 	rangeend  <= expr $size - 1
+	echo "KMLO AFF"
 	sequence  <= seq "0" $rangeend
 	range     <= split($sequence, "\n")
-
-	ids_luns  = ()
 
 	for i in $range {
 		idlun = ($ids[$i] $luns[$i])
@@ -468,10 +482,13 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	}
 
 	echo "vm.backup.create: getting VM disks IDs"
+	echo "vm.backup.create: vm name: " + $vmname
+	echo "vm.backup.create: resgroup: " + $resgroup
 
 	osdiskid       <= azure_vm_get_osdisk_id($vmname, $resgroup)
-	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
+	echo "got os disk id: " + $osdiskid
 
+	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
 	echo "vm.backup.create: creating resource group: "+$bkp_resgroup
 	echo "vm.backup.create: at location: "+$location
 
@@ -563,6 +580,10 @@ fn azure_vm_backup_delete(backup_resgroup) {
 	echo "backup delete: removing lock: " + $readlock
 	azure_lock_delete($readlock, $backup_resgroup)
 
+	# WHY: Deleting locks is not synchronous, this is a VERY
+	# lame workaround while we don't fix the azure_lock_delete function.
+	lame_workaround_sleep = "5"
+	sleep $lame_workaround_sleep
 	echo "backup delete: locks removed, deleting resource group: " + $backup_resgroup
 	azure_group_delete($backup_resgroup)
 }
@@ -581,6 +602,9 @@ fn azure_vm_backup_delete(backup_resgroup) {
 # The backup_resgroup is the name of the resource group
 # where the disks are stored just as it is returned by
 # azure_vm_backup_create.
+#
+# It is an error to provide a vm instance that has not
+# a os type setted using azure_vm_set_ostype.
 fn azure_vm_backup_recover(instance, backup_resgroup) {
 
 	fn log(msg) {
@@ -603,7 +627,7 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 
 	osdiskname <= _azure_vm_backup_get_osdisk_name()
 	for snapshot in $snapshots {
-		log("parsing: " + $snapshot)
+		log(format("parsing: %s", $snapshot))
 		id = $snapshot[0]
 		name = $snapshot[1]
 		if $name == $osdiskname {
@@ -627,7 +651,8 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 	d <= azure_disk_set_source($d, $osdiskid)
 	osdisk <= azure_disk_create($d)
 
-	azure_vm_set_osdisk_id($instance, $osdisk)
+	log("created os disk: " + $osdisk)
+	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
 
 	log("creating VM")
 	azure_vm_create($instance)

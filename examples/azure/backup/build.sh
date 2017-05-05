@@ -121,6 +121,7 @@ echo
 
 echo "creating backup VM info"
 backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
+backupvm <= azure_vm_set_ostype($backupvm, "linux")
 echo "restoring backup"
 azure_vm_backup_recover($backupvm, $backups[0])
 echo "finished with success"

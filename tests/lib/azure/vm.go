@@ -21,6 +21,12 @@ type VMDataDisk struct {
 	SizeGB int
 }
 
+type VMOSDisk struct {
+	OsType     string
+	Name       string `json:"name,omitempty"`
+	DiskSizeGB int32  `json:"diskSizeGB,omitempty"`
+}
+
 func NewVM(f fixture.F) *VM {
 	as := &VM{
 		client: compute.NewVirtualMachinesClient(f.Session.SubscriptionID),

@@ -61,16 +61,20 @@ func createVM(
 	return vm
 }
 
-func backupVM(t *testing.T, f fixture.F, vmname string, prefix string) {
+func backupVM(t *testing.T, f fixture.F, vmname string, prefix string) string {
 
-	// TODO need to get output
-	f.Shell.Run(
-		"./testdata/backup_vm.sh",
-		vmname,
-		f.ResGroupName,
-		prefix,
-		f.Location,
-	)
+	res := execWithIPC(t, f, func(output string) {
+		f.Shell.Run(
+			"./testdata/backup_vm.sh",
+			vmname,
+			f.ResGroupName,
+			prefix,
+			f.Location,
+			output,
+		)
+	})
+	res = strings.TrimSpace(res)
+	return strings.Trim(res, "\n")
 }
 
 func deleteBackup(t *testing.T, f fixture.F, backupResgroup string) {
@@ -101,6 +105,23 @@ func testPremiumDiskVM(t *testing.T, f fixture.F) {
 	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS")
 }
 
+func execWithIPC(t *testing.T, f fixture.F, exec func(string)) string {
+	outfile, err := ioutil.TempFile("", "klb_vm_script_ipc")
+	if err != nil {
+		t.Fatalf("error creating output file: %s", err)
+	}
+	defer os.Remove(outfile.Name()) // clean up
+
+	exec(outfile.Name())
+
+	f.Logger.Println("executed script, reading output")
+	out, err := ioutil.ReadAll(outfile)
+	if err != nil {
+		t.Fatalf("error reading output file: %s", err)
+	}
+	return string(out)
+}
+
 func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
@@ -122,20 +143,16 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 		vms.AssertAttachedDataDisk(t, vm, disk.name, disk.size, sku)
 	}
 
-	outfile, err := ioutil.TempFile("", "create_vm_snapshots_output")
-	if err != nil {
-		t.Fatalf("error creating output file: %s", err)
-	}
-	defer os.Remove(outfile.Name()) // clean up
-
-	f.Shell.Run("./testdata/create_vm_snapshots.sh", f.ResGroupName, vm, outfile.Name())
+	idsraw := execWithIPC(t, f, func(outfile string) {
+		f.Shell.Run(
+			"./testdata/create_vm_snapshots.sh",
+			f.ResGroupName,
+			vm,
+			outfile,
+		)
+	})
 
 	f.Logger.Println("created snapshots, retrieving ids")
-	idsraw, err := ioutil.ReadAll(outfile)
-	if err != nil {
-		t.Fatalf("error reading output file: %s", err)
-	}
-
 	ids := strings.Split(strings.Trim(string(idsraw), "\n"), "\n")
 	f.Logger.Printf("parsed ids: %s", ids)
 
@@ -182,6 +199,19 @@ func testVMSnapshotStandard(t *testing.T, f fixture.F) {
 
 func testVMSnapshotPremium(t *testing.T, f fixture.F) {
 	testVMSnapshot(t, f, "Standard_DS4_v2", "Premium_LRS")
+}
+
+func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
+	// TODO
+	vmSize := "Basic_A2"
+	sku := "Standard_LRS"
+	resources := createVMResources(t, f)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+	backupResgroup := backupVM(t, f, vm, "kbkp")
+	defer deleteBackup(t, f, backupResgroup)
+
+	// TODO: call restore procedure
+	// TODO: validate VMs have the same disks
 }
 
 func testVMBackup(t *testing.T, f fixture.F) {
@@ -337,11 +367,12 @@ func attachNewDiskOnVM(
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	vmtesttimeout := time.Hour
+	vmtesttimeout := 30 * time.Minute
 	fixture.Run(t, "VMCreationStandardDisk", vmtesttimeout, location, testStandardDiskVM)
 	fixture.Run(t, "VMCreationPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
 	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
 	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
 	fixture.Run(t, "VMDuplicatedAvSet", vmtesttimeout, location, testDuplicatedAvailabilitySet)
+	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
 	fixture.Run(t, "VMBackup", vmtesttimeout, location, testVMBackup)
 }
