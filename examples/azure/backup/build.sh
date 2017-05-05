@@ -81,21 +81,21 @@ azure_login()
 
 echo "creating new resource group"
 
-azure_group_create($group, $location)
+# azure_group_create($group, $location)
 
 echo "creating VNET"
 
-azure_vnet_create($vnet, $group, $location, $vnet_cidr, $vnet_dns_servers)
+# azure_vnet_create($vnet, $group, $location, $vnet_cidr, $vnet_dns_servers)
 
 echo "creating subnet"
 
-create_subnet($subnet_name, $subnet_cidr)
+# create_subnet($subnet_name, $subnet_cidr)
 
 echo "creating virtual machine"
 
-create_vm($vm_name, $subnet_name)
-azure_vm_disk_attach_new($vm_name, $group, "disk1", "10", "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Premium_LRS")
+# create_vm($vm_name, $subnet_name)
+# azure_vm_disk_attach_new($vm_name, $group, "disk1", "10", "Premium_LRS")
+# azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Premium_LRS")
 
 echo "created VM, starting backup"
 

@@ -587,23 +587,30 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 		echo "vm.backup.recover: " + $msg
 	}
 
+	log("getting info from vm")
 	resgroup <= _azure_vm_get($instance, "resource-group")
 	location <= _azure_vm_get($instance, "location")
 	vmname <= _azure_vm_get($instance, "name")
+	log("vm name: " + $vmname)
+	log("vm resgroup: " + $resgroup)
+	log("vm location: " + $location)
 
+	log("loading snapshots from backup: " + $backup_resgroup)
 	snapshots <= azure_snapshot_list($backup_resgroup)
+	log("loaded snapshots, parsing results")
 	osdiskid = ""
 	datadisks = ()
 
 	osdiskname <= _azure_vm_backup_get_osdisk_name()
 	for snapshot in $snapshots {
+		log("parsing: " + $snapshot)
 		id = $snapshot[0]
 		name = $snapshot[1]
 		if $name == $osdiskname {
 			osdiskid = $id
 		} else {
-			lun <= _azure_vm_backup_datadisk_lun($snapshot)
-			idlun = ($snapshot[0] $lun)
+			lun <= _azure_vm_backup_datadisk_lun($name)
+			idlun = ($id $lun)
 			datadisks <= append($datadisks, $idlun)
 		}
 	}
