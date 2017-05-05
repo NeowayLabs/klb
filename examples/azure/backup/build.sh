@@ -52,6 +52,9 @@ fn new_vm_nodisk(name, subnet) {
 
 	azure_nic_create($nic)
 
+	echo "created NIC with success"
+	echo "creating new VM instance"
+
 	vm   <= azure_vm_new($name, $group, $location)
 	vm   <= azure_vm_set_vmsize($vm, $vm_size)
 	vm   <= azure_vm_set_username($vm, $vm_username)
@@ -61,6 +64,7 @@ fn new_vm_nodisk(name, subnet) {
 	vm   <= azure_vm_set_nics($vm, $nics)
 	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
 
+	echo "returning new VM instance"
 	return $vm
 }
 
@@ -115,8 +119,9 @@ for bkup in $backups {
 
 echo
 
-echo "restoring backup"
+echo "creating backup VM info"
 backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
+echo "restoring backup"
 azure_vm_backup_recover($backupvm, $backups[0])
 echo "finished with success"
 
