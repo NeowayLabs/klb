@@ -21,10 +21,10 @@ type VMDataDisk struct {
 	SizeGB int
 }
 
-type VMOSDisk struct {
-	OsType     string
-	Name       string `json:"name,omitempty"`
-	DiskSizeGB int32  `json:"diskSizeGB,omitempty"`
+type VMOsDisk struct {
+	OsType string
+	Name   string
+	SizeGB int
 }
 
 func NewVM(f fixture.F) *VM {
@@ -34,6 +34,51 @@ func NewVM(f fixture.F) *VM {
 	}
 	as.client.Authorizer = f.Session.Token
 	return as
+}
+
+func (vm *VM) OsDisk(t *testing.T, vmname string) VMOsDisk {
+
+	var osdisk *VMOsDisk
+
+	vm.f.Retrier.Run(newID("VM", "DataDisks", vmname), func() error {
+		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
+		if err != nil {
+			return err
+		}
+		if v.VirtualMachineProperties == nil {
+			return fmt.Errorf("no virtual machine properties found on vm %s", vmname)
+		}
+		if v.VirtualMachineProperties.StorageProfile == nil {
+			return fmt.Errorf("no storage profile found on vm %s", vmname)
+		}
+
+		storageProfile := v.VirtualMachineProperties.StorageProfile
+		if storageProfile.OsDisk == nil {
+			return fmt.Errorf("no os disk found on vm %s", vmname)
+		}
+
+		if storageProfile.OsDisk.Name == nil {
+			return errors.New("os disk has no name")
+		}
+
+		if storageProfile.OsDisk.DiskSizeGB == nil {
+			return errors.New("os disk has size")
+		}
+
+		osdisk = &VMOsDisk{
+			Name:   *storageProfile.OsDisk.Name,
+			SizeGB: int(*storageProfile.OsDisk.DiskSizeGB),
+			OsType: string(storageProfile.OsDisk.OsType),
+		}
+
+		return nil
+	})
+
+	if osdisk == nil {
+		t.Fatal("unable to get os disks for vm %q", vmname)
+	}
+
+	return *osdisk
 }
 
 func (vm *VM) DataDisks(t *testing.T, vmname string) []VMDataDisk {

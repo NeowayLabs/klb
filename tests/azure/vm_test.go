@@ -211,7 +211,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	defer deleteBackup(t, f, backupResgroup)
 
 	// TODO: call restore procedure
-	// TODO: validate VMs have the same disks
+	// TODO: validate VMs have the same osdisk
 }
 
 func testVMBackup(t *testing.T, f fixture.F) {
@@ -224,6 +224,7 @@ func testVMBackup(t *testing.T, f fixture.F) {
 	//defer deleteBackup(t, f, backupResgroup)
 
 	// TODO: call restore procedure
+	// TODO: validate VMs have the same osdisk
 	// TODO: validate VMs have the same disks
 }
 
