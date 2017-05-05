@@ -109,6 +109,7 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 		name string
 		size int
 	}{
+		// Different sizes is important to validate behavior
 		{name: genUniqName(), size: 10},
 		{name: genUniqName(), size: 20},
 		{name: genUniqName(), size: 30},
@@ -142,27 +143,35 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 		t.Fatalf("expected %d snapshots, got %d", len(disks), len(ids))
 	}
 
-	recoveredDisks := map[int]bool{}
-	for _, disk := range disks {
-		if _, ok := recoveredDisks[disk.size]; ok {
-			t.Fatal("snapshot test can't have disks with same size")
-		}
-		recoveredDisks[disk.size] = false
-	}
-
 	nic := genNicName()
 	createVMNIC(f, nic, resources.vnet, resources.subnet)
 	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, sku)
 
 	for _, id := range ids {
-		diskname := attachSnapshotOnVM(t, f, vmbackup, id, sku)
-		size := vms.DataDiskSize(t, vmbackup, diskname)
-		recoveredDisks[size] = true
+		attachSnapshotOnVM(t, f, vmbackup, id, sku)
 	}
 
-	for diskinfo, got := range recoveredDisks {
+	originaldisks := vms.DataDisks(t, vm)
+	backupdisks := vms.DataDisks(t, vmbackup)
+
+	if len(originaldisks) != len(backupdisks) {
+		t.Fatalf("expected disks %q == %q", originaldisks, backupdisks)
+	}
+
+	for _, originaldisk := range originaldisks {
+		size := originaldisk.SizeGB
+		got := false
+		for _, backupdisk := range backupdisks {
+			if backupdisk.SizeGB == size {
+				got = true
+			}
+		}
 		if !got {
-			t.Fatalf("disk with size %d not recovered from snapshot", diskinfo)
+			t.Fatalf(
+				"unable to find disk: %q on backup disks %q",
+				originaldisk,
+				backupdisks,
+			)
 		}
 	}
 }

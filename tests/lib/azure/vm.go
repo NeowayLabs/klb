@@ -15,6 +15,12 @@ type VM struct {
 	f      fixture.F
 }
 
+type VMDataDisk struct {
+	Lun    int
+	Name   string
+	SizeGB int
+}
+
 func NewVM(f fixture.F) *VM {
 	as := &VM{
 		client: compute.NewVirtualMachinesClient(f.Session.SubscriptionID),
@@ -24,11 +30,11 @@ func NewVM(f fixture.F) *VM {
 	return as
 }
 
-func (vm *VM) DataDiskSize(t *testing.T, vmname string, diskname string) int {
+func (vm *VM) DataDisks(t *testing.T, vmname string) []VMDataDisk {
 
-	size := 0
+	disksinfo := []VMDataDisk{}
 
-	vm.f.Retrier.Run(newID("VM", "DataDiskSize", vmname), func() error {
+	vm.f.Retrier.Run(newID("VM", "DataDisks", vmname), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
 		if err != nil {
 			return err
@@ -49,26 +55,27 @@ func (vm *VM) DataDiskSize(t *testing.T, vmname string, diskname string) int {
 			if disk.Name == nil {
 				continue
 			}
+			if disk.Lun == nil {
+				continue
+			}
 			if disk.DiskSizeGB == nil {
 				continue
 			}
-			gotName := *disk.Name
-			gotDiskSize := int(*disk.DiskSizeGB)
-			vm.f.Logger.Printf("got disk %q", gotName)
-
-			if gotName == diskname {
-				size = gotDiskSize
-				return nil
-			}
+			disksinfo = append(disksinfo, VMDataDisk{
+				Name:   *disk.Name,
+				Lun:    int(*disk.Lun),
+				SizeGB: int(*disk.DiskSizeGB),
+			})
 		}
-		return fmt.Errorf("unable to find disk %q on vm %q", diskname, vmname)
+
+		return nil
 	})
 
-	if size == 0 {
-		t.Fatal("unable to get data disk %q size", diskname)
+	if len(disksinfo) == 0 {
+		t.Fatal("unable to get data disks for vm %q", vmname)
 	}
 
-	return size
+	return disksinfo
 }
 
 // AssertAttachedDisk checks if VM has the following disk attached
