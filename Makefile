@@ -50,6 +50,10 @@ test: image
 	./hack/run.sh nash ./azure/vm_test.sh
 
 test-integration: image
+	./hack/run.sh $(gotest) -tags=slow -run=$(run) ./... $(gotestargs)
+
+# WHY? Travis CI has a limit of 50 min total for test running (docker image build included)
+test-integration-ci: image
 	./hack/run.sh $(gotest) -run=$(run) ./... $(gotestargs)
 
 test-examples: image
