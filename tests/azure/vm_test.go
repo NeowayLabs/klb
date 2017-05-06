@@ -386,8 +386,8 @@ func attachNewDiskOnVM(
 func TestVM(t *testing.T) {
 	t.Parallel()
 	vmtesttimeout := 45 * time.Minute
-	fixture.Run(t, "VMCreationStandardDisk", vmtesttimeout, location, testStandardDiskVM)
-	fixture.Run(t, "VMCreationPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
+	//fixture.Run(t, "VMCreationStandardDisk", vmtesttimeout, location, testStandardDiskVM)
+	//fixture.Run(t, "VMCreationPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
 	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
 	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
 	fixture.Run(t, "VMDuplicatedAvSet", vmtesttimeout, location, testDuplicatedAvailabilitySet)
