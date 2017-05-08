@@ -31,19 +31,22 @@ fn azure_snapshot_create(name, resgroup, srcid) {
 fn azure_snapshot_list(resgroup) {
 	# THIS IS COPIED FROM azure_vm_get_datadisks_ids_lun
 	# It seems like a practical case for a zip function (like python)
-	snapshots <= az snapshot list --resource-group $resgroup
-	names_raw <= echo $snapshots | jq -r ".[].name"
-	ids_raw <= echo $snapshots | jq -r ".[].id"
-
-	ids       <= split($ids_raw, "\n")
-	names      <= split($names_raw, "\n")
-
-	size      <= len($ids)
-	rangeend  <= expr $size - 1
-	sequence  <= seq "0" $rangeend
-	range     <= split($sequence, "\n")
-
 	ids_names = ()
+
+	snapshots     <= az snapshot list --resource-group $resgroup
+	names_raw     <= echo $snapshots | jq -r ".[].name"
+	ids_raw       <= echo $snapshots | jq -r ".[].id"
+	ids           <= split($ids_raw, "\n")
+	names         <= split($names_raw, "\n")
+	size          <= len($ids)
+	rangeend, err <= expr $size - 1
+
+	if $err != "0" {
+		return $ids_names
+	}
+
+	sequence <= seq "0" $rangeend
+	range    <= split($sequence, "\n")
 
 	for i in $range {
 		idname = ($ids[$i] $names[$i])
