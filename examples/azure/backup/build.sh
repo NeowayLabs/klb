@@ -104,6 +104,8 @@ backup <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_locat
 echo "created backup: "+$backup
 echo "creating second backup"
 
+# WHY: Test if it works on an already stopped VM
+azure_vm_stop($vm_name, $group)
 otherbackup <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
 
 echo "created second backup: "+$otherbackup
@@ -123,6 +125,7 @@ echo "creating backup VM info"
 backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
 backupvm <= azure_vm_set_ostype($backupvm, "linux")
 echo "restoring backup"
+
 azure_vm_backup_recover($backupvm, $backups[0])
 echo "finished with success"
 
