@@ -364,10 +364,7 @@ fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
 	luns      <= split($luns_raw, "\n")
 	size      <= len($ids)
 
-	echo "KMLO: " + $size
-	echo "KMLO: " + $ids_raw
 	rangeend  <= expr $size - 1
-	echo "KMLO AFF"
 	sequence  <= seq "0" $rangeend
 	range     <= split($sequence, "\n")
 
