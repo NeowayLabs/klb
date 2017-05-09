@@ -26,10 +26,9 @@ fn build_vms_create(name, subnet, address) {
 		ssh-keygen -f $accesskey -P ""
 	}
 
-	# create storage account
-	storage_account <= azure_storage_account_create($name, $group, $location, $vm_storage_type, "Storage")
-
 	# create nic
+	nic_name = ($name)
+
 	nic <= azure_nic_new($name, $group, $location)
 	nic <= azure_nic_set_vnet($nic, $vnet)
 	nic <= azure_nic_set_subnet($nic, $subnet)
@@ -46,17 +45,14 @@ fn build_vms_create(name, subnet, address) {
 
 	# create vm
 
-	vm <= azure_vm_new($name, $group, $location, "Linux")
+	vm <= azure_vm_new($name, $group, $location)
 	vm <= azure_vm_set_vmsize($vm, $vm_size)
 	vm <= azure_vm_set_username($vm, $vm_username)
-	vm <= azure_vm_set_vnet($vm, $vnet)
-	vm <= azure_vm_set_subnet($vm, $subnet)
-	vm <= azure_vm_set_nic($vm, $name)
-	vm <= azure_vm_set_storageaccount($vm, $storage_account)
-	vm <= azure_vm_set_osdiskvhd($vm, $name+".vhd")
+	vm <= azure_vm_set_nics($vm, $nic_name)
+	vm <= azure_vm_set_storagesku($vm, $vm_storage_type)
+	vm <= azure_vm_set_osdiskname($vm, $name+".vhd")
 	vm <= azure_vm_set_imageurn($vm, $vm_image_urn)
 	vm <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
-	vm <= azure_vm_set_disablebootdiagnostics($vm)
 
 	azure_vm_create($vm)
 }
