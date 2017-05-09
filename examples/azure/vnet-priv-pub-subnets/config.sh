@@ -16,10 +16,10 @@ subnet_priv_cidr = "10.50.2.0/24"
 
 ## VMs Settings
 
-vm_size         = "Basic_A2"
+vm_size         = "Standard_DS1_v2"
 vm_username     = "core"
 vm_image_urn    = "CoreOS:CoreOS:Stable:1298.6.0"
-vm_storage_type = "LRS"
+vm_storage_type = "Premium_LRS"
 
 nat_name        = "nat"
 nat_subnet      = "public"
