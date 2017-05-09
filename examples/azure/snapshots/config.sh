@@ -13,7 +13,7 @@ subnet_cidr      = "10.50.1.0/24"
 
 ## VMs Settings
 vm_name         = "snapshots-test-vm"
-vm_size         = "Standard_L4s"
+vm_size         = "Standard_DS4_v2"
 vm_username     = "core"
 vm_image_urn    = "CoreOS:CoreOS:Stable:1298.6.0"
 snapshots_group = $group+"-snapshots"

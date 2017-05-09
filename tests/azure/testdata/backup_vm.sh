@@ -13,6 +13,10 @@ azure_login()
 
 print("vm name %q resgroup %q prefix %q location %q\n", $vm_name, $resgroup, $prefix, $location)
 echo "creating backup"
-backup <= azure_vm_backup_create($vm_name, $resgroup, $prefix, $location)
+backup, err <= azure_vm_backup_create($vm_name, $resgroup, $prefix, $location)
+if $err != "" {
+	echo $err
+	exit("1")
+}
 echo "created backup: " + $backup
 echo $backup > $output

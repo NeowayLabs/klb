@@ -84,8 +84,9 @@ create_subnet($subnet_name, $subnet_cidr)
 echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name)
-azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "10", "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "20", "Standard_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "100", "Premium_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "200", "Standard_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "bigPremiumDisk", "1023", "Premium_LRS")
 
 echo "created main VM"
 echo "creating backup VM"
@@ -101,14 +102,19 @@ ids <= azure_vm_get_disks_ids($vm_name, $group)
 echo "generating snapshots from original VM"
 echo "snapshots will be located at: "+$snapshots_group
 
+fn log(msg) {
+	ts <= date "+%T"
+	echo $ts + ":" + $msg
+}
+
 for id in $ids {
 	snapshot_name <= addsuffix("snapshot")
 
-	echo "creating snapshot: "+$snapshot_name+" from id: "+$id
+	log("creating snapshot: "+$snapshot_name+" from id: "+$id)
 
 	snapshotid <= azure_snapshot_create($snapshot_name, $snapshots_group, $id)
 
-	echo "created snapshot id: "+$snapshotid
+	log("created snapshot id: "+$snapshotid)
 
 	disk_name <= addsuffix("disk")
 
