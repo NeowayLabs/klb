@@ -33,7 +33,7 @@ fn create_subnet(name, cidr) {
 	azure_route_table_route_create($route)
 }
 
-fn create_vm(name, subnet) {
+fn create_vm(name, subnet, sku) {
 	# create ssh key
 	accessdir = "/tmp/.config/ssh/"
 	accesskey = $accessdir+"id_rsa-"+$name
@@ -62,6 +62,7 @@ fn create_vm(name, subnet) {
 	vm   <= azure_vm_set_osdiskname($vm, $name)
 	vm   <= azure_vm_set_imageurn($vm, $vm_image_urn)
 	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
+	vm   <= azure_vm_set_storagesku($vm, $sku)
 
 	azure_vm_create($vm)
 }
@@ -83,7 +84,8 @@ create_subnet($subnet_name, $subnet_cidr)
 
 echo "creating virtual machine"
 
-create_vm($vm_name, $subnet_name)
+create_vm($vm_name, $subnet_name, "Premium_LRS")
+
 azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "100", "Premium_LRS")
 azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "200", "Standard_LRS")
 azure_vm_disk_attach_new($vm_name, $group, "bigPremiumDisk", "1023", "Premium_LRS")
@@ -93,7 +95,7 @@ echo "creating backup VM"
 
 vm_backup_name = $vm_name+"-backup"
 
-create_vm($vm_backup_name, $subnet_name)
+create_vm($vm_backup_name, $subnet_name, "Premium_LRS")
 
 echo "getting IDs of the VM disks"
 
