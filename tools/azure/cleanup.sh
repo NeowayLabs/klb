@@ -2,6 +2,7 @@
 
 import klb/azure/login
 import klb/azure/group
+import klb/azure/vm
 
 klbtests_prefix = "^klb-*"
 
@@ -61,7 +62,9 @@ echo "deleting resource groups, may the odds be at your favor"
 for resgroup in $filtered {
 	echo "deleting: "+$resgroup
 
-	azure_group_delete($resgroup)
+	# WHY ? Some resource groups are backups, this will
+	# remove locks also.
+        azure_vm_backup_delete($resgroup)
 }
 
 echo "done"
