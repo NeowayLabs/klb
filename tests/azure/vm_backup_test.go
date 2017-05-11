@@ -26,17 +26,20 @@ func backupVM(t *testing.T, f fixture.F, vmname string, prefix string) string {
 	return strings.Trim(res, "\n")
 }
 
-func deleteBackup(t *testing.T, f fixture.F, backupResgroup string) {
-	f.Shell.Run("./testdata/delete_vm_backup.sh", backupResgroup)
+func deleteBackups(t *testing.T, f fixture.F, vmname string, bkpprefix string) {
+	f.Shell.Run("./testdata/delete_backups.sh", vmname, bkpprefix)
 }
 
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
+	bkpprefix := "klb-bkp"
+
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
-	backupResgroup := backupVM(t, f, vm, "klb")
-	defer deleteBackup(t, f, backupResgroup)
+
+	defer deleteBackups(t, f, vm, bkpprefix)
+	backupVM(t, f, vm, bkpprefix)
 
 	// TODO: call restore procedure
 	// TODO: validate VMs have the same osdisk
@@ -46,6 +49,8 @@ func testVMBackup(t *testing.T, f fixture.F) {
 
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
+	bkpprefix := "klb-bkp"
+
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 
@@ -57,8 +62,8 @@ func testVMBackup(t *testing.T, f fixture.F) {
 	}
 	attachDisks(t, f, vm, disks)
 
-	backupResgroup := backupVM(t, f, vm, "kbkp")
-	defer deleteBackup(t, f, backupResgroup)
+	defer deleteBackups(t, f, vm, bkpprefix)
+	backupVM(t, f, vm, bkpprefix)
 
 	// TODO: call restore procedure
 	// TODO: validate VMs have the same osdisk

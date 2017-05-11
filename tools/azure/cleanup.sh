@@ -3,7 +3,7 @@
 import klb/azure/login
 import klb/azure/group
 
-klbtests_prefix = "klb-*"
+klbtests_prefix = "^klb-*"
 
 echo
 echo "========================================================================="
@@ -16,9 +16,9 @@ resgroups <= azure_group_get_names()
 filtered = ()
 
 for resgroup in $resgroups {
-	_ <= echo $resgroup | -grep $klbtests_prefix
+	_, err <= echo $resgroup | grep $klbtests_prefix
 
-	if $status == "0" {
+	if $err == "0" {
 		filtered <= append($filtered, $resgroup)
 	}
 }
@@ -39,6 +39,7 @@ echo "from credentials:"
 echo "==============================================="
 echo
 echo "AZURE_SUBSCRIPTION_NAME: "+$AZURE_SUBSCRIPTION_NAME
+echo "AZURE_SUBSCRIPTION_ID: "+$AZURE_SUBSCRIPTION_ID
 echo "AZURE_TENANT_ID: "+$AZURE_TENANT_ID
 echo "AZURE_CLIENT_ID: "+$AZURE_CLIENT_ID
 echo "AZURE_SERVICE_PRINCIPAL"+$AZURE_SERVICE_PRINCIPAL
