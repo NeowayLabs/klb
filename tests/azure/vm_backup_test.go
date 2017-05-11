@@ -35,7 +35,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
-	backupResgroup := backupVM(t, f, vm, "kbkp")
+	backupResgroup := backupVM(t, f, vm, "klb")
 	defer deleteBackup(t, f, backupResgroup)
 
 	// TODO: call restore procedure
