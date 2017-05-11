@@ -417,7 +417,7 @@ fn azure_vm_start(vmname, resgroup) {
 }
 
 # azure_vm_backup_create will create a full backup from the given VM.
-# The backup is created following a naming pattern for the resources
+# The backup is created following a naming convention for the resources
 # that it creates, this enables the azure_vm_backup_recover function to work.
 # Conceptually we are encoding information required for proper recover (metadata)
 # on the name of the resources, so we don't need a third party storage.
@@ -448,9 +448,9 @@ fn azure_vm_start(vmname, resgroup) {
 #
 # "staging-bkp-2017.05.28.1930-test"
 #
-# The resource group name pattern is important to be know since
+# The resource group name convention is important to be know since
 # you must manage these resource groups and delete them.
-# There will be also patterns on how snapshots are stored inside
+# There will be also a convention on how snapshots are stored inside
 # this resource group but they are not documented and you should not
 # rely on them, they are implementation details.
 #
@@ -460,22 +460,38 @@ fn azure_vm_start(vmname, resgroup) {
 # The azure_vm_backup_delete function will release the locks and delete
 # a backup resource group for you.
 #
-# During the backup procedure the VM will be shutdown, and restarted
-# after all snapshots are taken.
+# During the backup procedure the VM must be stopped (you can use the
+# azure_vm_stop function to do that). It is a programming error to call
+# this function with a VM that is running as a parameter, since it is
+# not safe to take snapshots from a running VM.
+#
+# After the function returns it is safe to start the VM, all the snapshots
+# have been taken.
 #
 # Be aware that resource group names have a lame limit of 64
-# characters. So avoid long names for VM's and prefixes.
+# characters. Since we need to create locks the final limit will
+# be 60 characters total (including the timestamp).
+# So avoid long names for VM's and prefixes.
 #
-# It will return the name of the created resource group.
+# On success it will return the name of the created resource group and
+# an empty string as error. On error it will return an empty string as resource
+# group and a non-empty error string with details on the failure.
 fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	timestamp <= date "+%Y.%m.%d.%H%M"
+	# WHY: We need some chars for the lock names,
+	# based on the resgroup name.
+	max_resgroup_size = "60"
 
 	bkp_resgroup = $prefix+"-bkp-"+$timestamp+"-"+$vmname
 
+	bkp_resgroup_len <= len($bkp_resgroup)
+	_, err <= test $max_resgroup_size -gt $bkp_resgroup_len
+	if $err != "0" {
+		return "", format("error: resgroup name %q is too bigger than %q", $bkp_resgroup, $max_resgroup_size)
+	}
+
 	if azure_group_exists($bkp_resgroup) == "0" {
-		echo "fatal error: resource group already exists: "+$bkp_resgroup
-		
-		exit("1")
+		return "", format("error: resource group already exists: %q", $bkp_resgroup)
 	}
 
 	echo "vm.backup.create: getting VM disks IDs"
@@ -491,15 +507,12 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	azure_group_create($bkp_resgroup, $location)
 
-	echo "vm.backup.create: created backup resource group, stopping running VM"
-
-	azure_vm_stop($vmname, $resgroup)
 
 	# WHY: name used later on the recover phase, do NOT change this
 	# unless you are absolutely SURE of what you are doing
 	snapshot_name <= _azure_vm_backup_get_osdisk_name()
 
-	echo "vm.backup.create: creating os disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
+	echo "vm.backup.create: creating OS disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
 
 	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid)
 
@@ -520,10 +533,6 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 		echo "vm.backup.create: created snapshot id: "+$snapshotid
 	}
 
-	echo "vm.backup.create: starting VM"
-
-	azure_vm_start($vmname, $resgroup)
-
 	echo "vm.backup.create: backup finished with success, creating lock"
 
 	nodelete <= _azure_vm_backup_get_nodelete_lock($bkp_resgroup)
@@ -536,7 +545,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	echo "vm.backup.create: created lock, finished with success"
 
-	return $bkp_resgroup
+	return $bkp_resgroup, ""
 }
 
 # azure_vm_backup_list returns the list of all backups
@@ -561,7 +570,7 @@ fn azure_vm_backup_list(vmname, prefix) {
 		}
 	}
 
-	echo "vm.backup.list: got: [" + $filtered + "], ordering"
+	echo "vm.backup.list: got: [" + $filtered + "], ordering the list"
 	return _azure_vm_backup_order_list($filtered)
 }
 
@@ -586,8 +595,8 @@ fn azure_vm_backup_delete(backup_resgroup) {
 }
 
 # azure_vm_backup_recover will recover a previously generated
-# backup. The backup must have been generated using
-# azure_vm_backup_create, since a whole pattern on resource
+# backup. The backup resource group must have been generated using
+# azure_vm_backup_create, since a whole convention on resource
 # naming will be required in the recovery process.
 #
 # The vminstance parameter is a instance of the vm object,
@@ -597,11 +606,14 @@ fn azure_vm_backup_delete(backup_resgroup) {
 # datadisks will be obtained from the backup_resgroup.
 #
 # The backup_resgroup is the name of the resource group
-# where the disks are stored just as it is returned by
+# where the snapshots are stored just as it is returned by
 # azure_vm_backup_create.
 #
 # It is an error to provide a vm instance that has not
 # a os type setted using azure_vm_set_ostype.
+#
+# This function returns an empty string on success or a
+# non empty error message if it fails.
 fn azure_vm_backup_recover(instance, backup_resgroup) {
 
 	fn log(msg) {
@@ -612,9 +624,34 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 	resgroup <= _azure_vm_get($instance, "resource-group")
 	location <= _azure_vm_get($instance, "location")
 	vmname <= _azure_vm_get($instance, "name")
+	ostype <= _azure_vm_get($instance, "os-type")
+	osdiskname <= _azure_vm_get($instance, "os-disk-name")
+
 	log("vm name: " + $vmname)
 	log("vm resgroup: " + $resgroup)
 	log("vm location: " + $location)
+	log("vm os type: " + $ostype)
+
+	if $vmname == "" {
+		return "unable to get the 'name' from the given vm instance"
+	}
+
+	if $resgroup == "" {
+		return "unable to get the 'resource-group' from the given vm instance"
+	}
+
+	if $location == "" {
+		return "unable to get the 'location' from the given vm instance"
+	}
+
+	if $ostype == "" {
+		return "unable to get the 'os-type' from the given vm instance"
+	}
+
+	if $osdiskname != "" {
+		msg <= format("found os disk name %q on vm instance.")
+		return $msg + "should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
+	}
 
 	log("loading snapshots from backup: " + $backup_resgroup)
 	snapshots <= azure_snapshot_list($backup_resgroup)
@@ -637,8 +674,10 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 	}
 
 	if $osdiskid == "" {
-		log("unable to find osdisk id on backup: " + $backup_resgroup)
-		exit("1")
+		return format(
+			"unable to find osdisk id on backup resource group: %q, corrupted backup ?",
+			$backup_resgroup,
+		)
 	}
 
 	log("os disk id: " + $osdiskid)

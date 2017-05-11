@@ -14,6 +14,12 @@ import klb/azure/route
 import klb/azure/snapshot
 import config.sh
 
+
+fn log(msg) {
+	ts <= date "+%T"
+	echo $ts + ":" + $msg
+}
+
 fn addsuffix(name) {
 	# Providing true uniqueness with the limits on the names is pretty hard :-)
 	s <= head -n1 /dev/urandom | md5sum | tr -dc A-Za-z0-9 | cut -b 1-10
@@ -94,21 +100,41 @@ create_subnet($subnet_name, $subnet_cidr)
 echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name)
-azure_vm_disk_attach_new($vm_name, $group, "disk1", "10", "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "disk2", "20", "Premium_LRS")
 
-echo "created VM, starting backup"
+sequence  <= seq "1" $vm_disks_count
+range     <= split($sequence, "\n")
 
-backup <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
+print("creating %q disks with size %q\n", $vm_disks_count, $vm_disks_size)
 
-echo "created backup: "+$backup
-echo "creating second backup"
+for i in $range {
+	azure_vm_disk_attach_new($vm_name, $group, "disk" + $i, $vm_disks_size, "Premium_LRS")
+}
 
-# WHY: Test if it works on an already stopped VM
+echo "stopping VM"
 azure_vm_stop($vm_name, $group)
-otherbackup <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
 
-echo "created second backup: "+$otherbackup
+log("starting backup")
+
+backup, err <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
+if $err != "" {
+	echo $err
+	exit("1")
+}
+
+log("created backup: "+$backup)
+log("creating second backup")
+
+azure_vm_stop($vm_name, $group)
+otherbackup, err  <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
+if $err != "" {
+	echo $err
+	exit("1")
+}
+
+log("created second backup: "+$otherbackup)
+log("starting VM")
+
+azure_vm_start($vm_name, $group)
 
 backups <= azure_vm_backup_list($vm_name, $backup_prefix)
 
@@ -120,7 +146,6 @@ for bkup in $backups {
 }
 
 echo
-
 echo "creating backup VM info"
 backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
 backupvm <= azure_vm_set_ostype($backupvm, "linux")
