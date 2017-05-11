@@ -22,21 +22,27 @@ func TestExamples(t *testing.T) {
 		cleanup string
 	}{
 		{
-			name:    "managedDisks",
-			script:  "../../examples/azure/managed-disks/build.sh",
-			cleanup: "../../examples/azure/managed-disks/cleanup.sh",
+			name:    "snapshots",
+			script:  "../../examples/azure/snapshots/build.sh",
+			cleanup: "../../examples/azure/snapshots/cleanup.sh",
+		},
+		{
+			name:    "backup",
+			script:  "../../examples/azure/backup/build.sh",
+			cleanup: "../../examples/azure/backup/cleanup.sh",
 		},
 	}
 
 	timeout := time.Hour
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	env := fixture.NewSession(t).Env()
 
 	for _, e := range examples {
 		example := e
 		t.Run(example.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+
+			env := fixture.NewSession(t).Env()
 			runExample(
 				ctx,
 				t,
@@ -76,8 +82,11 @@ func runExample(
 		logger.Printf("cleanup script: %s", cleanup)
 		e := shell.RunOnce(cleanup)
 
-		t.Errorf("unexpected error on cleanup: %s", e)
-		t.Error("resources may have leaked")
+		if e != nil {
+			t.Errorf("unexpected error on cleanup: %s", e)
+			t.Error("resources may have leaked")
+		}
+
 		result <- err
 	}()
 

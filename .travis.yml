@@ -3,4 +3,5 @@ dist: trusty
 sudo: required
 
 script:
-  - travis_wait 90 make test logger=stdout
+  - make test
+  - travis_wait 60 make test-integration-ci logger=stdout

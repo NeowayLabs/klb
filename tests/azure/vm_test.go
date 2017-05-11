@@ -85,40 +85,63 @@ func testPremiumDiskVM(t *testing.T, f fixture.F) {
 	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS")
 }
 
-func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
-	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
-
-	disks := []struct {
-		name string
-		size int
-	}{
-		{name: genUniqName(), size: 10},
-		{name: genUniqName(), size: 20},
-		{name: genUniqName(), size: 30},
-	}
-
-	vms := azure.NewVM(f)
-
-	for _, disk := range disks {
-		attachNewDiskOnVM(t, f, vm, disk.name, disk.size, sku)
-		vms.AssertAttachedDataDisk(t, vm, disk.name, disk.size, sku)
-	}
-
-	outfile, err := ioutil.TempFile("", "create_vm_snapshots_output")
+func execWithIPC(t *testing.T, f fixture.F, exec func(string)) string {
+	outfile, err := ioutil.TempFile("", "klb_vm_script_ipc")
 	if err != nil {
 		t.Fatalf("error creating output file: %s", err)
 	}
 	defer os.Remove(outfile.Name()) // clean up
 
-	f.Shell.Run("./testdata/create_vm_snapshots.sh", f.ResGroupName, vm, outfile.Name())
+	exec(outfile.Name())
 
-	f.Logger.Println("created snapshots, retrieving ids")
-	idsraw, err := ioutil.ReadAll(outfile)
+	f.Logger.Println("executed script, reading output")
+	out, err := ioutil.ReadAll(outfile)
 	if err != nil {
 		t.Fatalf("error reading output file: %s", err)
 	}
+	return string(out)
+}
 
+type VMDisk struct {
+	Name string
+	Sku  string
+	Size int
+}
+
+func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
+	vms := azure.NewVM(f)
+
+	for _, disk := range disks {
+		attachNewDiskOnVM(t, f, vmname, disk.Name, disk.Size, disk.Sku)
+		vms.AssertAttachedDataDisk(t, vmname, disk.Name, disk.Size, disk.Sku)
+	}
+}
+
+func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
+	resources := createVMResources(t, f)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+
+	disks := []VMDisk{
+		// Different sizes is important to validate behavior
+		{Name: genUniqName(), Size: 10, Sku: sku},
+		{Name: genUniqName(), Size: 20, Sku: sku},
+		{Name: genUniqName(), Size: 30, Sku: sku},
+	}
+
+	vms := azure.NewVM(f)
+
+	attachDisks(t, f, vm, disks)
+
+	idsraw := execWithIPC(t, f, func(outfile string) {
+		f.Shell.Run(
+			"./testdata/create_vm_snapshots.sh",
+			f.ResGroupName,
+			vm,
+			outfile,
+		)
+	})
+
+	f.Logger.Println("created snapshots, retrieving ids")
 	ids := strings.Split(strings.Trim(string(idsraw), "\n"), "\n")
 	f.Logger.Printf("parsed ids: %s", ids)
 
@@ -126,27 +149,35 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 		t.Fatalf("expected %d snapshots, got %d", len(disks), len(ids))
 	}
 
-	recoveredDisks := map[int]bool{}
-	for _, disk := range disks {
-		if _, ok := recoveredDisks[disk.size]; ok {
-			t.Fatal("snapshot test can't have disks with same size")
-		}
-		recoveredDisks[disk.size] = false
-	}
-
 	nic := genNicName()
 	createVMNIC(f, nic, resources.vnet, resources.subnet)
 	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, sku)
 
 	for _, id := range ids {
-		diskname := attachSnapshotOnVM(t, f, vmbackup, id, sku)
-		size := vms.DataDiskSize(t, vmbackup, diskname)
-		recoveredDisks[size] = true
+		attachSnapshotOnVM(t, f, vmbackup, id, sku)
 	}
 
-	for diskinfo, got := range recoveredDisks {
+	originaldisks := vms.DataDisks(t, vm)
+	backupdisks := vms.DataDisks(t, vmbackup)
+
+	if len(originaldisks) != len(backupdisks) {
+		t.Fatalf("expected disks %q == %q", originaldisks, backupdisks)
+	}
+
+	for _, originaldisk := range originaldisks {
+		size := originaldisk.SizeGB
+		got := false
+		for _, backupdisk := range backupdisks {
+			if backupdisk.SizeGB == size {
+				got = true
+			}
+		}
 		if !got {
-			t.Fatalf("disk with size %d not recovered from snapshot", diskinfo)
+			t.Fatalf(
+				"unable to find disk: %q on backup disks %q",
+				originaldisk,
+				backupdisks,
+			)
 		}
 	}
 }
@@ -299,7 +330,7 @@ func attachNewDiskOnVM(
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	vmtesttimeout := time.Hour
+	vmtesttimeout := 45 * time.Minute
 	fixture.Run(t, "VMCreationStandardDisk", vmtesttimeout, location, testStandardDiskVM)
 	fixture.Run(t, "VMCreationPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
 	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)

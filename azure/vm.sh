@@ -1,5 +1,10 @@
 # Machine related functions
 
+import klb/azure/group
+import klb/azure/lock
+import klb/azure/snapshot
+import klb/azure/disk
+
 # azure_vm_new creates a new instance of "virtual machine".
 # `name` is the name of the virtual machine.
 # `group` is name of resource group.
@@ -13,6 +18,15 @@ fn azure_vm_new(name, group, location) {
 		"--location"
 		$location
 	)
+
+	return $instance
+}
+
+# azure_vm_set_osdisk_id sets os disk ID of the virtual machine.
+# If the this is called you should not set other OS parameters.
+fn azure_vm_set_osdisk_id(instance, id) {
+	instance <= append($instance, "--attach-os-disk")
+	instance <= append($instance, $id)
 
 	return $instance
 }
@@ -296,6 +310,12 @@ fn azure_vm_disk_attach(name, resgroup, diskID) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskID
 }
 
+# azure_vm_disk_attach_lun does the same as azure_vm_disk_attach
+# but with the specificied LUN.
+fn azure_vm_disk_attach_lun(name, resgroup, diskID, lun) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun
+}
+
 # azure_vm_disk_attach_new creats a new disk and attaches to the VM.
 fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskname --new --size-gb $size --sku $sku
@@ -308,30 +328,71 @@ fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
 #
 # These ID's are well suited to be used on snapshot creation.
 fn azure_vm_get_datadisks_ids(name, resgroup) {
-	ids_raw <= (
-		az vm show
-			--resource-group $resgroup
-			--name $name |
-		jq -r ".storageProfile.dataDisks[].managedDisk.id"
-	)
-
+	info    <= azure_vm_get_rawinfo($name, $resgroup)
+	ids_raw <= echo $info | jq -r ".storageProfile.dataDisks[].managedDisk.id"
 	ids     <= split($ids_raw, "\n")
 
 	return $ids
+}
+
+# azure_vm_get_datadisks_ids_lun will returns a list
+# of pairs (diskid, disklun).
+#
+# The LUN is only useful if you are trying to replicate
+# a VM exact state, so you need to know the disks LUN so
+# they will be attached on the new VM with the same device names.
+#
+# These ID's are the same returned by azure_vm_get_datadisks_ids
+fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
+	ids_luns  = ()
+	info      <= azure_vm_get_rawinfo($name, $resgroup)
+	disks_raw <= echo $info | jq -r ".storageProfile.dataDisks[]"
+	ids_raw <= echo $disks_raw | jq -r ".managedDisk.id"
+
+	if $ids_raw == "" {
+		echo "no datadisks found for vm: " + $name
+		return $ids_luns
+	}
+	ids       <= split($ids_raw, "\n")
+
+	luns_raw  <= echo $disks_raw | jq -r ".lun"
+	if $luns_raw == "" {
+		echo "no datadisks found for vm: " + $name
+		return $ids_luns
+	}
+
+	luns      <= split($luns_raw, "\n")
+	size      <= len($ids)
+
+	rangeend  <= expr $size - 1
+	sequence  <= seq "0" $rangeend
+	range     <= split($sequence, "\n")
+
+	for i in $range {
+		idlun = ($ids[$i] $luns[$i])
+
+		ids_luns <= append($ids_luns, $idlun)
+	}
+
+	return $ids_luns
 }
 
 # azure_vm_get_osdisk_id will return the osdisk ID.
 #
 # This ID is well suited to be used on snapshot creation.
 fn azure_vm_get_osdisk_id(name, resgroup) {
-	id <= (
-		az vm show
-			--resource-group $resgroup
-			--name $name |
-		jq -r ".storageProfile.osDisk.managedDisk.id"
-	)
+	info <= azure_vm_get_rawinfo($name, $resgroup)
+	id   <= echo $info | jq -r ".storageProfile.osDisk.managedDisk.id"
 
 	return $id
+}
+
+# azure_vm_get_rawinfo will return the raw encoded JSON data with
+# all the VM info.
+fn azure_vm_get_rawinfo(name, resgroup) {
+	info <= az vm show --resource-group $resgroup --name $name
+
+	return $info
 }
 
 # azure_vm_get_disks_ids will return the id of all disks on the VM.
@@ -343,4 +404,379 @@ fn azure_vm_get_disks_ids(name, resgroup) {
 	disks     <= append($datadisks, $osdiskid)
 
 	return $disks
+}
+
+# azure_vm_stop stops a running VM
+fn azure_vm_stop(vmname, resgroup) {
+	az vm stop -g $resgroup -n $vmname
+}
+
+# azure_vm_start starts a stopped VM
+fn azure_vm_start(vmname, resgroup) {
+	az vm start -g $resgroup -n $vmname
+}
+
+# azure_vm_backup_create will create a full backup from the given VM.
+# The backup is created following a naming convention for the resources
+# that it creates, this enables the azure_vm_backup_recover function to work.
+# Conceptually we are encoding information required for proper recover (metadata)
+# on the name of the resources, so we don't need a third party storage.
+#
+# The "prefix" parameter gives you a namespace that you can use to organize
+# backups of different applications on the same subscription. This namespace
+# is built by appending the provided string as a prefix on the name of
+# the resource group that will be created to hold the backup.
+#
+# When you call this function, the first step is to create a resource
+# group with the name following this pattern:
+#
+# <prefix>-klb-backup-<timestamp>-<vmname>
+#
+# Where the prefix is the one you passed as a parameter.
+# If there is already a resource group with this name, the
+# creation will fail. It is paramount to the proper work of
+# the backup functions that the ONLY thing inside the resource
+# group are the VM disks snapshots.
+#
+# The <timestamp> will follow this pattern:
+#
+# <year>.<month>.<day>.<hour>
+#
+# Calling: azure_vm_backup_create("test", "testgroup", "staging")
+#
+# Could (timestamp may vary) create the resource group:
+#
+# "staging-bkp-2017.05.28.1930-test"
+#
+# The resource group name convention is important to be know since
+# you must manage these resource groups and delete them.
+# There will be also a convention on how snapshots are stored inside
+# this resource group but they are not documented and you should not
+# rely on them, they are implementation details.
+#
+# Backup resource groups should never be changed, because of that
+# they are read only locked after all snapshots are added. There is
+# also a delete lock to avoid deleting backups on accident.
+# The azure_vm_backup_delete function will release the locks and delete
+# a backup resource group for you.
+#
+# During the backup procedure the VM must be stopped (you can use the
+# azure_vm_stop function to do that). It is a programming error to call
+# this function with a VM that is running as a parameter, since it is
+# not safe to take snapshots from a running VM.
+#
+# After the function returns it is safe to start the VM, all the snapshots
+# have been taken.
+#
+# Be aware that resource group names have a lame limit of 64
+# characters. Since we need to create locks the final limit will
+# be 60 characters total (including the timestamp).
+# So avoid long names for VM's and prefixes.
+#
+# On success it will return the name of the created resource group and
+# an empty string as error. On error it will return an empty string as resource
+# group and a non-empty error string with details on the failure.
+fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
+	timestamp <= date "+%Y.%m.%d.%H%M"
+	# WHY: We need some chars for the lock names,
+	# based on the resgroup name.
+	max_resgroup_size = "60"
+
+	bkp_resgroup = $prefix+"-bkp-"+$timestamp+"-"+$vmname
+
+	bkp_resgroup_len <= len($bkp_resgroup)
+	_, err <= test $max_resgroup_size -gt $bkp_resgroup_len
+	if $err != "0" {
+		return "", format("error: resgroup name %q is too bigger than %q", $bkp_resgroup, $max_resgroup_size)
+	}
+
+	if azure_group_exists($bkp_resgroup) == "0" {
+		return "", format("error: resource group already exists: %q", $bkp_resgroup)
+	}
+
+	echo "vm.backup.create: getting VM disks IDs"
+	echo "vm.backup.create: vm name: " + $vmname
+	echo "vm.backup.create: resgroup: " + $resgroup
+
+	osdiskid       <= azure_vm_get_osdisk_id($vmname, $resgroup)
+	echo "got os disk id: " + $osdiskid
+
+	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
+	echo "vm.backup.create: creating resource group: "+$bkp_resgroup
+	echo "vm.backup.create: at location: "+$location
+
+	azure_group_create($bkp_resgroup, $location)
+
+
+	# WHY: name used later on the recover phase, do NOT change this
+	# unless you are absolutely SURE of what you are doing
+	snapshot_name <= _azure_vm_backup_get_osdisk_name()
+
+	echo "vm.backup.create: creating OS disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
+
+	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid)
+
+	echo "vm.backup.create: created snapshot id: "+$snapshotid
+
+	for idlun in $disks_ids_luns {
+		id  = $idlun[0]
+		lun = $idlun[1]
+
+		# WHY: Encode lun on the name as metadata, use it later to restore
+		# Change this and the whole world will collapse :-)
+		snapshot_name <= _azure_vm_backup_datadisk_name($lun)
+
+		echo "vm.backup.create: creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
+
+		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id)
+
+		echo "vm.backup.create: created snapshot id: "+$snapshotid
+	}
+
+	echo "vm.backup.create: backup finished with success, creating lock"
+
+	nodelete <= _azure_vm_backup_get_nodelete_lock($bkp_resgroup)
+
+	azure_lock_create($nodelete, "CanNotDelete", $bkp_resgroup)
+
+	readonly <= _azure_vm_backup_get_readonly_lock($bkp_resgroup)
+
+	azure_lock_create($readonly, "ReadOnly", $bkp_resgroup)
+
+	echo "vm.backup.create: created lock, finished with success"
+
+	return $bkp_resgroup, ""
+}
+
+# azure_vm_backup_list returns the list of all backups
+# for the given vm name + prefix. They are the same parameters
+# you used to create the backup.
+#
+# The backup list is a list of resource groups names, where each
+# resource group is a backup.
+#
+# The list will be ordered, from the more recent to the oldest backup.
+fn azure_vm_backup_list(vmname, prefix) {
+	resgroups <= azure_group_get_names()
+
+	filtered = ""
+
+	for resgroup in $resgroups {
+		hasprefix <= echo $resgroup | -grep "^"+$prefix
+		hasvmname <= echo $hasprefix | -grep $vmname+"$"
+
+		if $status == "0" {
+			filtered = $filtered+$resgroup+"\n"
+		}
+	}
+
+	echo "vm.backup.list: got: [" + $filtered + "], ordering the list"
+	return _azure_vm_backup_order_list($filtered)
+}
+
+# azure_vm_backup_delete deletes a backup. This function
+# will also remove the locks that prevents backups deletion.
+fn azure_vm_backup_delete(backup_resgroup) {
+
+	dellock <= _azure_vm_backup_get_nodelete_lock($backup_resgroup)
+	readlock <= _azure_vm_backup_get_readonly_lock($backup_resgroup)
+
+	echo "backup delete: removing lock: " + $dellock
+	azure_lock_delete($dellock, $backup_resgroup)
+	echo "backup delete: removing lock: " + $readlock
+	azure_lock_delete($readlock, $backup_resgroup)
+
+	# WHY: Deleting locks is not synchronous, this is a VERY
+	# lame workaround while we don't fix the azure_lock_delete function.
+	lame_workaround_sleep = "5"
+	sleep $lame_workaround_sleep
+	echo "backup delete: locks removed, deleting resource group: " + $backup_resgroup
+	azure_group_delete($backup_resgroup)
+}
+
+# azure_vm_backup_recover will recover a previously generated
+# backup. The backup resource group must have been generated using
+# azure_vm_backup_create, since a whole convention on resource
+# naming will be required in the recovery process.
+#
+# The vminstance parameter is a instance of the vm object,
+# created with azure_vm_new and configured just like you
+# would do to create a new VM. The only main difference is
+# that no os disk should be configured, since the os disk and
+# datadisks will be obtained from the backup_resgroup.
+#
+# The backup_resgroup is the name of the resource group
+# where the snapshots are stored just as it is returned by
+# azure_vm_backup_create.
+#
+# It is an error to provide a vm instance that has not
+# a os type setted using azure_vm_set_ostype.
+#
+# This function returns an empty string on success or a
+# non empty error message if it fails.
+fn azure_vm_backup_recover(instance, backup_resgroup) {
+
+	fn log(msg) {
+		echo "vm.backup.recover: " + $msg
+	}
+
+	log("getting info from vm")
+	resgroup <= _azure_vm_get($instance, "resource-group")
+	location <= _azure_vm_get($instance, "location")
+	vmname <= _azure_vm_get($instance, "name")
+	ostype <= _azure_vm_get($instance, "os-type")
+	osdiskname <= _azure_vm_get($instance, "os-disk-name")
+
+	log("vm name: " + $vmname)
+	log("vm resgroup: " + $resgroup)
+	log("vm location: " + $location)
+	log("vm os type: " + $ostype)
+
+	if $vmname == "" {
+		return "unable to get the 'name' from the given vm instance"
+	}
+
+	if $resgroup == "" {
+		return "unable to get the 'resource-group' from the given vm instance"
+	}
+
+	if $location == "" {
+		return "unable to get the 'location' from the given vm instance"
+	}
+
+	if $ostype == "" {
+		return "unable to get the 'os-type' from the given vm instance"
+	}
+
+	if $osdiskname != "" {
+		msg <= format("found os disk name %q on vm instance.")
+		return $msg + "should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
+	}
+
+	log("loading snapshots from backup: " + $backup_resgroup)
+	snapshots <= azure_snapshot_list($backup_resgroup)
+	log("loaded snapshots, parsing results")
+	osdiskid = ""
+	datadisks = ()
+
+	osdiskname <= _azure_vm_backup_get_osdisk_name()
+	for snapshot in $snapshots {
+		log(format("parsing: %s", $snapshot))
+		id = $snapshot[0]
+		name = $snapshot[1]
+		if $name == $osdiskname {
+			osdiskid = $id
+		} else {
+			lun <= _azure_vm_backup_datadisk_lun($name)
+			idlun = ($id $lun)
+			datadisks <= append($datadisks, $idlun)
+		}
+	}
+
+	if $osdiskid == "" {
+		return format(
+			"unable to find osdisk id on backup resource group: %q, corrupted backup ?",
+			$backup_resgroup,
+		)
+	}
+
+	log("os disk id: " + $osdiskid)
+	log("creating os disk")
+	osdiskname = $vmname + "-osdisk"
+	d <= azure_disk_new($osdiskname, $resgroup, $location)
+	d <= azure_disk_set_source($d, $osdiskid)
+	osdisk <= azure_disk_create($d)
+
+	log("created os disk: " + $osdisk)
+	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
+
+	log("creating VM")
+	azure_vm_create($instance)
+	log("created VM, stopping it so we can attach disks")
+	# https://feedback.azure.com/forums/216843-virtual-machines/suggestions/6750456-allow-to-create-vm-without-starting-it-immediatell
+	azure_vm_stop($vmname, $resgroup)
+
+	log("attaching datadisks")
+	for datadisk in $datadisks {
+		id = $datadisk[0]
+		lun = $datadisk[1]
+
+		log("creating disk from snapshot: " + $id)
+		log("disk will have LUN: " + $lun)
+
+		diskname = $vmname + "-disk-" + $lun
+		d <= azure_disk_new($diskname, $resgroup, $location)
+		d <= azure_disk_set_source($d, $id)
+		diskid <= azure_disk_create($d)
+
+		log("created disk id: " + $diskid)
+		log("attaching on VM")
+		azure_vm_disk_attach($vmname, $resgroup, $diskid)
+		log("attached")
+	}
+
+	log("starting VM with all disks attached")
+	azure_vm_start($vmname, $resgroup)
+	log("finished recover with success")
+}
+
+fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
+	return "del-"+$bkp_resgroup
+}
+
+fn _azure_vm_backup_get_readonly_lock(bkp_resgroup) {
+	return "ro-"+$bkp_resgroup
+}
+
+fn _azure_vm_backup_order_list(backup_resgroups) {
+	ordered_raw <= echo $backup_resgroups | sort -r
+	ordered <= split($ordered_raw, "\n")
+	res = ()
+	# WHY: handle possible trailing newlines
+	for o in $ordered {
+		if $o != "" {
+			res <= append($res, $o)
+		}
+	}
+	return $res
+}
+
+fn _azure_vm_backup_get_osdisk_name() {
+	return "osdisk"
+}
+
+fn _azure_vm_backup_datadisk_name(lun) {
+	return "datadisk-"+$lun
+}
+
+fn _azure_vm_backup_datadisk_lun(name) {
+	tokens <= split($name, "-")
+	if len($tokens) != "2" {
+		echo "invalid backup datadisk name: " + $name
+		exit("1")
+	}
+	return $tokens[1]
+}
+
+fn _azure_vm_get(instance, cfgname) {
+	cfgname = "--" + $cfgname
+	size      <= len($instance)
+	rangeend  <= expr $size "-" "2"
+	sequence  <= seq "0" $rangeend
+	range     <= split($sequence, "\n")
+
+	ids_names = ()
+
+	for i in $range {
+		cfgval_index <= expr $i "+" "1"
+		name = $instance[$i]
+		if $name == $cfgname {
+			return $instance[$cfgval_index]
+		}
+	}
+
+	echo "fatal error getting cfg: " + $cfgname
+	echo "vm instance: " + $instance
+	exit("1")
+	return ""
 }

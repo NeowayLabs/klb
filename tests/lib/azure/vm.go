@@ -15,6 +15,18 @@ type VM struct {
 	f      fixture.F
 }
 
+type VMDataDisk struct {
+	Lun    int
+	Name   string
+	SizeGB int
+}
+
+type VMOsDisk struct {
+	OsType string
+	Name   string
+	SizeGB int
+}
+
 func NewVM(f fixture.F) *VM {
 	as := &VM{
 		client: compute.NewVirtualMachinesClient(f.Session.SubscriptionID),
@@ -24,11 +36,56 @@ func NewVM(f fixture.F) *VM {
 	return as
 }
 
-func (vm *VM) DataDiskSize(t *testing.T, vmname string, diskname string) int {
+func (vm *VM) OsDisk(t *testing.T, vmname string) VMOsDisk {
 
-	size := 0
+	var osdisk *VMOsDisk
 
-	vm.f.Retrier.Run(newID("VM", "DataDiskSize", vmname), func() error {
+	vm.f.Retrier.Run(newID("VM", "DataDisks", vmname), func() error {
+		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
+		if err != nil {
+			return err
+		}
+		if v.VirtualMachineProperties == nil {
+			return fmt.Errorf("no virtual machine properties found on vm %s", vmname)
+		}
+		if v.VirtualMachineProperties.StorageProfile == nil {
+			return fmt.Errorf("no storage profile found on vm %s", vmname)
+		}
+
+		storageProfile := v.VirtualMachineProperties.StorageProfile
+		if storageProfile.OsDisk == nil {
+			return fmt.Errorf("no os disk found on vm %s", vmname)
+		}
+
+		if storageProfile.OsDisk.Name == nil {
+			return errors.New("os disk has no name")
+		}
+
+		if storageProfile.OsDisk.DiskSizeGB == nil {
+			return errors.New("os disk has size")
+		}
+
+		osdisk = &VMOsDisk{
+			Name:   *storageProfile.OsDisk.Name,
+			SizeGB: int(*storageProfile.OsDisk.DiskSizeGB),
+			OsType: string(storageProfile.OsDisk.OsType),
+		}
+
+		return nil
+	})
+
+	if osdisk == nil {
+		t.Fatal("unable to get os disks for vm %q", vmname)
+	}
+
+	return *osdisk
+}
+
+func (vm *VM) DataDisks(t *testing.T, vmname string) []VMDataDisk {
+
+	disksinfo := []VMDataDisk{}
+
+	vm.f.Retrier.Run(newID("VM", "DataDisks", vmname), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
 		if err != nil {
 			return err
@@ -49,26 +106,27 @@ func (vm *VM) DataDiskSize(t *testing.T, vmname string, diskname string) int {
 			if disk.Name == nil {
 				continue
 			}
+			if disk.Lun == nil {
+				continue
+			}
 			if disk.DiskSizeGB == nil {
 				continue
 			}
-			gotName := *disk.Name
-			gotDiskSize := int(*disk.DiskSizeGB)
-			vm.f.Logger.Printf("got disk %q", gotName)
-
-			if gotName == diskname {
-				size = gotDiskSize
-				return nil
-			}
+			disksinfo = append(disksinfo, VMDataDisk{
+				Name:   *disk.Name,
+				Lun:    int(*disk.Lun),
+				SizeGB: int(*disk.DiskSizeGB),
+			})
 		}
-		return fmt.Errorf("unable to find disk %q on vm %q", diskname, vmname)
+
+		return nil
 	})
 
-	if size == 0 {
-		t.Fatal("unable to get data disk %q size", diskname)
+	if len(disksinfo) == 0 {
+		t.Fatal("unable to get data disks for vm %q", vmname)
 	}
 
-	return size
+	return disksinfo
 }
 
 // AssertAttachedDisk checks if VM has the following disk attached

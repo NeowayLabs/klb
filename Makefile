@@ -23,6 +23,12 @@ image:
 shell: image
 	./hack/run-tty.sh /usr/bin/nash
 
+example-%: image
+	./hack/run-tty.sh ./examples/azure/$*/build.sh
+
+example-%-cleanup: image
+	./hack/run-tty.sh ./examples/azure/$*/cleanup.sh
+
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin
 install: guard-NASHPATH
@@ -34,17 +40,27 @@ install: guard-NASHPATH
 	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-timeout=90m
+timeout=60m
 logger=file
 parallel=30 #Explore I/O parallelization
 gotest=go test ./tests/azure -parallel $(parallel) -timeout $(timeout) -race
 gotestargs=-args -logger $(logger)
 
 test: image
+	./hack/run.sh nash ./azure/vm_test.sh
+
+test-integration: image
+	./hack/run.sh $(gotest) -tags=slow -run=$(run) ./... $(gotestargs)
+
+# WHY? Travis CI has a limit of 50 min total for test running (docker image build included)
+test-integration-ci: image
 	./hack/run.sh $(gotest) -run=$(run) ./... $(gotestargs)
 
 test-examples: image
 	./hack/run.sh $(gotest) -tags=examples -run=TestExamples $(gotestargs)
+
+# It is recommended to use this locally. It takes too much time for the CI
+test-all: test test-integration test-examples
 
 cleanup: image
 	./hack/run-tty.sh ./tools/azure/cleanup.sh

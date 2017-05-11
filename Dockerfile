@@ -18,9 +18,13 @@ RUN pip3 install azure-cli && \
     pip3 install awscli && \
     npm install --no-optional -g azure-cli
 
-ENV NASH_VERSION=0.3
-RUN wget https://github.com/NeowayLabs/nash/releases/download/v${NASH_VERSION}/nash -O /usr/bin/nash && \
-    chmod +x /usr/bin/nash
+ENV NASH_VERSION=v0.5
+RUN cd /tmp && \
+    wget https://github.com/NeowayLabs/nash/releases/download/${NASH_VERSION}/nash-${NASH_VERSION}-linux-amd64.tar.gz && \
+    tar xfz nash-${NASH_VERSION}-linux-amd64.tar.gz && \
+    cp /tmp/cmd/nash/nash /usr/bin/nash && \
+    rm nash-${NASH_VERSION}-linux-amd64.tar.gz && \
+    rm -rf /tmp/cmd
 
 ENV NASHPATH=/root/.nash
 

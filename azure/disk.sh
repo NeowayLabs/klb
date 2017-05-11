@@ -51,32 +51,17 @@ fn azure_disk_set_source(instance, source) {
 
 # azure_disk_new creates a new "managed disk".
 # `instance` is the disk instance.
+#
+# Returns the id of the created disk
 fn azure_disk_create(instance) {
-	az disk create --output table $instance
+	id <= az disk create --output json $instance | jq -r ".id"
+	return $id
 }
 
 # azure_disk_get_id returns the id of a previously created
 # disk. This id is used to attach the disk on a VM.
 fn azure_disk_get_id(resgroup, name) {
 	res <= az disk show -g $resgroup -n $name --query "id"
+
 	return $res
-}
-
-# FIXME: These last 3 functions seems to belong to the vm package.
-fn azure_disk_attach_new(group, vm, storageaccount, size, name) {
-	(
-		azure vm disk attach-new --resource-group $group --vm-name $vm --storage-account-name $storageaccount --size-in-gb $size --vhd-name $name
-	)
-}
-
-fn azure_disk_attach(group, vm, vhdurl) {
-	(
-		azure vm disk attach --resource-group $group --vm-name $vm --vhd-url $vhdurl
-	)
-}
-
-fn azure_disk_detach(group, vm, lun) {
-	(
-		azure vm disk attach-new --resource-group $group --vm-name $vm --lun $lun
-	)
 }
