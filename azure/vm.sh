@@ -150,7 +150,7 @@ fn azure_vm_set_nics(instance, nicnames) {
 		return $out
 	}
 
-	nics     <= join($nicnames, ",")
+	nics     <= join($nicnames, " ")
 	instance <= append($instance, "--nics")
 	instance <= append($instance, $nics)
 
