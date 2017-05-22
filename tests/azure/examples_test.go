@@ -22,6 +22,11 @@ func TestExamples(t *testing.T) {
 		cleanup string
 	}{
 		{
+			name:    "postgres",
+			script:  "../../examples/azure/postgres/build.sh",
+			cleanup: "../../examples/azure/postgres/cleanup.sh",
+		},
+		{
 			name:    "snapshots",
 			script:  "../../examples/azure/snapshots/build.sh",
 			cleanup: "../../examples/azure/snapshots/cleanup.sh",
