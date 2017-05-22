@@ -1,3 +1,54 @@
+# Release 0.5.0
+
+This release added support to work with Azure Postgres Servers.
+
+## Postgres Server Create
+
+Now we can create a new PostgreSQL Server managed by Azure:
+https://azure.microsoft.com/pt-br/services/postgresql/
+
+### Added
+
+#### azure_postgres_*
+
+**azure_postgres_new(name, group, location, username, password)** creates a new server of "managed Postgres".
+
+ - `name` is the name of the server.
+ - `group` is name of resource group.
+ - `location` is the Azure Region.
+ - `username` is the login name of a server.
+ - `password` is the postgres server login password.
+
+**azure_postgres_set_compute_units(instance, units)** sets the number of compute units for the new Postgres server.
+
+ - `instance` is the postgres server instance.
+ - `units` is the number of compute units desired. Default: 100
+
+**azure_postgres_set_performance_tier(instance, tier)** sets the performance tier for the new Postgres server.
+
+ - `instance` is the postgres server instance.
+ - `tier` is the performance tier desired for the server. Allowed values: Basic, Standard. Default: Basic
+
+**azure_postgres_disable_ssl(instance)** disables the ssl enforcement for the new Postgres server.
+
+ - `instance` is the postgres server instance.
+
+**azure_postgres_set_max_size(instance, size)** sets the max storage size for the server.
+
+ - `instance` is the postgres server instance.
+ - `size` is the postgres server storage size (in MB). Default: 51200
+
+**azure_postgres_set_version(instance, version)** sets the Postgres version of a new server.
+
+ - `instance` is the postgres server instance.
+ - `version` is the postgres server version. Default: 9.5
+ 
+**azure_postgres_server_create(instance)** creates a new "managed Postgres server".
+
+ - `instance` is the postgres server instance.
+
+---
+
 # Release 0.4.0
 
 This release added support to work with managed disks.
