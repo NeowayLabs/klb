@@ -53,6 +53,13 @@ fn azure_lb_frontend_ip_set_id_public_ip(instance, idpublicip) {
 	return $instance
 }
 
+fn azure_lb_frontend_ip_set_public_ip_name(instance, publicipname) {
+	instance <= append($instance, "--public-ip-name")
+	instance <= append($instance, $publicipname)
+
+	return $instance
+}
+
 fn azure_lb_frontend_ip_set_subnet_id(instance, subnetid) {
 	instance <= append($instance, "--subnet-id")
 	instance <= append($instance, $subnetid)
@@ -96,7 +103,7 @@ fn azure_lb_addresspool_create(name, group, lbname) {
 						--lb-name $lbname
 						--name $name
 						--json
-						
+
 	)
 
 	addresspoolid <= echo -n $out | jq -r ".id"
