@@ -28,6 +28,12 @@ For arch linux you can use:
 sudo ./deps/arch.sh
 ```
 
+Or for debian linux you can use:
+
+```sh
+sudo ./deps/debian.sh
+```
+
 Contributions for other distros are welcomed.
 The scripts can assume that Go is already installed, all the
 other dependencies will be installed automatically.
