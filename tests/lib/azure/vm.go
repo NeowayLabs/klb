@@ -62,7 +62,7 @@ func (vm *VM) OsDisk(t *testing.T, vmname string) VMOsDisk {
 		}
 
 		if storageProfile.OsDisk.DiskSizeGB == nil {
-			return errors.New("os disk has size")
+			return errors.New("os disk has no size")
 		}
 
 		osdisk = &VMOsDisk{
