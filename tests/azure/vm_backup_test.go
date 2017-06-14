@@ -50,12 +50,7 @@ func testVMBackup(t *testing.T, f fixture.F) {
 	assertResourceGroupExists(t, f, bkpresgroup)
 
 	backups := listBackups(t, f, vm, bkpprefix)
-	if len(backups) != 1 {
-		t.Fatalf("expected one backup, got: %q", backups)
-	}
-	if backups[0] != bkpresgroup {
-		t.Fatalf("expected %q got %q", bkpresgroup, backups[0])
-	}
+	assertEqualStringSlice(t, []string{bkpresgroup}, backups)
 
 	recoveredVMName := recoverVM(
 		t,
@@ -68,6 +63,25 @@ func testVMBackup(t *testing.T, f fixture.F) {
 	)
 
 	assertBackupHasDisks(t, f, vm, recoveredVMName)
+}
+
+func assertEqualStringSlice(t *testing.T, slice1 []string, slice2 []string) {
+	if len(slice2) != len(slice2) {
+		t.Fatalf("%+v != %+v", slice1, slice2)
+	}
+
+	for _, str1 := range slice1 {
+		found := false
+		for _, str2 := range slice2 {
+			if str1 == str2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("%+v != %+v", slice1, slice2)
+		}
+	}
 }
 
 func assertResourceGroupExists(t *testing.T, f fixture.F, resgroup string) {
