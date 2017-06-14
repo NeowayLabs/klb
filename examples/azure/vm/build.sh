@@ -12,20 +12,13 @@ import klb/azure/vnet
 import klb/azure/nsg
 import klb/azure/route
 import klb/azure/snapshot
+import klb/azure/public-ip
 import config.sh
 
-fn log(msg) {
-	ts <= date "+%T"
 
-	echo $ts+":"+$msg
-}
-
-fn addsuffix(name) {
-	# Providing true uniqueness with the limits on the names is pretty hard :-)
-	s <= head -n1 /dev/urandom | md5sum | tr -dc A-Za-z0-9 | cut -b 1-10
-
-	return $name+"-"+$s
-}
+accessdir = "/tmp/.config/ssh/"
+accesskey = $accessdir+"id_rsa-"+$vm_name
+accesskeypub = $accesskey+".pub"
 
 fn create_subnet(name, cidr) {
 	azure_nsg_create($name, $group, $location)
@@ -41,9 +34,6 @@ fn create_subnet(name, cidr) {
 
 fn new_vm_nodisk(name, subnet) {
 	# create ssh key
-	accessdir = "/tmp/.config/ssh/"
-	accesskey = $accessdir+"id_rsa-"+$name
-
 	-test -e $accesskey
 
 	if $status != "0" {
@@ -51,11 +41,13 @@ fn new_vm_nodisk(name, subnet) {
 		ssh-keygen -f $accesskey -P ""
 	}
 
-	# create nic
+	public_ip_name = $name+"-public-ip"
+	azure_public_ip_create($public_ip_name, $group, $location, "Static")
+
 	nic <= azure_nic_new($name, $group, $location)
 	nic <= azure_nic_set_vnet($nic, $vnet)
 	nic <= azure_nic_set_subnet($nic, $subnet)
-	nic <= azure_nic_set_publicip($nic, $name+"-public-ip")
+	nic <= azure_nic_set_publicip($nic, $public_ip_name)
 
 	azure_nic_create($nic)
 
@@ -69,7 +61,7 @@ fn new_vm_nodisk(name, subnet) {
 	nics = ($name)
 
 	vm   <= azure_vm_set_nics($vm, $nics)
-	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
+	vm   <= azure_vm_set_publickeyfile($vm, $accesskeypub)
 
 	echo "returning new VM instance"
 
@@ -113,3 +105,5 @@ for i in $range {
 }
 
 echo "finished with success"
+echo "user: " + $vm_username
+echo "private key located at: " + $accesskey
