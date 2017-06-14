@@ -53,6 +53,9 @@ func testVMBackup(t *testing.T, f fixture.F) {
 	if len(backups) != 1 {
 		t.Fatalf("expected one backup, got: %q", backups)
 	}
+	if backups[0] != bkpresgroup {
+		t.Fatalf("expected %q got %q", bkpresgroup, backups[0])
+	}
 
 	recoveredVMName := recoverVM(
 		t,
@@ -72,7 +75,6 @@ func assertResourceGroupExists(t *testing.T, f fixture.F, resgroup string) {
 }
 
 func assertBackupHasDisks(t *testing.T, f fixture.F, vmName string, recoveredVMName string) {
-	// TODO compare both VMs disks
 	vm := azure.NewVM(f)
 	originalOSDisk := vm.OsDisk(t, vmName)
 	restoredOSDisk := vm.OsDisk(t, recoveredVMName)
