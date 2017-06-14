@@ -109,6 +109,7 @@ type VMDisk struct {
 }
 
 func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
+	// TODO: Improve using concurrency.
 	vms := azure.NewVM(f)
 
 	for _, disk := range disks {

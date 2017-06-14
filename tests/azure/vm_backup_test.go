@@ -177,17 +177,6 @@ func recoverVM(
 	keyFile := "./testdata/key.pub"
 	ostype := "linux"
 
-	//name     = $ARGS[1]
-	//resgroup = $ARGS[2]
-	//location = $ARGS[3]
-	//vmsize   = $ARGS[4]
-	//vnet	 = $ARGS[5]
-	//subnet	 = $ARGS[6]
-	//pubkey   = $ARGS[7]
-	//ostype   = $ARGS[8]
-	//sku = 9
-	//bkpresgroup = 10
-
 	f.Shell.Run(
 		"./testdata/recover_backup.sh",
 		vmName,
