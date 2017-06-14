@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
@@ -53,7 +54,7 @@ func testVMBackup(t *testing.T, f fixture.F) {
 		t.Fatalf("expected one backup, got: %q", backups)
 	}
 
-	restoredVMName := recoverVM(
+	recoveredVMName := recoverVM(
 		t,
 		f,
 		resources.vnet,
@@ -63,15 +64,54 @@ func testVMBackup(t *testing.T, f fixture.F) {
 		bkpresgroup,
 	)
 
-	assertBackupHasDisks(t, f, vm, restoredVMName)
+	assertBackupHasDisks(t, f, vm, recoveredVMName)
 }
 
 func assertResourceGroupExists(t *testing.T, f fixture.F, resgroup string) {
 	fixture.NewResourceGroup(f.Ctx, t, f.Session, f.Logger).AssertExists(t, resgroup)
 }
 
-func assertBackupHasDisks(t *testing.T, f fixture.F, vmName string, restoredVMName string) {
+func assertBackupHasDisks(t *testing.T, f fixture.F, vmName string, recoveredVMName string) {
 	// TODO compare both VMs disks
+	vm := azure.NewVM(f)
+	originalOSDisk := vm.OsDisk(t, vmName)
+	restoredOSDisk := vm.OsDisk(t, recoveredVMName)
+
+	if originalOSDisk != restoredOSDisk {
+		t.Fatalf("expected os disk:\n%+v\n\ngot:\n%+v\n\n", originalOSDisk, restoredOSDisk)
+	}
+
+	originalDataDisks := vm.DataDisks(t, vmName)
+	recoveredDataDisks := vm.DataDisks(t, recoveredVMName)
+
+	fail := func() {
+		t.Fatalf("expected data disks:\n%+v\n\ngot:\n%+v\n\n", originalDataDisks, recoveredDataDisks)
+	}
+
+	if len(originalDataDisks) != len(recoveredDataDisks) {
+		fail()
+	}
+
+	for _, dataDisk := range originalDataDisks {
+		found := false
+		for _, recoveredDataDisk := range recoveredDataDisks {
+			// WHY: Disks cant have the same name
+			if recoveredDataDisk.Lun == dataDisk.Lun {
+				if recoveredDataDisk.SizeGB != dataDisk.SizeGB {
+					t.Fatalf(
+						"expected disks with same LUN to have same size, %+v != %+v",
+						dataDisk,
+						recoveredDataDisk,
+					)
+				}
+				found = true
+			}
+		}
+
+		if !found {
+			fail()
+		}
+	}
 }
 
 func backupVM(t *testing.T, f fixture.F, vmname string, prefix string) string {

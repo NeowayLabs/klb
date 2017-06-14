@@ -2,6 +2,7 @@
 
 import klb/azure/login
 import klb/azure/vm
+import klb/azure/nic
 
 name     = $ARGS[1]
 resgroup = $ARGS[2]
