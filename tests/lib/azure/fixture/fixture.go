@@ -71,7 +71,12 @@ func Run(
 		defer teardown()
 
 		session := NewSession(t)
-		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
+		resgroup := fmt.Sprintf(
+			"klb-test-fixture-%s-%d-%d",
+			testname,
+			time.Now().Unix(),
+			rand.Intn(99999),
+		)
 
 		resources := NewResourceGroup(ctx, t, session, logger)
 		defer func() {

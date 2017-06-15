@@ -11,6 +11,13 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
+func TestVMBackup(t *testing.T) {
+	t.Parallel()
+	vmtesttimeout := 45 * time.Minute
+	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
+	fixture.Run(t, "VMBackup", vmtesttimeout, location, testVMBackup)
+}
+
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
@@ -31,7 +38,9 @@ func testVMBackup(t *testing.T, f fixture.F) {
 
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
-	bkpprefix := "klb-bkp"
+	bkpprefix := "klb-tests"
+
+	f.Shell.DisableTryAgain()
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
@@ -62,7 +71,7 @@ func testVMBackup(t *testing.T, f fixture.F) {
 		bkpresgroup,
 	)
 
-	assertBackupHasDisks(t, f, vm, recoveredVMName)
+	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 }
 
 func assertEqualStringSlice(t *testing.T, slice1 []string, slice2 []string) {
@@ -88,13 +97,15 @@ func assertResourceGroupExists(t *testing.T, f fixture.F, resgroup string) {
 	fixture.NewResourceGroup(f.Ctx, t, f.Session, f.Logger).AssertExists(t, resgroup)
 }
 
-func assertBackupHasDisks(t *testing.T, f fixture.F, vmName string, recoveredVMName string) {
+func assertRecoveredVMDisks(t *testing.T, f fixture.F, vmName string, recoveredVMName string) {
 	vm := azure.NewVM(f)
 	originalOSDisk := vm.OsDisk(t, vmName)
 	restoredOSDisk := vm.OsDisk(t, recoveredVMName)
 
-	if originalOSDisk != restoredOSDisk {
-		t.Fatalf("expected os disk:\n%+v\n\ngot:\n%+v\n\n", originalOSDisk, restoredOSDisk)
+	// WHY: Names cant be equal
+	if originalOSDisk.SizeGB != restoredOSDisk.SizeGB ||
+		originalOSDisk.OsType != restoredOSDisk.OsType {
+		t.Fatalf("os disk: %+v != %+v", originalOSDisk, restoredOSDisk)
 	}
 
 	originalDataDisks := vm.DataDisks(t, vmName)
@@ -112,6 +123,7 @@ func assertBackupHasDisks(t *testing.T, f fixture.F, vmName string, recoveredVMN
 		found := false
 		for _, recoveredDataDisk := range recoveredDataDisks {
 			// WHY: Disks cant have the same name
+			// LUN is fundamental for backup process, must be identical
 			if recoveredDataDisk.Lun == dataDisk.Lun {
 				if recoveredDataDisk.SizeGB != dataDisk.SizeGB {
 					t.Fatalf(
@@ -173,7 +185,7 @@ func recoverVM(
 	sku string,
 	backupResgroup string,
 ) string {
-	vmName := genUniqName()
+	vmName := "recoveredVM-" + genUniqName()
 	keyFile := "./testdata/key.pub"
 	ostype := "linux"
 
@@ -191,11 +203,4 @@ func recoverVM(
 		backupResgroup,
 	)
 	return vmName
-}
-
-func TestVMBackup(t *testing.T) {
-	t.Parallel()
-	vmtesttimeout := 45 * time.Minute
-	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
-	fixture.Run(t, "VMBackup", vmtesttimeout, location, testVMBackup)
 }

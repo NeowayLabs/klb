@@ -32,13 +32,13 @@ example-%-cleanup: image
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin
 install: guard-NASHPATH
-	rm -rf $(libdir)
-	mkdir -p $(libdir)
-	mkdir -p $(bindir)
-	cp -pr ./aws $(libdir)
-	cp -pr ./azure $(libdir)
-	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
-	cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
+	@rm -rf $(libdir)
+	@mkdir -p $(libdir)
+	@mkdir -p $(bindir)
+	@cp -pr ./aws $(libdir)
+	@cp -pr ./azure $(libdir)
+	@cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
+	@cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
 timeout=60m
 logger=file
