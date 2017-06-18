@@ -40,7 +40,7 @@ func testVMBackup(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	bkpprefix := "klb-tests"
 
-	f.Shell.DisableTryAgain()
+	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
