@@ -19,7 +19,9 @@ func TestVMBackup(t *testing.T) {
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
-	bkpprefix := "klb-bkp"
+	bkpprefix := "klb-tests"
+
+	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
