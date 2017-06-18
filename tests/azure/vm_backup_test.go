@@ -1,5 +1,3 @@
-// +build slow
-
 package azure_test
 
 import (
