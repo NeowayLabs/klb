@@ -14,14 +14,13 @@ func TestVMBackup(t *testing.T) {
 	vmtesttimeout := 45 * time.Minute
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
 	fixture.Run(t, "VMBackupStandardLRS", vmtesttimeout, location, testVMBackupStandardLRS)
+	fixture.Run(t, "VMBackupPremiumLRS", vmtesttimeout, location, testVMBackupPremiumLRS)
 }
 
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
 	backupPrefix := "klb-tests"
-
-	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
@@ -44,6 +43,10 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 }
 
+func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
+	testVMBackup(t, f, "Standard_DS4_v2", "Premium_LRS")
+}
+
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
 	testVMBackup(t, f, "Basic_A2", "Standard_LRS")
 }
@@ -52,10 +55,9 @@ func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
 
 	backupPrefix := "klb-tests"
 
-	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
-
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, storageSKU)
+	defer deleteBackups(t, f, vm, backupPrefix)
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
@@ -65,8 +67,6 @@ func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
 	attachDisks(t, f, vm, disks)
 
 	vmBackup := backupVM(t, f, vm, backupPrefix)
-	// TODO: Fix delete backups
-	defer deleteBackups(t, f, vm, backupPrefix)
 
 	assertResourceGroupExists(t, f, vmBackup)
 
