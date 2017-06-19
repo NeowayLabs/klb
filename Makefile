@@ -43,7 +43,7 @@ install: guard-NASHPATH
 timeout=60m
 logger=file
 parallel=30 #Explore I/O parallelization
-gotest=go test ./tests/azure -parallel $(parallel) -timeout $(timeout) -race
+gotest=go test ./tests/azure -parallel $(parallel) -timeout $(timeout)
 gotestargs=-args -logger $(logger)
 
 test: image
