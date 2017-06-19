@@ -1,5 +1,3 @@
-// +build slow
-
 package azure_test
 
 import (
@@ -21,7 +19,9 @@ func TestVMBackup(t *testing.T) {
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
-	bkpprefix := "klb-bkp"
+	bkpprefix := "klb-tests"
+
+	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
@@ -40,7 +40,7 @@ func testVMBackup(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	bkpprefix := "klb-tests"
 
-	f.Shell.DisableTryAgain()
+	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)

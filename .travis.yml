@@ -4,4 +4,4 @@ sudo: required
 
 script:
   - make test
-  - travis_wait 60 make test-integration-ci logger=stdout
+  - travis_wait 60 make test-integration logger=stdout

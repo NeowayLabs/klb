@@ -581,6 +581,7 @@ fn azure_vm_backup_delete(backup_resgroup) {
 	dellock <= _azure_vm_backup_get_nodelete_lock($backup_resgroup)
 	readlock <= _azure_vm_backup_get_readonly_lock($backup_resgroup)
 
+	echo "backup delete: resource group: " + $backup_resgroup
 	echo "backup delete: removing lock: " + $dellock
 	azure_lock_delete($dellock, $backup_resgroup)
 	echo "backup delete: removing lock: " + $readlock
