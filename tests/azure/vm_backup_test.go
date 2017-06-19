@@ -38,7 +38,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 		resources.vnet,
 		resources.subnet,
 		vmSize,
-		storageSKU,
+		sku,
 		vmBackup,
 	)
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
