@@ -13,7 +13,7 @@ func TestVMBackup(t *testing.T) {
 	t.Parallel()
 	vmtesttimeout := 45 * time.Minute
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
-	fixture.Run(t, "VMBackup", vmtesttimeout, location, testVMBackup)
+	fixture.Run(t, "VMBackupStandardLRS", vmtesttimeout, location, testVMBackupStandardLRS)
 }
 
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
@@ -34,22 +34,24 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	// TODO: validate VMs have the same osdisk
 }
 
-func testVMBackup(t *testing.T, f fixture.F) {
+func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
+	testVMBackup(t, f, "Basic_A2", "Standard_LRS")
+}
 
-	vmSize := "Basic_A2"
-	sku := "Standard_LRS"
+func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
+
 	bkpprefix := "klb-tests"
 
 	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, storageSKU)
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 50, Sku: sku},
-		{Name: genUniqName(), Size: 20, Sku: sku},
-		{Name: genUniqName(), Size: 100, Sku: sku},
+		{Name: genUniqName(), Size: 50, Sku: storageSKU},
+		{Name: genUniqName(), Size: 20, Sku: storageSKU},
+		{Name: genUniqName(), Size: 100, Sku: storageSKU},
 	}
 	attachDisks(t, f, vm, disks)
 
@@ -67,7 +69,7 @@ func testVMBackup(t *testing.T, f fixture.F) {
 		resources.vnet,
 		resources.subnet,
 		vmSize,
-		sku,
+		storageSKU,
 		bkpresgroup,
 	)
 
