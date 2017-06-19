@@ -574,6 +574,29 @@ fn azure_vm_backup_list(vmname, prefix) {
 	return _azure_vm_backup_order_list($filtered)
 }
 
+# azure_vm_backup_list_all returns the list of all backups
+# for the given prefix. If there is backups for multiple VM's
+# for the given prefix it will return all of them.
+#
+# The return value is the same as azure_vm_backup_list, just aggregating
+# results for all VMs instead of a single one.
+fn azure_vm_backup_list_all(prefix) {
+	resgroups <= azure_group_get_names()
+
+	filtered = ""
+
+	for resgroup in $resgroups {
+		hasprefix <= echo $resgroup | -grep "^"+$prefix
+
+		if $status == "0" {
+			filtered = $filtered+$resgroup+"\n"
+		}
+	}
+
+	echo "vm.backup.list.all: got: [" + $filtered + "], ordering the list"
+	return _azure_vm_backup_order_list($filtered)
+}
+
 # azure_vm_backup_delete deletes a backup. This function
 # will also remove the locks that prevents backups deletion.
 fn azure_vm_backup_delete(backup_resgroup) {

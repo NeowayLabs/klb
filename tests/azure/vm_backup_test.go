@@ -19,19 +19,29 @@ func TestVMBackup(t *testing.T) {
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
-	bkpprefix := "klb-tests"
+	backupPrefix := "klb-tests"
 
 	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 
-	defer deleteBackups(t, f, vm, bkpprefix)
-	bkpresgroup := backupVM(t, f, vm, bkpprefix)
-	assertResourceGroupExists(t, f, bkpresgroup)
+	defer deleteBackups(t, f, vm, backupPrefix)
+	vmBackup := backupVM(t, f, vm, backupPrefix)
+	assertResourceGroupExists(t, f, vmBackup)
 
-	// TODO: call restore procedure
-	// TODO: validate VMs have the same osdisk
+	recoveredVMName := vm + "2"
+	recoverVM(
+		t,
+		f,
+		recoveredVMName,
+		resources.vnet,
+		resources.subnet,
+		vmSize,
+		storageSKU,
+		vmBackup,
+	)
+	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 }
 
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
@@ -40,7 +50,7 @@ func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
 
 func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
 
-	bkpprefix := "klb-tests"
+	backupPrefix := "klb-tests"
 
 	f.Shell.DisableTryAgain() // TODO: REMOVE THIS
 
@@ -50,30 +60,41 @@ func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
 		{Name: genUniqName(), Size: 50, Sku: storageSKU},
-		{Name: genUniqName(), Size: 20, Sku: storageSKU},
 		{Name: genUniqName(), Size: 100, Sku: storageSKU},
 	}
 	attachDisks(t, f, vm, disks)
 
-	defer deleteBackups(t, f, vm, bkpprefix)
+	vmBackup := backupVM(t, f, vm, backupPrefix)
+	// TODO: Fix delete backups
+	defer deleteBackups(t, f, vm, backupPrefix)
 
-	bkpresgroup := backupVM(t, f, vm, bkpprefix)
-	assertResourceGroupExists(t, f, bkpresgroup)
+	assertResourceGroupExists(t, f, vmBackup)
 
-	backups := listBackups(t, f, vm, bkpprefix)
-	assertEqualStringSlice(t, []string{bkpresgroup}, backups)
+	backups := listBackups(t, f, vm, backupPrefix)
+	assertEqualStringSlice(t, []string{vmBackup}, backups)
 
-	recoveredVMName := recoverVM(
+	recoveredVMName := vm + "2"
+	recoverVM(
 		t,
 		f,
+		recoveredVMName,
 		resources.vnet,
 		resources.subnet,
 		vmSize,
 		storageSKU,
-		bkpresgroup,
+		vmBackup,
 	)
 
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
+
+	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix)
+	assertResourceGroupExists(t, f, recoveredVMBackup)
+
+	recoveredVMBackups := listBackups(t, f, recoveredVMName, backupPrefix)
+	assertEqualStringSlice(t, []string{recoveredVMBackup}, recoveredVMBackups)
+
+	allbackups := listAllBackups(t, f, backupPrefix)
+	assertEqualStringSlice(t, []string{vmBackup, recoveredVMBackup}, allbackups)
 }
 
 func assertEqualStringSlice(t *testing.T, slice1 []string, slice2 []string) {
@@ -160,6 +181,23 @@ func backupVM(t *testing.T, f fixture.F, vmname string, prefix string) string {
 	return strings.Trim(res, "\n")
 }
 
+func parseBackupsList(rawlist string) []string {
+	return strings.Split(strings.Trim(strings.TrimSpace(rawlist), "\n"), "\n")
+}
+
+func listAllBackups(t *testing.T, f fixture.F, prefix string) []string {
+
+	res := execWithIPC(t, f, func(outputfile string) {
+		f.Shell.Run(
+			"./testdata/list_all_backups.sh",
+			prefix,
+			outputfile,
+		)
+	})
+
+	return parseBackupsList(res)
+}
+
 func listBackups(t *testing.T, f fixture.F, vmname string, prefix string) []string {
 
 	res := execWithIPC(t, f, func(outputfile string) {
@@ -171,23 +209,23 @@ func listBackups(t *testing.T, f fixture.F, vmname string, prefix string) []stri
 		)
 	})
 
-	return strings.Split(strings.Trim(strings.TrimSpace(res), "\n"), "\n")
+	return parseBackupsList(res)
 }
 
-func deleteBackups(t *testing.T, f fixture.F, vmname string, bkpprefix string) {
-	f.Shell.Run("./testdata/delete_backups.sh", vmname, bkpprefix)
+func deleteBackups(t *testing.T, f fixture.F, vmname string, backupPrefix string) {
+	f.Shell.Run("./testdata/delete_backups.sh", vmname, backupPrefix)
 }
 
 func recoverVM(
 	t *testing.T,
 	f fixture.F,
+	vmName string,
 	vnet string,
 	subnet string,
 	vmSize string,
 	sku string,
 	backupResgroup string,
-) string {
-	vmName := "recoveredVM-" + genUniqName()
+) {
 	keyFile := "./testdata/key.pub"
 	ostype := "linux"
 
@@ -204,5 +242,4 @@ func recoverVM(
 		sku,
 		backupResgroup,
 	)
-	return vmName
 }

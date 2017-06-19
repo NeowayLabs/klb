@@ -15,7 +15,7 @@ import (
 )
 
 func genUniqName() string {
-	return fmt.Sprintf("klbvmtests-%d", rand.Intn(9999999))
+	return fmt.Sprintf("klbvmt-%d", rand.Intn(999999))
 }
 
 type VMResources struct {
@@ -109,9 +109,7 @@ type VMDisk struct {
 }
 
 func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
-	// TODO: Improve using concurrency.
 	vms := azure.NewVM(f)
-
 	for _, disk := range disks {
 		attachNewDiskOnVM(t, f, vmname, disk.Name, disk.Size, disk.Sku)
 		vms.AssertAttachedDataDisk(t, vmname, disk.Name, disk.Size, disk.Sku)
@@ -124,7 +122,6 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 10, Sku: sku},
 		{Name: genUniqName(), Size: 20, Sku: sku},
 		{Name: genUniqName(), Size: 30, Sku: sku},
 	}
