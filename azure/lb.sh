@@ -103,7 +103,7 @@ fn azure_lb_addresspool_create(name, group, lbname) {
 						--lb-name $lbname
 						--name $name
 						--json
-
+						
 	)
 
 	addresspoolid <= echo -n $out | jq -r ".id"
@@ -121,18 +121,18 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 }
 
 fn azure_lb_addresspool_get_id(addrpoolname, resgroup, lbname) {
-	out           <= (
+	out <= (
 		-az network lb address-pool show
 						--resource-group $resgroup
 						--lb-name $lbname
 						--name $addrpoolname
 						--output json
-        >[2=]
+						>[2=]
 	)
 
-    if $out == "" {
-        return ""
-    }
+	if $out == "" {
+		return ""
+	}
 
 	addresspoolid <= echo -n $out | jq -r ".id"
 
