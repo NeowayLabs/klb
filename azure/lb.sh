@@ -120,6 +120,25 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 	)
 }
 
+fn azure_lb_addresspool_get_id(addrpoolname, resgroup, lbname) {
+	out           <= (
+		-az network lb address-pool show
+						--resource-group $resgroup
+						--lb-name $lbname
+						--name $addrpoolname
+						--output json
+        >[2=]
+	)
+
+    if $out == "" {
+        return ""
+    }
+
+	addresspoolid <= echo -n $out | jq -r ".id"
+
+	return $addresspoolid
+}
+
 # RULE functions
 
 fn azure_lb_rule_new(name, group) {
