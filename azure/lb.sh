@@ -121,16 +121,16 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 }
 
 fn azure_lb_addresspool_get_id(addrpoolname, resgroup, lbname) {
-	out <= (
-		-az network lb address-pool show
-						--resource-group $resgroup
-						--lb-name $lbname
-						--name $addrpoolname
-						--output json
-						>[2=]
+	out, err <= (
+		az network lb address-pool show
+					--resource-group $resgroup
+					--lb-name $lbname
+					--name $addrpoolname
+					--output json
+					>[2=]
 	)
 
-	if $out == "" {
+	if $err != "0" {
 		return ""
 	}
 
