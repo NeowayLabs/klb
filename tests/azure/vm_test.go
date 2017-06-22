@@ -148,10 +148,13 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks 
 	}
 
 	originaldisks := vms.DataDisks(t, vm)
-	backupdisks := vms.DataDisks(t, vmbackup)
+	if len(originaldisks) != len(disks) {
+		t.Fatalf("expected %d disks, got %d", len(disks), len(originaldisks))
+	}
 
+	backupdisks := vms.DataDisks(t, vmbackup)
 	if len(originaldisks) != len(backupdisks) {
-		t.Fatalf("expected disks %q == %q", originaldisks, backupdisks)
+		t.Fatalf("expected original disks %q == %q backup disks", originaldisks, backupdisks)
 	}
 
 	for _, originaldisk := range originaldisks {

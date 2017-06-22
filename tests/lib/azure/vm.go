@@ -122,10 +122,6 @@ func (vm *VM) DataDisks(t *testing.T, vmname string) []VMDataDisk {
 		return nil
 	})
 
-	if len(disksinfo) == 0 {
-		t.Fatal("unable to get data disks for vm %q", vmname)
-	}
-
 	return disksinfo
 }
 
