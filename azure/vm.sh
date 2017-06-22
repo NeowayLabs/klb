@@ -689,7 +689,7 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 
 	log("loading snapshots from backup: " + $backup_resgroup)
 	snapshots <= azure_snapshot_list($backup_resgroup)
-	log("loaded snapshots, parsing results")
+	log(format("loaded snapshots, parsing results: %s", $snapshots))
 	osdiskid = ""
 	datadisks = ()
 
@@ -707,6 +707,7 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 		}
 	}
 
+	log("os disk id:[" + $osdiskid + "]")
 	if $osdiskid == "" {
 		return format(
 			"unable to find osdisk id on backup resource group: %q, corrupted backup ?",
@@ -714,7 +715,6 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 		)
 	}
 
-	log("os disk id: " + $osdiskid)
 	log("creating os disk")
 	osdiskname = $vmname + "-osdisk"
 	d <= azure_disk_new($osdiskname, $resgroup, $location)

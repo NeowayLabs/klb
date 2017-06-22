@@ -37,5 +37,11 @@ vm <= azure_vm_set_publickeyfile($vm, $pubkey)
 vm <= azure_vm_set_ostype($vm, $ostype)
 
 echo "creating vm from backup: " + $bkpresgroup
-azure_vm_backup_recover($vm, $storagesku, $bkpresgroup)
+res <= azure_vm_backup_recover($vm, $storagesku, $bkpresgroup)
+if $res != "" {
+	echo
+	echo "error: " + $res
+	echo
+	exit("1")
+}
 echo "done"

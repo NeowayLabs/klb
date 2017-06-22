@@ -116,15 +116,9 @@ func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
 	}
 }
 
-func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
+func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks []VMDisk) {
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
-
-	disks := []VMDisk{
-		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 20, Sku: sku},
-		{Name: genUniqName(), Size: 30, Sku: sku},
-	}
 
 	vms := azure.NewVM(f)
 
@@ -181,11 +175,24 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 }
 
 func testVMSnapshotStandard(t *testing.T, f fixture.F) {
-	testVMSnapshot(t, f, "Basic_A2", "Standard_LRS")
+	sku := "Standard_LRS"
+	testVMSnapshot(t, f, "Basic_A2", sku,
+		[]VMDisk{
+			{Name: genUniqName(), Size: 20, Sku: sku},
+			{Name: genUniqName(), Size: 30, Sku: sku},
+		},
+	)
+
 }
 
 func testVMSnapshotPremium(t *testing.T, f fixture.F) {
-	testVMSnapshot(t, f, "Standard_DS4_v2", "Premium_LRS")
+	sku := "Premium_LRS"
+	testVMSnapshot(t, f, "Standard_DS4_v2", sku,
+		[]VMDisk{
+			{Name: genUniqName(), Size: 50, Sku: sku},
+			{Name: genUniqName(), Size: 150, Sku: sku},
+		},
+	)
 }
 
 func testDuplicatedAvailabilitySet(t *testing.T, f fixture.F) {

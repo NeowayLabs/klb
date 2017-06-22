@@ -187,6 +187,18 @@ func (vm *VM) AssertAttachedDataDisk(
 	})
 }
 
+// AssertExistsByName checks if VM exists in the resource group
+// based only on its name. Fail tests otherwise.
+func (vm *VM) AssertExistsByName(t *testing.T, name string) {
+	vm.f.Retrier.Run(newID("VM", "AssertExistsByName", name), func() error {
+		_, err := vm.client.Get(vm.f.ResGroupName, name, "")
+		if err != nil {
+			return fmt.Errorf("unable to find vm %q, error: %s", name, err)
+		}
+		return nil
+	})
+}
+
 // AssertExists checks if VM exists in the resource group.
 // Fail tests otherwise.
 func (vm *VM) AssertExists(
