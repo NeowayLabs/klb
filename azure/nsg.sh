@@ -87,6 +87,12 @@ fn azure_nsg_rule_create(instance) {
 	azure network nsg rule create $instance
 }
 
+# azure_nsg_rule_update updates an NSG rule.
+# `instance` is the name of the instance.
+fn azure_nsg_rule_update(instance) {
+	az network nsg rule update $instance
+}
+
 fn azure_nsg_delete_rule(name, group, nsgname) {
 	(
 		azure network nsg rule delete
@@ -94,4 +100,42 @@ fn azure_nsg_delete_rule(name, group, nsgname) {
 					--resource-group $group
 					--nsg-name $nsgname
 	)
+}
+
+# azure_nsg_get_id will return the NSG ID.
+# `name` is the nsg name
+# `group` is name of resource group.
+fn azure_nsg_get_id(name, group) {
+	out, err <= az network nsg show --resource-group $group --name $name --ouput json >[2=]
+
+	if $err != "0" {
+		return ""
+	}
+
+	nsgid <= echo -n $out | jq -r ".id"
+
+	return $nsgid
+}
+
+# azure_nsg_rule_get_id will return the NSG rule ID.
+# `nsgname` is the name of the nsg (network security group).
+# `name` is the name of the nsg rule
+# `group` is name of resource group.
+fn azure_nsg_rule_get_id(nsgname, rulename, group) {
+	out, err <= (
+		az network nsg rule show
+					--nsg-name $nsgname
+					--name $rulename
+					--resource-group $group
+					--output json
+					>[2=]
+	)
+
+	if $err != "0" {
+		return ""
+	}
+
+	nsgruleid <= echo -n $out | jq -r ".id"
+
+	return $nsgruleid
 }
