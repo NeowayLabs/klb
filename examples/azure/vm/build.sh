@@ -34,7 +34,7 @@ fn create_subnet(name, cidr) {
 
 fn new_vm_nodisk(name, subnet) {
 	# create ssh key
-	-test -e $accesskey
+	_, status <= test -e $accesskey
 
 	if $status != "0" {
 		mkdir -p $accessdir

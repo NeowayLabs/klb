@@ -562,8 +562,8 @@ fn azure_vm_backup_list(vmname, prefix) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix <= echo $resgroup | -grep "^"+$prefix
-		hasvmname <= echo $hasprefix | -grep $vmname+"$"
+		hasprefix, _ <= echo $resgroup | grep "^"+$prefix
+		hasvmname, status <= echo $hasprefix | grep $vmname+"$"
 
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"
@@ -586,7 +586,7 @@ fn azure_vm_backup_list_all(prefix) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix <= echo $resgroup | -grep "^"+$prefix
+		hasprefix, status <= echo $resgroup | grep "^"+$prefix
 
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"

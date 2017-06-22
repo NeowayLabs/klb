@@ -40,7 +40,7 @@ install: guard-NASHPATH
 	@cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	@cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-timeout=60m
+timeout=50m
 logger=file
 parallel=30 #Explore I/O parallelization
 cpu=4
@@ -58,6 +58,7 @@ test-examples: image
 
 # It is recommended to use this locally. It takes too much time for the CI
 test-all: test
+	timeout=90m
 	./hack/run.sh $(gotest) -tags=examples $(gotestargs)
 
 cleanup: image
