@@ -570,7 +570,6 @@ fn azure_vm_backup_list(vmname, prefix) {
 		}
 	}
 
-	echo "vm.backup.list: got: [" + $filtered + "], ordering the list"
 	return _azure_vm_backup_order_list($filtered)
 }
 
