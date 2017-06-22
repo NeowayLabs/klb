@@ -57,7 +57,8 @@ test-examples: image
 	./hack/run.sh $(gotest) -tags=examples -run=TestExamples $(gotestargs)
 
 # It is recommended to use this locally. It takes too much time for the CI
-test-all: test test-integration test-examples
+test-all: test
+	./hack/run.sh $(gotest) -tags=examples $(gotestargs)
 
 cleanup: image
 	./hack/run-tty.sh ./tools/azure/cleanup.sh

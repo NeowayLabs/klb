@@ -22,7 +22,6 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	backupPrefix := "klb-tests"
 
-	f.Shell.DisableTryAgain()
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 

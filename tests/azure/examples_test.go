@@ -36,6 +36,11 @@ func TestExamples(t *testing.T) {
 			script:  "../../examples/azure/backup/build.sh",
 			cleanup: "../../examples/azure/backup/cleanup.sh",
 		},
+		{
+			name:    "vm",
+			script:  "../../examples/azure/vm/build.sh",
+			cleanup: "../../examples/azure/vm/cleanup.sh",
+		},
 	}
 
 	timeout := time.Hour
