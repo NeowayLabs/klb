@@ -754,6 +754,8 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 	log("starting VM with all disks attached")
 	azure_vm_start($vmname, $resgroup)
 	log("finished recover with success")
+
+	return ""
 }
 
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {

@@ -73,8 +73,6 @@ func testVMCreation(t *testing.T, f fixture.F, vmSize string, sku string) {
 
 	vms := azure.NewVM(f)
 	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku)
-
-	f.Logger.Println("VM with attached disk created with success")
 }
 
 func testStandardDiskVM(t *testing.T, f fixture.F) {
