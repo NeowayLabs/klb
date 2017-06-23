@@ -2,13 +2,13 @@
 
 fn azure_nsg_create(name, group, location) {
 	(
-		azure network nsg create --name $name --resource-group $group --location $location
+		az network nsg create --name $name --resource-group $group --location $location
 	)
 }
 
 fn azure_nsg_delete(name, group) {
 	(
-		azure network nsg delete --name $name --resource-group $group
+		az network nsg delete --name $name --resource-group $group
 	)
 }
 
@@ -84,7 +84,7 @@ fn azure_nsg_rule_set_direction(instance, direction) {
 }
 
 fn azure_nsg_rule_create(instance) {
-	azure network nsg rule create $instance
+	az network nsg rule create $instance
 }
 
 # azure_nsg_rule_update updates an NSG rule.
@@ -95,7 +95,7 @@ fn azure_nsg_rule_update(instance) {
 
 fn azure_nsg_delete_rule(name, group, nsgname) {
 	(
-		azure network nsg rule delete
+		az network nsg rule delete
 					--name $name
 					--resource-group $group
 					--nsg-name $nsgname
