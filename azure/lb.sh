@@ -103,7 +103,6 @@ fn azure_lb_addresspool_create(name, group, lbname) {
 						--lb-name $lbname
 						--name $name
 						--json
-						
 	)
 
 	addresspoolid <= echo -n $out | jq -r ".id"
