@@ -24,11 +24,11 @@ fn azure_group_get_names() {
 # azure_group_exists returns "0" if a resource group
 # already exists, "1" otherwise.
 fn azure_group_exists(name) {
-        groups <= azure_group_get_names()
-        for group in $groups {
-            if $group == $name {
-                return "0"
-            }
-        }
-        return "1"
+	group_name <= az group show --name $name | jq -r ".name"
+
+	if $group_name == $name {
+		return "0"
+	}
+
+	return "1"
 }
