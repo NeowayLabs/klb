@@ -103,6 +103,7 @@ fn azure_lb_addresspool_create(name, group, lbname) {
 						--lb-name $lbname
 						--name $name
 						--json
+						
 	)
 
 	addresspoolid <= echo -n $out | jq -r ".id"
@@ -120,22 +121,27 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 }
 
 fn azure_lb_addresspool_get_id(addrpoolname, resgroup, lbname) {
-	out, err <= (
+	# redirects stderr into stdout
+	# if the az cli only print to /dev/stderr *in case of errors* than
+	# everything's fine.
+	out, status <= (
 		az network lb address-pool show
 					--resource-group $resgroup
 					--lb-name $lbname
 					--name $addrpoolname
 					--output json
-					>[2=]
+					>[2=1]
 	)
 
-	if $err != "0" {
-		return ""
+	if $status != "0" {
+		# there's no address pool for this lb
+		# In this case $out contain the error
+		return "", $out
 	}
 
 	addresspoolid <= echo -n $out | jq -r ".id"
 
-	return $addresspoolid
+	return $addresspoolid, ""
 }
 
 # RULE functions
