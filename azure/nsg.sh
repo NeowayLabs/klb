@@ -151,15 +151,16 @@ fn azure_nsg_delete_rule(name, group, nsgname) {
 # `name` is the network security group name.
 # `group` is name of resource group.
 fn azure_nsg_get_id(name, group) {
+	# redirects stderr into stdout
 	out, err <= az network nsg show --resource-group $group --name $name --ouput json >[2=]
 
 	if $err != "0" {
-		return ""
+		return "", $out
 	}
 
 	nsgid <= echo -n $out | jq -r ".id"
 
-	return $nsgid
+	return $nsgid, ""
 }
 
 # azure_nsg_rule_get_id will return network security group rule ID.
@@ -177,10 +178,10 @@ fn azure_nsg_rule_get_id(name, group, nsgname) {
 	)
 
 	if $err != "0" {
-		return ""
+		return "", $out
 	}
 
 	nsgruleid <= echo -n $out | jq -r ".id"
 
-	return $nsgruleid
+	return $nsgruleid, ""
 }
