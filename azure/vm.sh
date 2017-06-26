@@ -384,7 +384,11 @@ fn azure_vm_get_osdisk_id(name, resgroup) {
 	info <= azure_vm_get_rawinfo($name, $resgroup)
 	id   <= echo $info | jq -r ".storageProfile.osDisk.managedDisk.id"
 	if $id == "" {
-		return "", format("unable to find managed OS disk on vm %q resgroup %q", $name, $resgroup)
+		return "", format(
+			"unable to find managed OS disk on vm[%s] resgroup[%s], vm probably do not exist",
+			$name,
+			$resgroup,
+		)
 	}
 	return $id
 }
@@ -505,7 +509,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	osdiskid, err <= azure_vm_get_osdisk_id($vmname, $resgroup)
 	if $err != "" {
-		return "", format("error: %q getting osdisk", $err)
+		return "", $err
 	}
 	echo "got os disk id: " + $osdiskid
 
