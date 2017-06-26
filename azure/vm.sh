@@ -383,8 +383,14 @@ fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
 fn azure_vm_get_osdisk_id(name, resgroup) {
 	info <= azure_vm_get_rawinfo($name, $resgroup)
 	id   <= echo $info | jq -r ".storageProfile.osDisk.managedDisk.id"
-
-	return $id
+	if $id == "" {
+		return "", format(
+			"unable to find managed OS disk on vm[%s] resgroup[%s], vm probably do not exist",
+			$name,
+			$resgroup,
+		)
+	}
+	return $id, ""
 }
 
 # azure_vm_get_rawinfo will return the raw encoded JSON data with
@@ -399,11 +405,14 @@ fn azure_vm_get_rawinfo(name, resgroup) {
 #
 # It will be a list including the osdisk id and the datadisks id's.
 fn azure_vm_get_disks_ids(name, resgroup) {
-	osdiskid  <= azure_vm_get_osdisk_id($name, $resgroup)
+	osdiskid, err <= azure_vm_get_osdisk_id($name, $resgroup)
+	if $err != "" {
+		return (), $err
+	}
 	datadisks <= azure_vm_get_datadisks_ids($name, $resgroup)
 	disks     <= append($datadisks, $osdiskid)
 
-	return $disks
+	return $disks, ""
 }
 
 # azure_vm_stop stops a running VM
@@ -498,7 +507,10 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	echo "vm.backup.create: vm name: " + $vmname
 	echo "vm.backup.create: resgroup: " + $resgroup
 
-	osdiskid       <= azure_vm_get_osdisk_id($vmname, $resgroup)
+	osdiskid, err <= azure_vm_get_osdisk_id($vmname, $resgroup)
+	if $err != "" {
+		return "", $err
+	}
 	echo "got os disk id: " + $osdiskid
 
 	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
