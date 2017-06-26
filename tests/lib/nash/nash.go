@@ -43,6 +43,13 @@ func New(
 	}
 }
 
+// DisableTryAgain will disable the default behaviour
+// of trying the execution again on failure. It is not
+// advised to be used unless for debugging purposes.
+func (s *Shell) DisableTryAgain() {
+	s.retrier.Disable()
+}
+
 func (s *Shell) Run(
 	scriptpath string,
 	args ...string,

@@ -62,7 +62,7 @@ func (vm *VM) OsDisk(t *testing.T, vmname string) VMOsDisk {
 		}
 
 		if storageProfile.OsDisk.DiskSizeGB == nil {
-			return errors.New("os disk has size")
+			return errors.New("os disk has no size")
 		}
 
 		osdisk = &VMOsDisk{
@@ -122,10 +122,6 @@ func (vm *VM) DataDisks(t *testing.T, vmname string) []VMDataDisk {
 		return nil
 	})
 
-	if len(disksinfo) == 0 {
-		t.Fatal("unable to get data disks for vm %q", vmname)
-	}
-
 	return disksinfo
 }
 
@@ -184,6 +180,18 @@ func (vm *VM) AssertAttachedDataDisk(
 		}
 
 		return fmt.Errorf("unable to find disk %q on vm %q", diskname, vmname)
+	})
+}
+
+// AssertExistsByName checks if VM exists in the resource group
+// based only on its name. Fail tests otherwise.
+func (vm *VM) AssertExistsByName(t *testing.T, name string) {
+	vm.f.Retrier.Run(newID("VM", "AssertExistsByName", name), func() error {
+		_, err := vm.client.Get(vm.f.ResGroupName, name, "")
+		if err != nil {
+			return fmt.Errorf("unable to find vm %q, error: %s", name, err)
+		}
+		return nil
 	})
 }
 
