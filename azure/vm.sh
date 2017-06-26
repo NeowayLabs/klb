@@ -390,7 +390,7 @@ fn azure_vm_get_osdisk_id(name, resgroup) {
 			$resgroup,
 		)
 	}
-	return $id
+	return $id, ""
 }
 
 # azure_vm_get_rawinfo will return the raw encoded JSON data with
