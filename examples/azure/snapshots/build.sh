@@ -99,7 +99,11 @@ create_vm($vm_backup_name, $subnet_name, "Premium_LRS")
 
 echo "getting IDs of the VM disks"
 
-ids <= azure_vm_get_disks_ids($vm_name, $group)
+ids, err <= azure_vm_get_disks_ids($vm_name, $group)
+if $err != "" {
+	echo "error: " + $err
+	exit("1")
+}
 
 echo "generating snapshots from original VM"
 echo "snapshots will be located at: "+$snapshots_group
