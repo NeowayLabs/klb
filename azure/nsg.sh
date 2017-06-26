@@ -154,6 +154,7 @@ fn azure_nsg_get_id(name, group) {
 	# redirects stderr into stdout
 	out, err <= (
 		az network nsg show --resource-group $group --name $name --ouput json
+										>[2=1]
 	)
 
 	if $err != "0" {
@@ -176,6 +177,7 @@ fn azure_nsg_rule_get_id(name, group, nsgname) {
 					--resource-group $group
 					--nsg-name $nsgname
 					--output json
+					>[2=1]
 	)
 
 	if $err != "0" {
