@@ -8,15 +8,21 @@
 # `startip` is the start IP address of the firewall rule. (IPV4 format)
 # `endip` is the end IP address of the firewall rule. (IPV4 format)
 fn azure_postgres_firewall_rule_create(name, group, servername, startip, endip) {
-	(
-		az postgres server
-		   firewall-rule create
-		   --name $name
-		   --resource-group $group
-		   --server-name $servername
-                   --start-ip-address $startip
-                   --end-ip-address $endip
+	out, status <= (
+		az postgres server firewall-rule create
+						--name $name
+						--resource-group $group
+						--server-name $servername
+						--start-ip-address $startip
+						--end-ip-address $endip
+						>[2=1]
 	)
+
+	if $status != "0" {
+		return "", $out
+	}
+
+	return $out, ""
 }
 
 # azure_postgres_firewall_rule_update updates a rule
@@ -27,15 +33,21 @@ fn azure_postgres_firewall_rule_create(name, group, servername, startip, endip) 
 # `startip` is the start IP address of the firewall rule. (IPV4 format)
 # `endip` is the end IP address of the firewall rule. (IPV4 format)
 fn azure_postgres_firewall_rule_update(name, group, servername, startip, endip) {
-	(
-		az postgres server
-		   firewall-rule update
-		   --name $name
-		   --resource-group $group
-                   --server-name $servername
-                   --start-ip-address $startip
-                   --end-ip-address $endip
+	out, status <= (
+		az postgres server firewall-rule update
+						--name $name
+						--resource-group $group
+						--server-name $servername
+						--start-ip-address $startip
+						--end-ip-address $endip
+						>[2=1]
 	)
+
+	if $status != "0" {
+		return "", $out
+	}
+
+	return $out, ""
 }
 
 # azure_postgres_firewall_rule_delete deletes
@@ -44,11 +56,17 @@ fn azure_postgres_firewall_rule_update(name, group, servername, startip, endip) 
 # `group` is the name of resource group.
 # `servername` is the name of the Postgres server.
 fn azure_postgres_firewall_rule_delete(name, group, servername) {
-	(
-		az postgres server
-		   firewall-rule delete -y
-		   --name $name
-		   --resource-group $group
-                   --server-name $servername
+	out, status <= (
+		az postgres server firewall-rule delete
+						-y
+						--name
+						$name --resource-group $group --server-name $servername
+						>[2=1]
 	)
+
+	if $status != "0" {
+		return "", $out
+	}
+
+	return $out, ""
 }
