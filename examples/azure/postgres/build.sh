@@ -40,13 +40,10 @@ azure_postgres_server_create($server)
 echo "created Postgres Server"
 echo "creating Postgres Server Firewall rule"
 
-publicip, status <= curl ipinfo.io/ip
+startip = "192.168.0.1"
+endip   = "192.168.0.1"
 
-if $status != "0" {
-	publicip = "8.8.8.8"
-}
-
-_, err <= azure_postgres_firewall_rule_create($rulename, $group, $name, $publicip, $publicip)
+err     <= azure_postgres_firewall_rule_create($rulename, $group, $name, $startip, $endip)
 
 if $err != "" {
 	echo "Error creating Postgres Server Firewall rule. Error: "+$err
