@@ -12,5 +12,7 @@ import provider
 import public_ip
 import disk
 import login
+import postgres
+import postgres_firewall
 
 azure_login()

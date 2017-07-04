@@ -1,12 +1,13 @@
 #!/usr/bin/env nash
+
 import klb/azure/login
 import klb/azure/group
 import klb/azure/postgres
+import klb/azure/postgres_firewall
 
 ## Resource Group Settings
 group    = "klb-examples-postgres"
 location = "eastus2"
-
 name     = "klb-pg-test"
 username = "klbpgtestuser"
 password = "klb2PgPass@secret"
@@ -31,12 +32,25 @@ server <= azure_postgres_set_max_size($server, $size)
 server <= azure_postgres_set_version($server, $version)
 
 if $ssl == "false" {
-        server <= azure_postgres_disable_ssl($server)
+	server <= azure_postgres_disable_ssl($server)
 }
 
 azure_postgres_server_create($server)
 
 echo "created Postgres Server"
+echo "creating Postgres Server Firewall rule"
 
+startip = "192.168.0.1"
+endip   = "192.168.0.1"
+
+err     <= azure_postgres_firewall_rule_create($rulename, $group, $name, $startip, $endip)
+
+if $err != "" {
+	echo "Error creating Postgres Server Firewall rule. Error: "+$err
+
+	exit("1")
+}
+
+echo "created Postgres Server Firewall rule"
 echo
 echo "finished with no errors lol"
