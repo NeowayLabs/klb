@@ -1,6 +1,6 @@
 # Droplet related functions
 
-fn digitalocean_droplet_create(name, size, image, region) {
+fn digitalocean_droplet_new(name, size, image, region) {
 	instance = (
 		$name
 		"--size"
