@@ -1,5 +1,4 @@
-Microsoft Azure
-==
+# Microsoft Azure
 
 ## Service principal and Setting account
 
@@ -57,13 +56,13 @@ Basic usage:
 
 ```sh
 λ> ./tools/azure/getcredentials.sh
-Usage:  ./tools/azure/getcredentials.sh <(sh|nash)> <service principal name> <service secret>
+Usage:  ./tools/azure/getcredentials.sh <(sh|nash)> <subscription name> <service principal name> <service secret>
 ```
 
 For cool nash shells:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh nash klb-sp-tests 123456
+λ> ./tools/azure/getcredentials.sh nash subscription-name klb-sp-tests 123456
 setenv AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 setenv AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
 setenv AZURE_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
@@ -74,14 +73,14 @@ setenv AZURE_CLIENT_SECRET="123456"
 Redirect the output above to a file and import into your nash session:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh nash <service principal name> <service secret> > credentials
+λ> ./tools/azure/getcredentials.sh nash <subscription name> <service principal name> <service secret> > credentials
 λ> import ./credentials
 ```
 
 For lame linux shell (like bash):
 
 ```sh
-λ> ./tools/azure/getcredentials.sh sh klb-sp-tests 123456
+λ> ./tools/azure/getcredentials.sh sh subscription-name klb-sp-tests 123456
 export AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 export AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
 export AZURE_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
@@ -92,7 +91,7 @@ export AZURE_CLIENT_SECRET="123456"
 Redirect the output above to a file and import into your lame shell session:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh sh <service principal name> <service secret> > credentials
+λ> ./tools/azure/getcredentials.sh sh <subscription name> <service principal name> <service secret> > credentials
 λ> source ./credentials
 ```
 
@@ -103,4 +102,21 @@ To register on the required providers you can run:
 
 ```sh
 λ> ./tools/azure/registerproviders.sh
+```
+
+## Examples
+
+There are some examples on the **examples/azure** dir. To build them
+you can call:
+
+```
+make example-<name>
+```
+
+Where **<name>** can be the name of any example on the dir.
+
+Running the backup example:
+
+```
+make example-backup
 ```

@@ -9,8 +9,10 @@ import vm
 import vnet
 import app
 import provider
-import public-ip
+import public_ip
 import disk
 import login
+import postgres
+import postgres_firewall
 
 azure_login()

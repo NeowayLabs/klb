@@ -37,8 +37,6 @@ type F struct {
 
 type Test func(*testing.T, F)
 
-const resourceCleanupTimeout = 10 * time.Minute
-
 // Run creates a unique resource group based on testname and calls
 // the given testfunc passing as argument all the resources required
 // to test integration with Azure cloud.
@@ -73,11 +71,17 @@ func Run(
 		defer teardown()
 
 		session := NewSession(t)
-		resgroup := fmt.Sprintf("klb-test-fixture-%s-%d", testname, rand.Intn(9999999))
+		resgroup := fmt.Sprintf(
+			"klb-test-fixture-%s-%d-%d",
+			testname,
+			time.Now().Unix(),
+			rand.Intn(99999),
+		)
 
 		resources := NewResourceGroup(ctx, t, session, logger)
 		defer func() {
 			// We cant use an expired context when cleaning up state from Azure.
+			const resourceCleanupTimeout = 30 * time.Second
 			ctx, cancel := context.WithTimeout(context.Background(), resourceCleanupTimeout)
 			defer cancel()
 			resources := NewResourceGroup(ctx, t, session, logger)
@@ -97,7 +101,7 @@ func Run(
 			Session:      session,
 			Location:     location,
 			Logger:       logger,
-			Shell:        nash.New(ctx, t, logger),
+			Shell:        nash.New(ctx, t, logger, session.Env()),
 			Retrier:      retrier.New(ctx, t, logger),
 		})
 		logger.Printf("fixture: finished, failed=%t", t.Failed())

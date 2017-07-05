@@ -1,25 +1,30 @@
 #!/usr/bin/env nash
 
-
-if len($ARGS) != "4" {
-        echo "Usage: " $ARGS[0] "<(sh|nash)> <service principal name>" "<service secret>"
-        exit
+if len($ARGS) != "5" {
+	echo "Usage: " $ARGS[0] "<(sh|nash)> <subscription name> <service principal name> <service secret>"
+	
+	exit("0")
 }
 
-shell=$ARGS[1]
+shell = $ARGS[1]
 
 fn printvar(name, value) {
-        if $shell == "nash" {
-	    printf "setenv %s=\"%s\"\n" $name $value
-	    return
-        }
+	if $shell == "nash" {
+		printf "setenv %s=\"%s\"\n" $name $value
+		
+		return
+	}
+
 	printf "export %s=\"%s\"\n" $name $value
 }
 
-SPNAME                  = $ARGS[2]
-SPSECRET                = $ARGS[3]
+AZURE_SUBSCRIPTION_NAME = $ARGS[2]
+SPNAME                  = $ARGS[3]
+SPSECRET                = $ARGS[4]
 
-AZURE_SUBSCRIPTION_ID   <= (
+azure account set $AZURE_SUBSCRIPTION_NAME > /dev/null
+
+AZURE_SUBSCRIPTION_ID <= (
 	azure account show
 			--json
 			 |
@@ -27,15 +32,7 @@ AZURE_SUBSCRIPTION_ID   <= (
 	tr -d "\n"
 )
 
-AZURE_SUBSCRIPTION_NAME <= (
-	azure account show
-			--json
-			 |
-	jq -r ".[0].name" |
-	tr -d "\n"
-)
-
-AZURE_TENANT_ID         <= (
+AZURE_TENANT_ID       <= (
 	azure account show
 			--json
 			 |
@@ -55,3 +52,4 @@ AZURE_CLIENT_ID <= (
 
 printvar("AZURE_CLIENT_ID", $AZURE_CLIENT_ID)
 printvar("AZURE_CLIENT_SECRET", $SPSECRET)
+printvar("AZURE_SERVICE_PRINCIPAL", "http://"+$SPNAME)

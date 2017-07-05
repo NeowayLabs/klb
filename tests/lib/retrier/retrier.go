@@ -15,9 +15,10 @@ import (
 )
 
 type Retrier struct {
-	ctx context.Context
-	t   *testing.T
-	l   *log.Logger
+	ctx      context.Context
+	t        *testing.T
+	l        *log.Logger
+	disabled bool
 }
 
 type WorkFunc func() error
@@ -31,10 +32,19 @@ func New(
 	l *log.Logger,
 ) *Retrier {
 	return &Retrier{
-		ctx: ctx,
-		t:   t,
-		l:   l,
+		ctx:      ctx,
+		t:        t,
+		l:        l,
+		disabled: false,
 	}
+}
+
+// Disable will disable the retrier, if an operation fails once it
+// will abort the test with a fatal.
+// This is used for debug purposes only, not a good idea to commit
+// code with this.
+func (r *Retrier) Disable() {
+	r.disabled = true
 }
 
 // Run executes the given work function trying again if something
@@ -45,22 +55,33 @@ func (r *Retrier) Run(
 	name string,
 	work WorkFunc,
 ) {
-	r.l.Printf("retrier: starting retry loop for work %q", name)
-	errs := retryUntilDone(r.ctx, r.l, name, work)
-	if len(errs) > 0 {
-		errmsgs := []string{
-			"\n",
-			fmt.Sprintf("work %q failed, errors in order:", name),
+	r.l.Printf("retrier: starting work %q", name)
+	if r.disabled {
+		r.l.Println("retrier: disabled, running work once only")
+		err := work()
+		if err == nil {
+			return
 		}
-		for i, err := range errs {
-			errmsgs = append(
-				errmsgs,
-				fmt.Sprintf("error[%d]: %s", i, err),
-			)
-		}
-		r.t.Fatal(r.t, strings.Join(errmsgs, "\n"))
+		r.t.Fatalf("retrier: error[%q] running[%q]", err, name)
+		return
 	}
-	r.l.Printf("retrier: success running work %q", name)
+	errs := retryUntilDone(r.ctx, r.l, name, work)
+
+	if len(errs) == 0 {
+		r.l.Printf("retrier: success running work %q", name)
+		return
+	}
+	errmsgs := []string{
+		"\n",
+		fmt.Sprintf("work %q failed, errors in order:", name),
+	}
+	for i, err := range errs {
+		errmsgs = append(
+			errmsgs,
+			fmt.Sprintf("error[%d]: %s", i, err),
+		)
+	}
+	r.t.Fatalf(strings.Join(errmsgs, "\n"))
 }
 
 const backoff = 10 * time.Second
@@ -73,11 +94,11 @@ func retryUntilDone(
 ) []error {
 	var errs []error
 	for {
-		// buffered channel avoid goroutine leak
+		// WHY: buffered channel avoid goroutine leak
 		result := make(chan error, 1)
 
 		go func() {
-			l.Printf("retrier: executing work: %s", name)
+			l.Printf("executing work: %s", name)
 			result <- work()
 		}()
 
@@ -95,7 +116,7 @@ func retryUntilDone(
 				l.Printf("retrier: %s: timeouted, returning all errors", name)
 				return append(
 					errs,
-					errors.New("retrier timeout"),
+					errors.New("operation timeouted"),
 				)
 			}
 		}

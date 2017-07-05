@@ -53,6 +53,13 @@ fn azure_lb_frontend_ip_set_id_public_ip(instance, idpublicip) {
 	return $instance
 }
 
+fn azure_lb_frontend_ip_set_public_ip_name(instance, publicipname) {
+	instance <= append($instance, "--public-ip-name")
+	instance <= append($instance, $publicipname)
+
+	return $instance
+}
+
 fn azure_lb_frontend_ip_set_subnet_id(instance, subnetid) {
 	instance <= append($instance, "--subnet-id")
 	instance <= append($instance, $subnetid)
@@ -111,6 +118,30 @@ fn azure_lb_addresspool_delete(name, group, lbname) {
 						--resource-group $group
 						--lb-name $lbname
 	)
+}
+
+fn azure_lb_addresspool_get_id(addrpoolname, resgroup, lbname) {
+	# redirects stderr into stdout
+	# if the az cli only print to /dev/stderr *in case of errors* than
+	# everything's fine.
+	out, status <= (
+		az network lb address-pool show
+					--resource-group $resgroup
+					--lb-name $lbname
+					--name $addrpoolname
+					--output json
+					>[2=1]
+	)
+
+	if $status != "0" {
+		# there's no address pool for this lb
+		# In this case $out contain the error
+		return "", $out
+	}
+
+	addresspoolid <= echo -n $out | jq -r ".id"
+
+	return $addresspoolid, ""
 }
 
 # RULE functions
@@ -173,6 +204,16 @@ fn azure_lb_rule_set_addresspoolname(instance, addresspoolname) {
 fn azure_lb_rule_set_probename(instance, probename) {
 	instance <= append($instance, "--probe-name")
 	instance <= append($instance, $probename)
+
+	return $instance
+}
+
+# Set a client session persistence for LB's rule with the possible values:
+# "SourceIP"
+# "SourceIPProtocol"
+fn azure_lb_rule_set_sessionpersistence(instance, sessionpersistence) {
+	instance <= append($instance, "--load-distribution")
+	instance <= append($instance, $sessionpersistence)
 
 	return $instance
 }

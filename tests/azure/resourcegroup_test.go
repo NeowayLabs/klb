@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 	testlog "github.com/NeowayLabs/klb/tests/lib/log"
@@ -28,13 +29,14 @@ func testResourceGroupCreate(t *testing.T) {
 	session := fixture.NewSession(t)
 	resources := fixture.NewResourceGroup(ctx, t, session, logger)
 	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		const resourceCleanupTimeout = 30 * time.Second
+		ctx, cancel := context.WithTimeout(context.Background(), resourceCleanupTimeout)
 		defer cancel()
 		resources := fixture.NewResourceGroup(ctx, t, session, logger)
 		resources.Delete(t, resgroup)
 	}()
 
-	shell := nash.New(ctx, t, logger)
+	shell := nash.New(ctx, t, logger, session.Env())
 	shell.Run(
 		"./testdata/create_resource_group.sh",
 		resgroup,
@@ -56,7 +58,7 @@ func testResourceGroupDelete(t *testing.T) {
 	session := fixture.NewSession(t)
 	resources := fixture.NewResourceGroup(ctx, t, session, logger)
 
-	shell := nash.New(ctx, t, logger)
+	shell := nash.New(ctx, t, logger, session.Env())
 	shell.Run(
 		"./testdata/create_resource_group.sh",
 		resgroup,

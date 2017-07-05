@@ -10,7 +10,7 @@ import (
 )
 
 func genAvailSetName() string {
-	return fmt.Sprintf("klb-availset-tests-%d", rand.Intn(1000))
+	return fmt.Sprintf("klb-availset-tests-%d", rand.Intn(9999999))
 }
 
 func testAvailSetCreate(t *testing.T, f fixture.F) {

@@ -1,43 +1,14 @@
-.PHONY: deps aws-deps azure-deps testazure test vendor
+.PHONY: test vendor
 
 ifndef TESTRUN
 TESTRUN=".*"
 endif
 
-ifndef GOPATH
-$(error $$GOPATH is not set)
-endif
-
 all:
 	@echo "did you mean 'make test' ?"
 
-deps: aws-deps azure-deps doctl-deps jq-dep
-
-aws-deps:
-	pip install --user awscli
-
-azure-deps:
-	npm install --no-optional -g azure-cli
-
-doctl-deps: $(GOPATH)/bin/doctl
-
-$(GOPATH)/bin/doctl:
-	@echo "Downloading doctl..."
-	mkdir -p $(GOPATH)/bin
-	wget -qO- https://github.com/digitalocean/doctl/releases/download/v1.6.0/doctl-1.6.0-linux-amd64.tar.gz  | tar xz -C $(GOPATH)/bin
-	chmod "+x" $(GOPATH)/bin/doctl
-
-jq-dep: $(GOPATH)/bin/jq
-
-$(GOPATH)/bin/jq:
-	@echo "Downloading jq..."
-	mkdir -p $(GOPATH)/bin
-	wget "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -O $(GOPATH)/bin/jq
-	chmod "+x" $(GOPATH)/bin/jq
-
 vendor:
 	./hack/vendor.sh
-
 
 guard-%:
 	@ if [ "${${*}}" = "" ]; then \
@@ -45,22 +16,55 @@ guard-%:
                 exit 1; \
         fi
 
+image:
+	export TERMINFO=""
+	docker build . -t neowaylabs/klb
+
+shell: image
+	./hack/run-tty.sh /usr/bin/nash
+
+example-%: image
+	./hack/run-tty.sh ./examples/azure/$*/build.sh
+
+example-%-cleanup: image
+	./hack/run-tty.sh ./examples/azure/$*/cleanup.sh
+
 libdir=$(NASHPATH)/lib/klb
 bindir=$(NASHPATH)/bin
 install: guard-NASHPATH
-	rm -rf $(libdir)
-	mkdir -p $(libdir)
-	mkdir -p $(bindir)
-	cp -pr ./aws $(libdir)
-	cp -pr ./azure $(libdir)
-	cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
-	cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
+	@rm -rf $(libdir)
+	@mkdir -p $(libdir)
+	@mkdir -p $(bindir)
+	@cp -pr ./aws $(libdir)
+	@cp -pr ./azure $(libdir)
+	@cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
+	@cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-timeout=30m
+integration_timeout=50m
+examples_timeout=50m
+all_timeout=90m
 logger=file
 parallel=30 #Explore I/O parallelization
-gotest=cd tests/azure && go test -parallel $(parallel) -timeout $(timeout) -race
+cpu=4
+gotest=go test ./tests/azure -parallel $(parallel) -cpu $(cpu)
 gotestargs=-args -logger $(logger)
 
-test:
+test: image
+	./hack/run.sh nash ./azure/vm_test.sh
+
+test-integration: image
+	./hack/run.sh $(gotest) -timeout $(integration_timeout) -run=$(run) ./... $(gotestargs)
+
+test-examples: image
+	./hack/run.sh $(gotest) -timeout $(examples_timeout) -tags=examples -run=TestExamples $(gotestargs)
+
+# It is recommended to use this locally. It takes too much time for the CI
+test-all: test
+	timeout=90m
+	./hack/run.sh $(gotest) -timeout $(all_timeout) -tags=examples $(gotestargs)
+
+cleanup: image
+	./hack/run-tty.sh ./tools/azure/cleanup.sh
+
+testhost:
 	$(gotest) -run=$(run) ./... $(gotestargs)
