@@ -79,6 +79,11 @@ fn digitalocean_droplet_set_wait(instance) {
 	return $instance
 }
 
+# digitalocean_droplet_create creates a "Droplet" and
+# returns all the "Droplet" information in JSON format.
+#
+# `instance` is the droplet parameters instance.
 fn digitalocean_droplet_create(instance) {
-	doctl compute droplet create $instance
+	instance <= doctl compute droplet create --output json $instance
+	return $instance
 }
