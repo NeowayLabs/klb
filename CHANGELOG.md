@@ -1,3 +1,7 @@
+# Release 0.6.0
+
+This release adds support to backup with snapshots.
+
 # Release 0.5.0
 
 This release added support to work with Azure Postgres Servers.
