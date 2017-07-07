@@ -112,3 +112,21 @@ fn digitalocean_droplet_exists(name) {
 
 	return $out
 }
+
+# digitalocean_droplet_get_ip gets the public IPv4
+# associated with the "Droplet".
+# If an error occurs, it returns an empty string.
+#
+# `name` is the droplet name.
+fn digitalocean_droplet_get_ip(name) {
+	out, status <= (
+		doctl compute droplet list --output json |
+		jq "map(select(.name==\""+$name+"\"))| .[].networks.v4[].ip_address" |
+		tr -d "\""
+	)
+	if $status != "0" {
+	   return ""
+	}
+
+	return $out
+}
