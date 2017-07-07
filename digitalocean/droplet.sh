@@ -95,16 +95,20 @@ fn digitalocean_droplet_create(instance) {
 	return $out, ""
 }
 
+# digitalocean_droplet_exists checks if a
+# "Droplet" exists in the Digital Ocean platform and
+# returns the "Droplet" ID.
+# If an error occurs, it returns an empty string.
+#
+# `name` is the droplet name.
 fn digitalocean_droplet_exists(name) {
-	key, status <= (
+	out, status <= (
 		doctl compute droplet list --output json |
-		jq ".[].name" |
-		grep $name
+		jq "map(select(.name==\""+$name+"\"))| .[].id"
 	)
-
-	if $status == "0" {
-		return "0"
+	if $status != "0" {
+	   return ""
 	}
 
-	return "1"
+	return $out
 }
