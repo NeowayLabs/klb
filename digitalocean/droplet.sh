@@ -38,9 +38,10 @@ fn digitalocean_droplet_set_private_network(instance) {
 	return $instance
 }
 
-fn digitalocean_droplet_set_ssh_key(instance, keys) {
+fn digitalocean_droplet_set_ssh_key(instance, key) {
+	key 	 <= format("[%s]", $key)
 	instance <= append($instance, "--ssh-keys")
-	instance <= append($instance, $keys)
+	instance <= append($instance, $key)
 
 	return $instance
 }
