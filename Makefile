@@ -37,6 +37,7 @@ install: guard-NASHPATH
 	@mkdir -p $(bindir)
 	@cp -pr ./aws $(libdir)
 	@cp -pr ./azure $(libdir)
+	@cp -pr ./digitalocean $(libdir)
 	@cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	@cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
