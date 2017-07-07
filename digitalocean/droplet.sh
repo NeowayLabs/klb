@@ -2,6 +2,7 @@
 
 fn digitalocean_droplet_new(name, size, image, region) {
 	instance = (
+		"--name"
 		$name
 		"--size"
 		$size
