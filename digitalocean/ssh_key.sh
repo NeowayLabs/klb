@@ -34,16 +34,21 @@ fn digitalocean_ssh_key_import(name, key) {
 	return $out, ""
 }
 
+# digitalocean_ssh_key_exists checks if a
+# ssh key exists in the Digital Ocean platform and
+# returns the ssh key ID.
+# If an error occurs, it returns an empty string and
+# the error.
+#
+# `name` is the ssh key name.
 fn digitalocean_ssh_key_exists(name) {
-	key, status <= (
+	out, status <= (
 		doctl compute ssh-key list --output json |
-		jq ".[].id" |
-		grep $name
+		jq "map(select(.name==\""+$name+"\"))| .[].id"
 	)
-
-	if $status == "0" {
-		return "0"
+	if $status != "0" {
+	   return "", $out
 	}
 
-	return "1"
+	return $out, ""
 }
