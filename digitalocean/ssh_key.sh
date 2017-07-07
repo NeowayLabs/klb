@@ -9,7 +9,7 @@
 # `name` is the ssh key name.
 # `key` is the ssh key contents to create.
 fn digitalocean_ssh_key_create(name, key) {
-	out, status <= doctl compute ssh-key create $name --public-key $key
+	out, status <= doctl compute ssh-key create $name --public-key $key --output json
 	if $status != "0" {
 	   return "", $out
 	}
