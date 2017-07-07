@@ -87,12 +87,12 @@ fn digitalocean_droplet_set_wait(instance) {
 #
 # `instance` is the droplet parameters instance.
 fn digitalocean_droplet_create(instance) {
-	instance, status <= doctl compute droplet create $instance --output json
+	out, status <= doctl compute droplet create $instance --output json
 	if $status != "0" {
-	   return "", $instance
+	   return "", $out
 	}
 	
-	return $instance, ""
+	return $out, ""
 }
 
 fn digitalocean_droplet_exists(name) {
