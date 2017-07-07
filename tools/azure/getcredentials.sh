@@ -23,7 +23,7 @@ SPNAME                  = $ARGS[3]
 SPSECRET                = $ARGS[4]
 
 azure login
-azure account set $AZURE_SUBSCRIPTION_NAME > /dev/null
+azure account set $AZURE_SUBSCRIPTION_NAME
 
 AZURE_SUBSCRIPTION_ID <= (
 	azure account show
@@ -41,16 +41,19 @@ AZURE_TENANT_ID       <= (
 	tr -d "\n"
 )
 
-printvar("AZURE_SUBSCRIPTION_ID", $AZURE_SUBSCRIPTION_ID)
-printvar("AZURE_SUBSCRIPTION_NAME", $AZURE_SUBSCRIPTION_NAME)
-printvar("AZURE_TENANT_ID", $AZURE_TENANT_ID)
-
-AZURE_CLIENT_ID <= (
+AZURE_CLIENT_ID       <= (
 	azure ad sp show -c $SPNAME --json |
 	jq -r ".[0].appId" |
 	tr -d "\n"
 )
 
+echo
+echo "environment variables (copy them to a file):"
+echo
+
+printvar("AZURE_SUBSCRIPTION_ID", $AZURE_SUBSCRIPTION_ID)
+printvar("AZURE_SUBSCRIPTION_NAME", $AZURE_SUBSCRIPTION_NAME)
+printvar("AZURE_TENANT_ID", $AZURE_TENANT_ID)
 printvar("AZURE_CLIENT_ID", $AZURE_CLIENT_ID)
 printvar("AZURE_CLIENT_SECRET", $SPSECRET)
 printvar("AZURE_SERVICE_PRINCIPAL", "http://"+$SPNAME)

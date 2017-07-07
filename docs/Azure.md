@@ -70,10 +70,9 @@ setenv AZURE_CLIENT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
 setenv AZURE_CLIENT_SECRET="123456"
 ```
 
-Redirect the output above to a file and import into your nash session:
+Copy the environment variables from the output to a file and import into your nash session:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh nash <subscription name> <service principal name> <service secret> > credentials
 λ> import ./credentials
 ```
 
@@ -88,10 +87,9 @@ export AZURE_CLIENT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
 export AZURE_CLIENT_SECRET="123456"
 ```
 
-Redirect the output above to a file and import into your lame shell session:
+Write the output above to a file and import into your lame shell session:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh sh <subscription name> <service principal name> <service secret> > credentials
 λ> source ./credentials
 ```
 
