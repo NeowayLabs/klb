@@ -81,11 +81,17 @@ fn digitalocean_droplet_set_wait(instance) {
 
 # digitalocean_droplet_create creates a "Droplet" and
 # returns all the "Droplet" information in JSON format.
+# If an error occurs, it returns an empty string and
+# the error.
 #
 # `instance` is the droplet parameters instance.
 fn digitalocean_droplet_create(instance) {
-	instance <= doctl compute droplet create $instance --output json
-	return $instance
+	instance, status <= doctl compute droplet create $instance --output json
+	if $status != "0" {
+	   return "", $instance
+	}
+	
+	return $instance, ""
 }
 
 fn digitalocean_droplet_exists(name) {
