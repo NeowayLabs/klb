@@ -87,3 +87,17 @@ fn digitalocean_droplet_create(instance) {
 	instance <= doctl compute droplet create --output json $instance
 	return $instance
 }
+
+fn digitalocean_droplet_exists(name) {
+	key, status <= (
+		doctl compute droplet list --output json |
+		jq ".[].name" |
+		grep $name
+	)
+
+	if $status == "0" {
+		return "0"
+	}
+
+	return "1"
+}
