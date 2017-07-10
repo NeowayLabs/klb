@@ -9,8 +9,11 @@ klbtests_prefix = "^klb-*"
 echo
 echo "========================================================================="
 echo "this script will attempt to cleanup all pending klb tests resource groups"
+echo "logging in"
 
 azure_login()
+
+echo "getting resource group names"
 
 resgroups <= azure_group_get_names()
 
@@ -64,7 +67,7 @@ for resgroup in $filtered {
 
 	# WHY ? Some resource groups are backups, this will
 	# remove locks also.
-        azure_vm_backup_delete($resgroup)
+	azure_vm_backup_delete($resgroup)
 }
 
 echo "done"
