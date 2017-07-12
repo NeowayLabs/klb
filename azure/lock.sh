@@ -18,19 +18,17 @@ fn _azure_lock_delete(lockname, resgroup, trycount) {
 	maxretry = "10"
 
 	fn error(reason) {
-		err <= format(
+		return format(
 			"azure_lock_delete: unable to delete lock[%s] resgroup[%s]: reason: %s",
 			$lockname,
 			$resgroup,
 			$reason,
 		)
-		return $err
 	}
 
 	_, status <= test $trycount "-lt" $maxretry
 	if $status != "0" {
-		err <= error("exceeded max retry: " + $maxretry)
-		return $err
+		return error("exceeded max retry: " + $maxretry)
 	}
 
 	fn log(msg) {
@@ -43,8 +41,7 @@ fn _azure_lock_delete(lockname, resgroup, trycount) {
 
 	out, status <= az lock delete --name $lockname --resource-type "locks" --namespace "Microsoft.Authorization" --resource-name $lockname --resource-group $resgroup
 	if $status != "0" {
-		err <= error(format("unable to delete lock, error details: [" + $out + "]"))
-		return $err
+		return error(format("unable to delete lock, error details: [" + $out + "]"))
 	}
 
 	log(format("deleted lock[%s] successfully, checking if it still exists", $lockname))
@@ -56,5 +53,6 @@ fn _azure_lock_delete(lockname, resgroup, trycount) {
 		return _azure_lock_delete($lockname, $resgroup, $trycount)
 	}
 
+	log(format("lock[%s] not found, success", $lockname))
 	return ""
 }
