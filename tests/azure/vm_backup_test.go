@@ -25,9 +25,9 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 
-	defer deleteBackups(t, f, vm, backupPrefix)
 	vmBackup := backupVM(t, f, vm, backupPrefix)
 	assertResourceGroupExists(t, f, vmBackup)
+	defer deleteBackup(t, f, vmBackup)
 
 	recoveredVMName := vm + "2"
 	recoverVM(
@@ -59,7 +59,6 @@ func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, storageSKU)
-	defer deleteBackups(t, f, vm, backupPrefix)
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
@@ -69,8 +68,8 @@ func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
 	attachDisks(t, f, vm, disks)
 
 	vmBackup := backupVM(t, f, vm, backupPrefix)
-
 	assertResourceGroupExists(t, f, vmBackup)
+	defer deleteBackup(t, f, vmBackup)
 
 	backups := listBackups(t, f, vm, backupPrefix)
 	assertEqualStringSlice(t, []string{vmBackup}, backups)
@@ -91,6 +90,7 @@ func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
 
 	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix)
 	assertResourceGroupExists(t, f, recoveredVMBackup)
+	defer deleteBackup(t, f, recoveredVMBackup)
 
 	recoveredVMBackups := listBackups(t, f, recoveredVMName, backupPrefix)
 	assertEqualStringSlice(t, []string{recoveredVMBackup}, recoveredVMBackups)
@@ -214,8 +214,8 @@ func listBackups(t *testing.T, f fixture.F, vmname string, prefix string) []stri
 	return parseBackupsList(res)
 }
 
-func deleteBackups(t *testing.T, f fixture.F, vmname string, backupPrefix string) {
-	f.Shell.Run("./testdata/delete_backups.sh", vmname, backupPrefix)
+func deleteBackup(t *testing.T, f fixture.F, backup string) {
+	f.Shell.Run("./testdata/delete_backup.sh", backup)
 }
 
 func recoverVM(
