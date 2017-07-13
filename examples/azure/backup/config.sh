@@ -17,7 +17,7 @@ vm_size         = "Standard_DS15_v2"
 vm_username     = "core"
 vm_image_urn    = "CoreOS:CoreOS:Stable:1298.6.0"
 vm_disks_count  = "4"
-vm_disks_size   = "1023"
+vm_disks_size   = "50"
 
 backup_prefix   = "klb-ex"
 backup_location = "eastus2"
