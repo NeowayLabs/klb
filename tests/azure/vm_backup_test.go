@@ -20,7 +20,7 @@ func TestVMBackup(t *testing.T) {
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
-	backupPrefix := "klb-tests"
+	backupPrefix := "klb-tests-osdisk"
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
@@ -46,16 +46,22 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 }
 
 func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
-	testVMBackup(t, f, "Standard_DS4_v2", "Premium_LRS")
+	backupPrefix := "klb-tests-premium"
+	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS")
 }
 
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
-	testVMBackup(t, f, "Basic_A2", "Standard_LRS")
+	backupPrefix := "klb-tests-stdsku"
+	testVMBackup(t, f, backupPrefix, "Basic_A2", "Standard_LRS")
 }
 
-func testVMBackup(t *testing.T, f fixture.F, vmSize string, storageSKU string) {
-
-	backupPrefix := "klb-tests"
+func testVMBackup(
+	t *testing.T,
+	f fixture.F,
+	backupPrefix string,
+	vmSize string,
+	storageSKU string,
+) {
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, storageSKU)
