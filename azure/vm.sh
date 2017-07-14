@@ -619,22 +619,25 @@ fn azure_vm_backup_delete(backup_resgroup) {
 	readlock <= _azure_vm_backup_get_readonly_lock($backup_resgroup)
 
 	echo "backup delete: resource group: "+$backup_resgroup
-	echo "backup delete: removing lock: "+$dellock
+	echo "backup delete: removing delete lock: "+$dellock
 
-	azure_lock_delete($dellock, $backup_resgroup)
+	err <= azure_lock_delete($dellock, $backup_resgroup)
+	if $err != "" {
+		return "azure_vm_backup_delete: error deleting delete lock: " + $err
+	}
 
-	echo "backup delete: removing lock: "+$readlock
+	echo "backup delete: removing read lock: "+$readlock
 
-	azure_lock_delete($readlock, $backup_resgroup)
+	err <= azure_lock_delete($readlock, $backup_resgroup)
+	if $err != "" {
+		return "azure_vm_backup_delete: error deleting read lock: " + $err
+	}
 
-	# WHY: Deleting locks is not synchronous, this is a VERY
-	# lame workaround while we don't fix the azure_lock_delete function.
-	lame_workaround_sleep = "5"
-
-	sleep $lame_workaround_sleep
 	echo "backup delete: locks removed, deleting resource group: "+$backup_resgroup
 
 	azure_group_delete($backup_resgroup)
+
+	return ""
 }
 
 # azure_vm_backup_exists returns an empty string on success

@@ -63,11 +63,19 @@ if $res != "Y" {
 echo "deleting resource groups, may the odds be at your favor"
 
 for resgroup in $filtered {
-	echo "deleting: "+$resgroup
 
-	# WHY ? Some resource groups are backups, this will
-	# remove locks also.
-	azure_vm_backup_delete($resgroup)
+	out, status <= echo $resgroup | grep -- "-bkp-"
+	if $status == "0" {
+		echo "seems like a backup, deleting it"
+		err <= azure_vm_backup_delete($resgroup)
+		if $err != "" {
+			echo "error deleting backup: " + $err
+			exit ("1")
+		}
+	} else {
+		echo "deleting resgroup: "+$resgroup
+		azure_group_delete($resgroup)
+	}
 }
 
 echo "done"
