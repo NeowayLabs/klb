@@ -15,22 +15,33 @@ fn check_role(role) {
 	return "false"
 }
 
-if len($ARGS) != "5" {
-	echo "usage: "+$ARGS[0]+" <subscription_id> <service_principal> <password> <role>"
+defRole = "Owner"
+
+arglen  <= len($ARGS)
+_, cond <= test $arglen -lt 4
+
+if $cond == "0" {
+	echo "usage: "+$ARGS[0]+" <subscription_id> <service_principal> <password> [<role>]"
 	exit
 }
 
 subscription_id   = $ARGS[1]
 service_principal = $ARGS[2]
 password          = $ARGS[3]
-role              = $ARGS[4]
+role              = $defRole
 
+if $arglen == "5" {
+	role = $ARGS[4]
+}
 if check_role($role) == "false" {
 	echo "Invalid role:"+$role+" - possible roles are: Owner or Reader"
-	exit
+	
+	exit("1")
 }
 
-subscription_name <= azure account show $subscription_id --json | jq -r ".[0].name"
+exit("0")
+
+#subscription_name <= azure account show $subscription_id --json | jq -r ".[0].name"
 
 echo "Setting azure subscription to: "+$subscription_name+" ["+$subscription_id+"]"
 azure account set $subscription_id >[1=]
