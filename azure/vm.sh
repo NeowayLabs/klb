@@ -820,6 +820,28 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 	return ""
 }
 
+
+# azure_vm_list_names will list all virtual machines available on
+# the given resource group. There are two return values,
+# the first one is a list of virtual machines names or
+# empty if there is no VM on the resource group.
+#
+# The second one is an error string, if it is "" it means success,
+# otherwise it means something else went wrong.
+fn azure_vm_list_names(resgroup) {
+        res, status <= az vm list --resource-group $resgroup --query "[].name" --output tsv
+        if $status != "0" {
+                return (), "error listing VM's: " + $res
+        }
+
+        if $res == "" {
+                return (), ""
+        }
+
+        parsed <= split($res, "\n")
+        return $parsed, ""
+}
+
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
 	return "del-"+$bkp_resgroup
 }
