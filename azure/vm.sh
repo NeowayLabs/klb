@@ -344,29 +344,32 @@ fn azure_vm_get_datadisks_ids(name, resgroup) {
 #
 # These ID's are the same returned by azure_vm_get_datadisks_ids
 fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
-	ids_luns  = ()
+	ids_luns = ()
+
 	info      <= azure_vm_get_rawinfo($name, $resgroup)
 	disks_raw <= echo $info | jq -r ".storageProfile.dataDisks[]"
-	ids_raw <= echo $disks_raw | jq -r ".managedDisk.id"
+	ids_raw   <= echo $disks_raw | jq -r ".managedDisk.id"
 
 	if $ids_raw == "" {
-		echo "no datadisks found for vm: " + $name
+		echo "no datadisks found for vm: "+$name
+		
 		return $ids_luns
 	}
-	ids       <= split($ids_raw, "\n")
 
-	luns_raw  <= echo $disks_raw | jq -r ".lun"
+	ids      <= split($ids_raw, "\n")
+	luns_raw <= echo $disks_raw | jq -r ".lun"
+
 	if $luns_raw == "" {
-		echo "no datadisks found for vm: " + $name
+		echo "no datadisks found for vm: "+$name
+		
 		return $ids_luns
 	}
 
-	luns      <= split($luns_raw, "\n")
-	size      <= len($ids)
-
-	rangeend  <= expr $size - 1
-	sequence  <= seq "0" $rangeend
-	range     <= split($sequence, "\n")
+	luns     <= split($luns_raw, "\n")
+	size     <= len($ids)
+	rangeend <= expr $size - 1
+	sequence <= seq "0" $rangeend
+	range    <= split($sequence, "\n")
 
 	for i in $range {
 		idlun = ($ids[$i] $luns[$i])
@@ -384,7 +387,11 @@ fn azure_vm_get_osdisk_id(name, resgroup) {
 	info <= azure_vm_get_rawinfo($name, $resgroup)
 	id   <= echo $info | jq -r ".storageProfile.osDisk.managedDisk.id"
 
-	return $id
+	if $id == "" {
+		return "", format("unable to find managed OS disk on vm[%s] resgroup[%s], vm probably do not exist", $name, $resgroup)
+	}
+
+	return $id, ""
 }
 
 # azure_vm_get_rawinfo will return the raw encoded JSON data with
@@ -399,11 +406,16 @@ fn azure_vm_get_rawinfo(name, resgroup) {
 #
 # It will be a list including the osdisk id and the datadisks id's.
 fn azure_vm_get_disks_ids(name, resgroup) {
-	osdiskid  <= azure_vm_get_osdisk_id($name, $resgroup)
+	osdiskid, err <= azure_vm_get_osdisk_id($name, $resgroup)
+
+	if $err != "" {
+		return (), $err
+	}
+
 	datadisks <= azure_vm_get_datadisks_ids($name, $resgroup)
 	disks     <= append($datadisks, $osdiskid)
 
-	return $disks
+	return $disks, ""
 }
 
 # azure_vm_stop stops a running VM
@@ -478,35 +490,40 @@ fn azure_vm_start(vmname, resgroup) {
 # group and a non-empty error string with details on the failure.
 fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 	timestamp <= date "+%Y.%m.%d.%H%M"
+
 	# WHY: We need some chars for the lock names,
 	# based on the resgroup name.
 	max_resgroup_size = "60"
+	bkp_resgroup      = $prefix+"-bkp-"+$timestamp+"-"+$vmname
 
-	bkp_resgroup = $prefix+"-bkp-"+$timestamp+"-"+$vmname
+	bkp_resgroup_len  <= len($bkp_resgroup)
+	_, err            <= test $max_resgroup_size -gt $bkp_resgroup_len
 
-	bkp_resgroup_len <= len($bkp_resgroup)
-	_, err <= test $max_resgroup_size -gt $bkp_resgroup_len
 	if $err != "0" {
 		return "", format("error: resgroup name %q is too bigger than %q", $bkp_resgroup, $max_resgroup_size)
 	}
-
 	if azure_group_exists($bkp_resgroup) == "0" {
 		return "", format("error: resource group already exists: %q", $bkp_resgroup)
 	}
 
 	echo "vm.backup.create: getting VM disks IDs"
-	echo "vm.backup.create: vm name: " + $vmname
-	echo "vm.backup.create: resgroup: " + $resgroup
+	echo "vm.backup.create: vm name: "+$vmname
+	echo "vm.backup.create: resgroup: "+$resgroup
 
-	osdiskid       <= azure_vm_get_osdisk_id($vmname, $resgroup)
-	echo "got os disk id: " + $osdiskid
+	osdiskid, err <= azure_vm_get_osdisk_id($vmname, $resgroup)
+
+	if $err != "" {
+		return "", $err
+	}
+
+	echo "got os disk id: "+$osdiskid
 
 	disks_ids_luns <= azure_vm_get_datadisks_ids_lun($vmname, $resgroup)
+
 	echo "vm.backup.create: creating resource group: "+$bkp_resgroup
 	echo "vm.backup.create: at location: "+$location
 
 	azure_group_create($bkp_resgroup, $location)
-
 
 	# WHY: name used later on the recover phase, do NOT change this
 	# unless you are absolutely SURE of what you are doing
@@ -562,36 +579,89 @@ fn azure_vm_backup_list(vmname, prefix) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix <= echo $resgroup | -grep "^"+$prefix
-		hasvmname <= echo $hasprefix | -grep $vmname+"$"
+		hasprefix, _      <= echo $resgroup | grep "^"+$prefix
+		hasvmname, status <= echo $hasprefix | grep $vmname+"$"
 
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"
 		}
 	}
 
-	echo "vm.backup.list: got: [" + $filtered + "], ordering the list"
+	return _azure_vm_backup_order_list($filtered)
+}
+
+# azure_vm_backup_list_all returns the list of all backups
+# for the given prefix. If there is backups for multiple VM's
+# for the given prefix it will return all of them.
+#
+# The return value is the same as azure_vm_backup_list, just aggregating
+# results for all VMs instead of a single one.
+fn azure_vm_backup_list_all(prefix) {
+	resgroups <= azure_group_get_names()
+
+	filtered = ""
+
+	for resgroup in $resgroups {
+		hasprefix, status <= echo $resgroup | grep "^"+$prefix
+
+		if $status == "0" {
+			filtered = $filtered+$resgroup+"\n"
+		}
+	}
+
 	return _azure_vm_backup_order_list($filtered)
 }
 
 # azure_vm_backup_delete deletes a backup. This function
 # will also remove the locks that prevents backups deletion.
 fn azure_vm_backup_delete(backup_resgroup) {
-
-	dellock <= _azure_vm_backup_get_nodelete_lock($backup_resgroup)
+	dellock  <= _azure_vm_backup_get_nodelete_lock($backup_resgroup)
 	readlock <= _azure_vm_backup_get_readonly_lock($backup_resgroup)
 
-	echo "backup delete: removing lock: " + $dellock
-	azure_lock_delete($dellock, $backup_resgroup)
-	echo "backup delete: removing lock: " + $readlock
-	azure_lock_delete($readlock, $backup_resgroup)
+	echo "backup delete: resource group: "+$backup_resgroup
+	echo "backup delete: removing delete lock: "+$dellock
 
-	# WHY: Deleting locks is not synchronous, this is a VERY
-	# lame workaround while we don't fix the azure_lock_delete function.
-	lame_workaround_sleep = "5"
-	sleep $lame_workaround_sleep
-	echo "backup delete: locks removed, deleting resource group: " + $backup_resgroup
+	err <= azure_lock_delete($dellock, $backup_resgroup)
+	if $err != "" {
+		return "azure_vm_backup_delete: error deleting delete lock: " + $err
+	}
+
+	echo "backup delete: removing read lock: "+$readlock
+
+	err <= azure_lock_delete($readlock, $backup_resgroup)
+	if $err != "" {
+		return "azure_vm_backup_delete: error deleting read lock: " + $err
+	}
+
+	echo "backup delete: locks removed, deleting resource group: "+$backup_resgroup
+
 	azure_group_delete($backup_resgroup)
+
+	return ""
+}
+
+# azure_vm_backup_exists returns an empty string on success
+# (the resource group exists) or a non empty string with details
+# on what is wrong with the backup resource group.
+fn azure_vm_backup_exists(backup_resgroup) {
+	snapshots, err <= azure_snapshot_list($backup_resgroup)
+
+	if $err != "" {
+		return format("error[%s] listing snapshots from resgroup[%s]", $err, $backup_resgroup)
+	}
+
+	osdiskname <= _azure_vm_backup_get_osdisk_name()
+
+	for snapshot in $snapshots {
+		id   = $snapshot[0]
+		name = $snapshot[1]
+
+		if $name == $osdiskname {
+			return ""
+		}
+	}
+
+	return format("unable to find osdisk id on backup resource group[%s], corrupted backup ?", $backup_resgroup)
 }
 
 # azure_vm_backup_recover will recover a previously generated
@@ -601,9 +671,13 @@ fn azure_vm_backup_delete(backup_resgroup) {
 #
 # The vminstance parameter is a instance of the vm object,
 # created with azure_vm_new and configured just like you
-# would do to create a new VM. The only main difference is
+# would do to create a new VM.
+#
+# The main differences is
 # that no os disk should be configured, since the os disk and
-# datadisks will be obtained from the backup_resgroup.
+# datadisks will be obtained from the backup_resgroup, and
+# no storage-sku should be set on the vm instance, since it
+# will be defined on the disks created from the backup.
 #
 # The backup_resgroup is the name of the resource group
 # where the snapshots are stored just as it is returned by
@@ -614,102 +688,126 @@ fn azure_vm_backup_delete(backup_resgroup) {
 #
 # This function returns an empty string on success or a
 # non empty error message if it fails.
-fn azure_vm_backup_recover(instance, backup_resgroup) {
-
+fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 	fn log(msg) {
-		echo "vm.backup.recover: " + $msg
+		echo "vm.backup.recover: "+$msg
 	}
 
 	log("getting info from vm")
+
 	resgroup <= _azure_vm_get($instance, "resource-group")
 	location <= _azure_vm_get($instance, "location")
-	vmname <= _azure_vm_get($instance, "name")
-	ostype <= _azure_vm_get($instance, "os-type")
-	osdiskname <= _azure_vm_get($instance, "os-disk-name")
+	vmname   <= _azure_vm_get($instance, "name")
+	ostype   <= _azure_vm_get($instance, "os-type")
 
-	log("vm name: " + $vmname)
-	log("vm resgroup: " + $resgroup)
-	log("vm location: " + $location)
-	log("vm os type: " + $ostype)
+	log("vm name: "+$vmname)
+	log("vm resgroup: "+$resgroup)
+	log("vm location: "+$location)
+	log("vm os type: "+$ostype)
 
 	if $vmname == "" {
 		return "unable to get the 'name' from the given vm instance"
 	}
-
 	if $resgroup == "" {
 		return "unable to get the 'resource-group' from the given vm instance"
 	}
-
 	if $location == "" {
 		return "unable to get the 'location' from the given vm instance"
 	}
-
 	if $ostype == "" {
 		return "unable to get the 'os-type' from the given vm instance"
 	}
 
+	osdiskname <= _azure_vm_get($instance, "os-disk-name")
+
 	if $osdiskname != "" {
-		msg <= format("found os disk name %q on vm instance.")
-		return $msg + "should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
+		msg <= format("found os disk name %q on vm instance: ", $osdiskname)
+		
+		return $msg+"should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
 	}
 
-	log("loading snapshots from backup: " + $backup_resgroup)
-	snapshots <= azure_snapshot_list($backup_resgroup)
-	log("loaded snapshots, parsing results")
-	osdiskid = ""
-	datadisks = ()
+	sku <= _azure_vm_get($instance, "storage-sku")
+
+	if $sku != "" {
+		msg <= format("found storage-sku %q on vm instance: ", $sku)
+		
+		return $msg+"should not call azure_vm_set_storagesku on a vm that is being recovered from backup"
+	}
+
+	log("loading snapshots from backup: "+$backup_resgroup)
+
+	snapshots, err <= azure_snapshot_list($backup_resgroup)
+
+	if $err != "" {
+		return $err
+	}
+
+	log(format("loaded snapshots, parsing results: %s", $snapshots))
+
+	osdiskid   = ""
+	datadisks  = ()
 
 	osdiskname <= _azure_vm_backup_get_osdisk_name()
+
 	for snapshot in $snapshots {
 		log(format("parsing: %s", $snapshot))
-		id = $snapshot[0]
+
+		id   = $snapshot[0]
 		name = $snapshot[1]
+
 		if $name == $osdiskname {
 			osdiskid = $id
 		} else {
 			lun <= _azure_vm_backup_datadisk_lun($name)
+			
 			idlun = ($id $lun)
+			
 			datadisks <= append($datadisks, $idlun)
 		}
 	}
 
+	log("os disk id:["+$osdiskid+"]")
+
 	if $osdiskid == "" {
-		return format(
-			"unable to find osdisk id on backup resource group: %q, corrupted backup ?",
-			$backup_resgroup,
-		)
+		return format("unable to find osdisk id on backup resource group: %q, corrupted backup ?", $backup_resgroup)
 	}
 
-	log("os disk id: " + $osdiskid)
 	log("creating os disk")
-	osdiskname = $vmname + "-osdisk"
-	d <= azure_disk_new($osdiskname, $resgroup, $location)
-	d <= azure_disk_set_source($d, $osdiskid)
+
+	osdiskname = $vmname+"-osdisk"
+
+	d      <= azure_disk_new($osdiskname, $resgroup, $location)
+	d      <= azure_disk_set_source($d, $osdiskid)
+	d      <= azure_disk_set_sku($d, $storagesku)
 	osdisk <= azure_disk_create($d)
 
-	log("created os disk: " + $osdisk)
+	log("created os disk: "+$osdisk)
+
 	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
 
 	log("creating VM")
 	azure_vm_create($instance)
 	log("created VM, stopping it so we can attach disks")
+
 	# https://feedback.azure.com/forums/216843-virtual-machines/suggestions/6750456-allow-to-create-vm-without-starting-it-immediatell
 	azure_vm_stop($vmname, $resgroup)
-
 	log("attaching datadisks")
+
 	for datadisk in $datadisks {
-		id = $datadisk[0]
+		id  = $datadisk[0]
 		lun = $datadisk[1]
 
-		log("creating disk from snapshot: " + $id)
-		log("disk will have LUN: " + $lun)
+		log("creating disk from snapshot: "+$id)
+		log("disk will have LUN: "+$lun)
 
-		diskname = $vmname + "-disk-" + $lun
-		d <= azure_disk_new($diskname, $resgroup, $location)
-		d <= azure_disk_set_source($d, $id)
+		diskname = $vmname+"-disk-"+$lun
+
+		d      <= azure_disk_new($diskname, $resgroup, $location)
+		d      <= azure_disk_set_source($d, $id)
+		d      <= azure_disk_set_sku($d, $storagesku)
 		diskid <= azure_disk_create($d)
 
-		log("created disk id: " + $diskid)
+		log("created disk id: "+$diskid)
 		log("attaching on VM")
 		azure_vm_disk_attach($vmname, $resgroup, $diskid)
 		log("attached")
@@ -718,6 +816,8 @@ fn azure_vm_backup_recover(instance, backup_resgroup) {
 	log("starting VM with all disks attached")
 	azure_vm_start($vmname, $resgroup)
 	log("finished recover with success")
+
+	return ""
 }
 
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
@@ -730,14 +830,17 @@ fn _azure_vm_backup_get_readonly_lock(bkp_resgroup) {
 
 fn _azure_vm_backup_order_list(backup_resgroups) {
 	ordered_raw <= echo $backup_resgroups | sort -r
-	ordered <= split($ordered_raw, "\n")
-	res = ()
+	ordered     <= split($ordered_raw, "\n")
+
+	res         = ()
+
 	# WHY: handle possible trailing newlines
 	for o in $ordered {
 		if $o != "" {
 			res <= append($res, $o)
 		}
 	}
+
 	return $res
 }
 
@@ -751,15 +854,19 @@ fn _azure_vm_backup_datadisk_name(lun) {
 
 fn _azure_vm_backup_datadisk_lun(name) {
 	tokens <= split($name, "-")
+
 	if len($tokens) != "2" {
-		echo "invalid backup datadisk name: " + $name
+		echo "invalid backup datadisk name: "+$name
+		
 		exit("1")
 	}
+
 	return $tokens[1]
 }
 
 fn _azure_vm_get(instance, cfgname) {
-	cfgname = "--" + $cfgname
+	cfgname = "--"+$cfgname
+
 	size      <= len($instance)
 	rangeend  <= expr $size "-" "2"
 	sequence  <= seq "0" $rangeend
@@ -769,14 +876,13 @@ fn _azure_vm_get(instance, cfgname) {
 
 	for i in $range {
 		cfgval_index <= expr $i "+" "1"
+
 		name = $instance[$i]
+
 		if $name == $cfgname {
 			return $instance[$cfgval_index]
 		}
 	}
 
-	echo "fatal error getting cfg: " + $cfgname
-	echo "vm instance: " + $instance
-	exit("1")
 	return ""
 }

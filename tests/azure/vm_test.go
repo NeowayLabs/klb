@@ -15,7 +15,7 @@ import (
 )
 
 func genUniqName() string {
-	return fmt.Sprintf("klbvmtests-%d", rand.Intn(9999999))
+	return fmt.Sprintf("klbvmt-%d", rand.Intn(999999))
 }
 
 type VMResources struct {
@@ -73,8 +73,6 @@ func testVMCreation(t *testing.T, f fixture.F, vmSize string, sku string) {
 
 	vms := azure.NewVM(f)
 	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku)
-
-	f.Logger.Println("VM with attached disk created with success")
 }
 
 func testStandardDiskVM(t *testing.T, f fixture.F) {
@@ -110,23 +108,15 @@ type VMDisk struct {
 
 func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
 	vms := azure.NewVM(f)
-
 	for _, disk := range disks {
 		attachNewDiskOnVM(t, f, vmname, disk.Name, disk.Size, disk.Sku)
 		vms.AssertAttachedDataDisk(t, vmname, disk.Name, disk.Size, disk.Sku)
 	}
 }
 
-func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
+func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks []VMDisk) {
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
-
-	disks := []VMDisk{
-		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 10, Sku: sku},
-		{Name: genUniqName(), Size: 20, Sku: sku},
-		{Name: genUniqName(), Size: 30, Sku: sku},
-	}
 
 	vms := azure.NewVM(f)
 
@@ -158,10 +148,13 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 	}
 
 	originaldisks := vms.DataDisks(t, vm)
-	backupdisks := vms.DataDisks(t, vmbackup)
+	if len(originaldisks) != len(disks) {
+		t.Fatalf("expected %d disks, got %d", len(disks), len(originaldisks))
+	}
 
+	backupdisks := vms.DataDisks(t, vmbackup)
 	if len(originaldisks) != len(backupdisks) {
-		t.Fatalf("expected disks %q == %q", originaldisks, backupdisks)
+		t.Fatalf("expected original disks %q == %q backup disks", originaldisks, backupdisks)
 	}
 
 	for _, originaldisk := range originaldisks {
@@ -183,11 +176,24 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string) {
 }
 
 func testVMSnapshotStandard(t *testing.T, f fixture.F) {
-	testVMSnapshot(t, f, "Basic_A2", "Standard_LRS")
+	sku := "Standard_LRS"
+	testVMSnapshot(t, f, "Basic_A2", sku,
+		[]VMDisk{
+			{Name: genUniqName(), Size: 20, Sku: sku},
+			{Name: genUniqName(), Size: 30, Sku: sku},
+		},
+	)
+
 }
 
 func testVMSnapshotPremium(t *testing.T, f fixture.F) {
-	testVMSnapshot(t, f, "Standard_DS4_v2", "Premium_LRS")
+	sku := "Premium_LRS"
+	testVMSnapshot(t, f, "Standard_DS4_v2", sku,
+		[]VMDisk{
+			{Name: genUniqName(), Size: 50, Sku: sku},
+			{Name: genUniqName(), Size: 150, Sku: sku},
+		},
+	)
 }
 
 func testDuplicatedAvailabilitySet(t *testing.T, f fixture.F) {
