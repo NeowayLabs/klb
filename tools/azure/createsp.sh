@@ -39,9 +39,7 @@ if check_role($role) == "false" {
 	exit("1")
 }
 
-exit("0")
-
-#subscription_name <= azure account show $subscription_id --json | jq -r ".[0].name"
+subscription_name <= azure account show $subscription_id --json | jq -r ".[0].name"
 
 echo "Setting azure subscription to: "+$subscription_name+" ["+$subscription_id+"]"
 azure account set $subscription_id >[1=]
