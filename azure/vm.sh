@@ -579,7 +579,7 @@ fn azure_vm_backup_list(vmname, prefix) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix, _      <= echo $resgroup | grep "^"+$prefix
+		hasprefix, _ <= _azure_vm_resgroup_is_backup($resgroup, $prefix)
 		hasvmname, status <= echo $hasprefix | grep $vmname+"$"
 
 		if $status == "0" {
@@ -602,8 +602,7 @@ fn azure_vm_backup_list_all(prefix) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix, status <= echo $resgroup | grep "^"+$prefix
-
+		_, status <= _azure_vm_resgroup_is_backup($resgroup, $prefix)
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"
 		}
@@ -907,4 +906,9 @@ fn _azure_vm_get(instance, cfgname) {
 	}
 
 	return ""
+}
+
+fn _azure_vm_resgroup_is_backup(resgroup, prefix) {
+        out, status <= echo $resgroup | grep "^"+$prefix+"-bkp"
+        return $out, $status
 }
