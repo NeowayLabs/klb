@@ -826,7 +826,7 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 # empty if there is no VM on the resource group.
 #
 # The second one is an error string, if it is "" it means success,
-# otherwise it means something else went wrong.
+# otherwise it contains the error message.
 fn azure_vm_list_names(resgroup) {
         res, status <= az vm list --resource-group $resgroup --query "[].name" --output tsv
         if $status != "0" {
