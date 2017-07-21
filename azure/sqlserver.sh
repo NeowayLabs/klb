@@ -14,10 +14,10 @@ fn azure_sqlserver_new(name, group, location, username, password) {
 		$group
 		"--location"
 		$location
-                "--admin-user"
-                $username
-                "--admin-password"
-                $password
+		"--admin-user"
+		$username
+		"--admin-password"
+		$password
 	)
 
 	return $instance
@@ -36,5 +36,5 @@ fn azure_sqlserver_set_tags(instance, tags) {
 # azure_sqlserver_server_create creates a new "managed SQLServer Logical Server"
 # `instance` is the sqlserver server instance.
 fn azure_sqlserver_server_create(instance) {
-        az sql server create $instance
+	az sql server create $instance
 }

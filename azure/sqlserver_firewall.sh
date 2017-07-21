@@ -55,9 +55,9 @@ fn azure_sqlserver_firewall_rule_update(name, group, servername, startip, endip)
 fn azure_sqlserver_firewall_rule_delete(name, group, servername) {
 	_, status <= (
 		az sqlserver server firewall-rule delete
-						-y
-						--name
-						$name --resource-group $group --server $servername
+							-y
+							--name
+							$name --resource-group $group --server $servername
 	)
 
 	if $status != "0" {

@@ -50,7 +50,6 @@ fn azure_sqlserverdb_set_edition(instance, edition) {
 	return $instance
 }
 
-
 # azure_sqlserverdb_set_max_size sets the max storage size for the server.
 # `instance` is the sqlserverdb server instance.
 # `size` is the sqlserverdb server storage size.
@@ -96,5 +95,5 @@ fn azure_sqlserverdb_set_tags(instance, tags) {
 # azure_sqlserverdb_server_create creates a new SQLServer Database on Azure.
 # `instance` is the sqlserverdb server instance.
 fn azure_sqlserverdb_server_create(instance) {
-        az sql db create $instance
+	az sql db create $instance
 }
