@@ -14,10 +14,10 @@ fn azure_mysql_new(name, group, location, username, password) {
 		$group
 		"--location"
 		$location
-                "--admin-user"
-                $username
-                "--admin-password"
-                $password
+		"--admin-user"
+		$username
+		"--admin-password"
+		$password
 	)
 
 	return $instance
@@ -90,5 +90,5 @@ fn azure_mysql_set_storage_size(instance, tags) {
 # azure_mysql_server_create creates a new "managed Mysql server"
 # `instance` is the mysql server instance.
 fn azure_mysql_server_create(instance) {
-        az mysql server create $instance
+	az mysql server create $instance
 }
