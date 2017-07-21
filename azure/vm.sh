@@ -579,7 +579,7 @@ fn azure_vm_backup_list(vmname, prefix) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix, _      <= echo $resgroup | grep "^"+$prefix
+		hasprefix, _ <= _azure_vm_resgroup_is_backup($resgroup, $prefix)
 		hasvmname, status <= echo $hasprefix | grep $vmname+"$"
 
 		if $status == "0" {
@@ -602,8 +602,7 @@ fn azure_vm_backup_list_all(prefix) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix, status <= echo $resgroup | grep "^"+$prefix
-
+		_, status <= _azure_vm_resgroup_is_backup($resgroup, $prefix)
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"
 		}
@@ -820,6 +819,28 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 	return ""
 }
 
+
+# azure_vm_list_names will list all virtual machines available on
+# the given resource group. There are two return values,
+# the first one is a list of virtual machines names or
+# empty if there is no VM on the resource group.
+#
+# The second one is an error string, if it is "" it means success,
+# otherwise it contains the error message.
+fn azure_vm_list_names(resgroup) {
+        res, status <= az vm list --resource-group $resgroup --query "[].name" --output tsv
+        if $status != "0" {
+                return (), "error listing VM's: " + $res
+        }
+
+        if $res == "" {
+                return (), ""
+        }
+
+        parsed <= split($res, "\n")
+        return $parsed, ""
+}
+
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
 	return "del-"+$bkp_resgroup
 }
@@ -885,4 +906,9 @@ fn _azure_vm_get(instance, cfgname) {
 	}
 
 	return ""
+}
+
+fn _azure_vm_resgroup_is_backup(resgroup, prefix) {
+        out, status <= echo $resgroup | grep "^"+$prefix+"-bkp"
+        return $out, $status
 }
