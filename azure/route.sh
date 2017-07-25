@@ -76,7 +76,7 @@ fn azure_route_table_route_create(instance) {
 # fn azure_route_table_route_update updates a route in a route table.
 # `instance` is the name of the route instance.
 fn azure_route_table_route_update(instance) {
-	az network route-table route uptade $instance
+	az network route-table route update $instance
 }
 
 # azure_route_table_add_route Create route in a Route Table
