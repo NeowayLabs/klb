@@ -15,7 +15,7 @@ fn azure_route_table_delete(name, group) {
 # azure_route_table_get_id will return the Route Table ID.
 # `name` is the route table name.
 # `group` is name of resource group.
-fn azure_route_table_get_id(name, group, routetable) {
+fn azure_route_table_get_id(name, group) {
 	# redirects stderr into stdout
 
 	out, status <= (
