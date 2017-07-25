@@ -7,13 +7,15 @@ backup = $ARGS[1]
 
 azure_login()
 
-echo "deleting backup: " + $backup
+echo "deleting backup: "+$backup
 
 err <= azure_vm_backup_delete($backup)
+
 if $err != "" {
-        echo "unable to delete backup: " + $backup
-        echo "error: " + $err
-        exit("1")
+	echo "unable to delete backup: "+$backup
+	echo "error: "+$err
+	
+	exit("1")
 }
 
 echo "done"
