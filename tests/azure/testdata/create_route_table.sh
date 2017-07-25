@@ -16,7 +16,7 @@ fn get_route_table_id() {
 
 route_table_id <= get_route_table_id()
 
-if $route_table_id != "" {
+if $route_table_id == "" {
 	azure_route_table_create($routetable, $resgroup, $location)
 }
 
