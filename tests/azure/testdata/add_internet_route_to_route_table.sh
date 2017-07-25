@@ -16,15 +16,15 @@ fn get_route_table_id() {
 	return $routetableid
 }
 
-route_id <= get_route_id()
+route_id <= get_route_table_id()
 
 if $route_id == "" {
 	route <= azure_route_table_route_new($name, $resgroup, $routetable, $address, $hoptype)
-	
+
 	azure_route_table_route_create($route)
 }
 
-route_id <= get_route_id()
+route_id <= get_route_table_id()
 
 if $route_id == "" {
 	exit("1")
