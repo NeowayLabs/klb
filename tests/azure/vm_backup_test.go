@@ -15,6 +15,7 @@ func TestVMBackup(t *testing.T) {
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
 	fixture.Run(t, "VMBackupStandardLRS", vmtesttimeout, location, testVMBackupStandardLRS)
 	fixture.Run(t, "VMBackupPremiumLRS", vmtesttimeout, location, testVMBackupPremiumLRS)
+	fixture.Run(t, "VMBackupVMPremiumBackuptStandard", vmtesttimeout, location, testVMBackupVMPremiumBackupStandard)
 }
 
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
@@ -47,12 +48,17 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 
 func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
 	backupPrefix := "klb-tests-premium"
-	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS")
+	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS", "Premium_LRS")
+}
+
+func testVMBackupVMPremiumBackupStandard(t *testing.T, f fixture.F) {
+	backupPrefix := "klb-tests-premium"
+	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS", "Standard_LRS")
 }
 
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
 	backupPrefix := "klb-tests-stdsku"
-	testVMBackup(t, f, backupPrefix, "Basic_A2", "Standard_LRS")
+	testVMBackup(t, f, backupPrefix, "Basic_A2", "Standard_LRS", "Standard_LRS")
 }
 
 func testVMBackup(
@@ -60,20 +66,21 @@ func testVMBackup(
 	f fixture.F,
 	backupPrefix string,
 	vmSize string,
-	storageSKU string,
+	vmSKU string,
+	backupSKU string,
 ) {
 
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, storageSKU)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU)
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 50, Sku: storageSKU},
-		{Name: genUniqName(), Size: 100, Sku: storageSKU},
+		{Name: genUniqName(), Size: 50, Sku: vmSKU},
+		{Name: genUniqName(), Size: 100, Sku: vmSKU},
 	}
 	attachDisks(t, f, vm, disks)
 
-	vmBackup := backupVM(t, f, vm, backupPrefix, storageSKU)
+	vmBackup := backupVM(t, f, vm, backupPrefix, backupSKU)
 	assertResourceGroupExists(t, f, vmBackup)
 	defer deleteBackup(t, f, vmBackup)
 
@@ -88,13 +95,13 @@ func testVMBackup(
 		resources.vnet,
 		resources.subnet,
 		vmSize,
-		storageSKU,
+		vmSKU,
 		vmBackup,
 	)
 
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 
-	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix, storageSKU)
+	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix, backupSKU)
 	assertResourceGroupExists(t, f, recoveredVMBackup)
 	defer deleteBackup(t, f, recoveredVMBackup)
 
