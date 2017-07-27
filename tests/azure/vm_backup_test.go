@@ -25,7 +25,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
 
-	vmBackup := backupVM(t, f, vm, backupPrefix)
+	vmBackup := backupVM(t, f, vm, backupPrefix, sku)
 	assertResourceGroupExists(t, f, vmBackup)
 	defer deleteBackup(t, f, vmBackup)
 
@@ -73,7 +73,7 @@ func testVMBackup(
 	}
 	attachDisks(t, f, vm, disks)
 
-	vmBackup := backupVM(t, f, vm, backupPrefix)
+	vmBackup := backupVM(t, f, vm, backupPrefix, storageSKU)
 	assertResourceGroupExists(t, f, vmBackup)
 	defer deleteBackup(t, f, vmBackup)
 
@@ -94,7 +94,7 @@ func testVMBackup(
 
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 
-	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix)
+	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix, storageSKU)
 	assertResourceGroupExists(t, f, recoveredVMBackup)
 	defer deleteBackup(t, f, recoveredVMBackup)
 
@@ -173,15 +173,22 @@ func assertRecoveredVMDisks(t *testing.T, f fixture.F, vmName string, recoveredV
 	}
 }
 
-func backupVM(t *testing.T, f fixture.F, vmname string, prefix string) string {
+func backupVM(
+	t *testing.T,
+	f fixture.F,
+	vmname string,
+	namespace string,
+	sku string,
+) string {
 
 	res := execWithIPC(t, f, func(output string) {
 		f.Shell.Run(
 			"./testdata/backup_vm.sh",
 			vmname,
 			f.ResGroupName,
-			prefix,
+			namespace,
 			f.Location,
+			sku,
 			output,
 		)
 	})

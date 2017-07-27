@@ -115,7 +115,7 @@ azure_vm_stop($vm_name, $group)
 
 log("starting backup")
 
-backup, err <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
+backup, err <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location, "Standard_LRS")
 if $err != "" {
 	echo $err
 	exit("1")
@@ -125,7 +125,7 @@ log("created backup: "+$backup)
 log("creating second backup")
 
 azure_vm_stop($vm_name, $group)
-otherbackup, err  <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location)
+otherbackup, err  <= azure_vm_backup_create($vm_name, $group, $backup_prefix, $backup_location, "Premium_LRS")
 if $err != "" {
 	echo $err
 	exit("1")
