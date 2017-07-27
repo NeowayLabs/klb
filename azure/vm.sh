@@ -531,7 +531,9 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	echo "vm.backup.create: creating OS disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
 
-	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid)
+	# TODO: Add parameter on backup
+	sku = "Standard_LRS"
+	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid, $sku)
 
 	echo "vm.backup.create: created snapshot id: "+$snapshotid
 
@@ -545,7 +547,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 		echo "vm.backup.create: creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
 
-		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id)
+		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id, $sku)
 
 		echo "vm.backup.create: created snapshot id: "+$snapshotid
 	}

@@ -127,6 +127,7 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks 
 			"./testdata/create_vm_snapshots.sh",
 			f.ResGroupName,
 			vm,
+			sku,
 			outfile,
 		)
 	})
