@@ -13,11 +13,11 @@ if len($ARGS) == "5" {
 }
 
 azure_login()
-
 azure_public_ip_create($name, $resgroup, $location, $allocation)
 
 public_ip_address, err <= azure_public_ip_get_address($name, $resgroup)
+
 if $err != "" {
-   print("error: %s", $err)
-   exit("1")
+	print("error: %s", $err)
+	exit("1")
 }

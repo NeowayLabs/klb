@@ -12,11 +12,17 @@ fn azure_subnet_create(name, group, vnet, address, securitygroup) {
 }
 
 fn azure_subnet_get_id(name, group, vnet) {
-        resp <= (
-                azure network vnet subnet show $group $vnet $name --json
-        )
-        id <= echo $resp | jq -r ".id"
-        return $id
+	out, status <= (
+		azure network vnet subnet show $group $vnet $name --json
+	)
+
+	if $status != "0" {
+		return "", $out
+	}
+
+	subnetid <= echo $out | jq -r ".id"
+
+	return $subnetid, ""
 }
 
 fn azure_subnet_delete(name, group, vnet) {

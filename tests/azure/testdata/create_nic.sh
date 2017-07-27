@@ -10,7 +10,7 @@ subnet   = $ARGS[5]
 addrnic  = ""
 
 if len($ARGS) == "7" {
-	addrnic  = $ARGS[6]
+	addrnic = $ARGS[6]
 }
 
 azure_login()

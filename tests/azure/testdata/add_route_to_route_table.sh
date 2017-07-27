@@ -10,4 +10,21 @@ hoptype    = $ARGS[5]
 hopaddress = $ARGS[6]
 
 azure_login()
-azure_route_table_add_route($route, $resgroup, $routetable, $address, $hoptype, $hopaddress)
+
+fn get_route_id() {
+	routeid, status <= azure_route_table_route_get_id($route, $resgroup, $routetable)
+
+	return $routeid
+}
+
+route_id <= get_route_id()
+
+if $route_id == "" {
+	azure_route_table_add_route($route, $resgroup, $routetable, $address, $hoptype, $hopaddress)
+}
+
+route_id <= get_route_id()
+
+if $route_id == "" {
+	exit("1")
+}

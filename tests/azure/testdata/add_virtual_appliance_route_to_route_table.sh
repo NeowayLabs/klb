@@ -11,7 +11,23 @@ hopaddress = $ARGS[6]
 
 azure_login()
 
-route <= azure_route_table_route_new($name, $resgroup, $routetable, $address, $hoptype)
-route <= azure_route_table_route_set_hop_address($route, $hopaddress)
+fn get_route_id() {
+	routeid, status <= azure_route_table_route_get_id($name, $resgroup, $routetable)
 
-azure_route_table_route_create($route)
+	return $routeid
+}
+
+route_id <= get_route_id()
+
+if $route_id == "" {
+	route <= azure_route_table_route_new($name, $resgroup, $routetable, $address, $hoptype)
+	route <= azure_route_table_route_set_hop_address($route, $hopaddress)
+
+	azure_route_table_route_create($route)
+}
+
+route_id <= get_route_id()
+
+if $route_id == "" {
+	exit("1")
+}
