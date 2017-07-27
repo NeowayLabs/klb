@@ -13,7 +13,8 @@ fn addsuffix(name) {
 
 resgroup = $ARGS[1]
 vmname   = $ARGS[2]
-results  = $ARGS[3]
+sku      = $ARGS[3]
+results  = $ARGS[4]
 
 azure_login()
 
@@ -24,7 +25,7 @@ for id in $ids {
 
 	echo "creating snapshot: "+$snapshot_name+" from id: "+$id
 
-	snapshotid <= azure_snapshot_create($snapshot_name, $resgroup, $id)
+	snapshotid <= azure_snapshot_create($snapshot_name, $resgroup, $id, $sku)
 
 	echo "created snapshot id: "+$snapshotid
 
