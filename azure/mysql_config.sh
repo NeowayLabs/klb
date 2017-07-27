@@ -1,7 +1,6 @@
 # Mysql Servers Configuration related functions
 
-# azure_mysql_config_set sets a new configuration
-# for a Mysql Server.
+# azure_mysql_config_set sets a new configuration for a Mysql Server.
 # On failure it will return en error string with details
 # `name` is the name of the configuration
 # `group` is the name of resource group.
