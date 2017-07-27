@@ -114,9 +114,16 @@ func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
 	}
 }
 
-func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks []VMDisk) {
+func testVMSnapshot(
+	t *testing.T,
+	f fixture.F,
+	vmSize string,
+	vmSKU string,
+	snapshotSKU string,
+	disks []VMDisk,
+) {
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU)
 
 	vms := azure.NewVM(f)
 
@@ -127,7 +134,7 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks 
 			"./testdata/create_vm_snapshots.sh",
 			f.ResGroupName,
 			vm,
-			sku,
+			snapshotSKU,
 			outfile,
 		)
 	})
@@ -142,10 +149,10 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks 
 
 	nic := genNicName()
 	createVMNIC(f, nic, resources.vnet, resources.subnet)
-	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, sku)
+	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, vmSKU)
 
 	for _, id := range ids {
-		attachSnapshotOnVM(t, f, vmbackup, id, sku)
+		attachSnapshotOnVM(t, f, vmbackup, id, vmSKU)
 	}
 
 	originaldisks := vms.DataDisks(t, vm)
@@ -178,7 +185,7 @@ func testVMSnapshot(t *testing.T, f fixture.F, vmSize string, sku string, disks 
 
 func testVMSnapshotStandard(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
-	testVMSnapshot(t, f, "Basic_A2", sku,
+	testVMSnapshot(t, f, "Basic_A2", sku, sku,
 		[]VMDisk{
 			{Name: genUniqName(), Size: 20, Sku: sku},
 			{Name: genUniqName(), Size: 30, Sku: sku},
@@ -189,11 +196,20 @@ func testVMSnapshotStandard(t *testing.T, f fixture.F) {
 
 func testVMSnapshotPremium(t *testing.T, f fixture.F) {
 	sku := "Premium_LRS"
-	testVMSnapshot(t, f, "Standard_DS4_v2", sku,
+	testVMSnapshot(t, f, "Standard_DS4_v2", sku, sku,
 		[]VMDisk{
 			{Name: genUniqName(), Size: 50, Sku: sku},
 			{Name: genUniqName(), Size: 150, Sku: sku},
 		},
+	)
+}
+
+func testVMPremiumDiskToStdSnapshot(t *testing.T, f fixture.F) {
+	vmSKU := "Premium_LRS"
+	snapshotSKU := "Standard_LRS"
+
+	testVMSnapshot(t, f, "Standard_DS4_v2", vmSKU, snapshotSKU,
+		[]VMDisk{{Name: genUniqName(), Size: 50, Sku: vmSKU}},
 	)
 }
 
@@ -342,5 +358,6 @@ func TestVM(t *testing.T) {
 	fixture.Run(t, "VMCreationPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
 	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
 	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
+	fixture.Run(t, "VMPremiumDiskToStdSnapshot", vmtesttimeout, location, testVMPremiumDiskToStdSnapshot)
 	fixture.Run(t, "VMDuplicatedAvSet", vmtesttimeout, location, testDuplicatedAvailabilitySet)
 }
