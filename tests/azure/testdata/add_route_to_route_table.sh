@@ -12,7 +12,7 @@ hopaddress = $ARGS[6]
 azure_login()
 
 fn get_route_id() {
-	routeid <= azure_route_table_route_get_id($name, $resgroup, $routetable)
+	routeid, status <= azure_route_table_route_get_id($route, $resgroup, $routetable)
 
 	return $routeid
 }

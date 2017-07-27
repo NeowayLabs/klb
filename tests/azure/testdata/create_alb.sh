@@ -27,7 +27,7 @@ azure_nsg_create($securitygroup, $resgroup, $location)
 azure_subnet_create($subnet, $resgroup, $vnet, $subnetaddr, $securitygroup)
 
 # Our main production use case is using subnet id
-subnetid <= azure_subnet_get_id($subnet, $resgroup, $vnet)
+subnetid, status <= azure_subnet_get_id($subnet, $resgroup, $vnet)
 
 azure_lb_create($lbname, $resgroup, $location)
 

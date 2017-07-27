@@ -9,7 +9,7 @@ location   = $ARGS[3]
 azure_login()
 
 fn get_route_table_id() {
-	routetableid <= azure_route_table_get_id($routetable, $resgroup)
+	routetableid, status <= azure_route_table_get_id($routetable, $resgroup)
 
 	return $routetableid
 }
