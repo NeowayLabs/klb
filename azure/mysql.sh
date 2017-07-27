@@ -80,7 +80,7 @@ fn azure_mysql_set_version(instance, version) {
 # azure_mysql_set_tags sets the tags for the server.
 # `instance` is the mysql server instance.
 # `tags` is the tags of mysql server.
-fn azure_mysql_set_storage_size(instance, tags) {
+fn azure_mysql_set_tags(instance, tags) {
 	instance <= append($instance, "--tags")
 	instance <= append($instance, $tags)
 
