@@ -46,7 +46,7 @@ all_timeout=90m
 logger=file
 parallel=30 #Explore I/O parallelization
 cpu=4
-gotest=go test ./tests/azure -parallel $(parallel) -cpu $(cpu)
+gotest=go test -v ./tests/azure -parallel $(parallel) -cpu $(cpu)
 gotestargs=-args -logger $(logger)
 
 test: image
