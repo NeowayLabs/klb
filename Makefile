@@ -1,8 +1,6 @@
 .PHONY: test vendor
 
-ifndef TESTRUN
-TESTRUN=".*"
-endif
+version=latest
 
 all:
 	@echo "did you mean 'make test' ?"
@@ -16,9 +14,12 @@ guard-%:
                 exit 1; \
         fi
 
+publish:image
+	docker push neowaylabs/klb:$(version)
+
 image:
 	export TERMINFO=""
-	docker build . -t neowaylabs/klb
+	docker build . -t neowaylabs/klb:$(version)
 
 shell: image
 	./hack/run-tty.sh /usr/bin/nash

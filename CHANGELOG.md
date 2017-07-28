@@ -1,3 +1,11 @@
+# Release 0.8.1
+
+Fix snapshot creation to allow the storage sku
+to be passed as a parameter.
+
+Fix backup creation API to allow the storage sku of the
+snapshots to be configured.
+
 # Release 0.6.0
 
 This release adds support to backup with snapshots.
