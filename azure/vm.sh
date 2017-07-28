@@ -434,29 +434,33 @@ fn azure_vm_start(vmname, resgroup) {
 # Conceptually we are encoding information required for proper recover (metadata)
 # on the name of the resources, so we don't need a third party storage.
 #
-# The "prefix" parameter gives you a namespace that you can use to organize
+# The "namespace" parameter gives you a namespace that you can use to organize
 # backups of different applications on the same subscription. This namespace
 # is built by appending the provided string as a prefix on the name of
 # the resource group that will be created to hold the backup.
 #
+# The "storage_sku" parameter defines the kind of disk where the snapshots
+# will be stored.
+#
 # When you call this function, the first step is to create a resource
 # group with the name following this pattern:
 #
-# <prefix>-klb-backup-<timestamp>-<vmname>
+# <namespace>-klb-backup-<timestamp>-<vmname>
 #
-# Where the prefix is the one you passed as a parameter.
+# Where the namespace is the one you passed as a parameter.
 # If there is already a resource group with this name, the
 # creation will fail. It is paramount to the proper work of
 # the backup functions that the ONLY thing inside the resource
-# group are the VM disks snapshots.
+# group are the VM disks snapshots (never manually manipulate
+# backup resource groups).
 #
 # The <timestamp> will follow this pattern:
 #
 # <year>.<month>.<day>.<hour>
 #
-# Calling: azure_vm_backup_create("test", "testgroup", "staging")
+# Calling: azure_vm_backup_create("test", "testgroup", "staging", "eastus2", "Standard_LRS")
 #
-# Could (timestamp may vary) create the resource group:
+# Would (timestamp may vary) create the resource group:
 #
 # "staging-bkp-2017.05.28.1930-test"
 #
@@ -483,18 +487,18 @@ fn azure_vm_start(vmname, resgroup) {
 # Be aware that resource group names have a lame limit of 64
 # characters. Since we need to create locks the final limit will
 # be 60 characters total (including the timestamp).
-# So avoid long names for VM's and prefixes.
+# So avoid long names for VM's and namespaces.
 #
 # On success it will return the name of the created resource group and
 # an empty string as error. On error it will return an empty string as resource
 # group and a non-empty error string with details on the failure.
-fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
+fn azure_vm_backup_create(vmname, resgroup, namespace, location, storage_sku) {
 	timestamp <= date "+%Y.%m.%d.%H%M"
 
 	# WHY: We need some chars for the lock names,
 	# based on the resgroup name.
 	max_resgroup_size = "60"
-	bkp_resgroup      = $prefix+"-bkp-"+$timestamp+"-"+$vmname
+	bkp_resgroup      = $namespace+"-bkp-"+$timestamp+"-"+$vmname
 
 	bkp_resgroup_len  <= len($bkp_resgroup)
 	_, err            <= test $max_resgroup_size -gt $bkp_resgroup_len
@@ -531,9 +535,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 	echo "vm.backup.create: creating OS disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
 
-	# TODO: Add parameter on backup
-	sku = "Standard_LRS"
-	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid, $sku)
+	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid, $storage_sku)
 
 	echo "vm.backup.create: created snapshot id: "+$snapshotid
 
@@ -547,7 +549,7 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 
 		echo "vm.backup.create: creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
 
-		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id, $sku)
+		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id, $storage_sku)
 
 		echo "vm.backup.create: created snapshot id: "+$snapshotid
 	}
@@ -568,21 +570,21 @@ fn azure_vm_backup_create(vmname, resgroup, prefix, location) {
 }
 
 # azure_vm_backup_list returns the list of all backups
-# for the given vm name + prefix. They are the same parameters
+# for the given vm name + namespace. They are the same parameters
 # you used to create the backup.
 #
 # The backup list is a list of resource groups names, where each
 # resource group is a backup.
 #
 # The list will be ordered, from the more recent to the oldest backup.
-fn azure_vm_backup_list(vmname, prefix) {
+fn azure_vm_backup_list(vmname, namespace) {
 	resgroups <= azure_group_get_names()
 
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasprefix, _ <= _azure_vm_resgroup_is_backup($resgroup, $prefix)
-		hasvmname, status <= echo $hasprefix | grep $vmname+"$"
+		hasnamespace, _ <= _azure_vm_resgroup_is_backup($resgroup, $namespace)
+		hasvmname, status <= echo $hasnamespace | grep $vmname+"$"
 
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"
@@ -593,18 +595,18 @@ fn azure_vm_backup_list(vmname, prefix) {
 }
 
 # azure_vm_backup_list_all returns the list of all backups
-# for the given prefix. If there is backups for multiple VM's
-# for the given prefix it will return all of them.
+# for the given namespace. If there is backups for multiple VM's
+# for the given namespace it will return all of them.
 #
 # The return value is the same as azure_vm_backup_list, just aggregating
 # results for all VMs instead of a single one.
-fn azure_vm_backup_list_all(prefix) {
+fn azure_vm_backup_list_all(namespace) {
 	resgroups <= azure_group_get_names()
 
 	filtered = ""
 
 	for resgroup in $resgroups {
-		_, status <= _azure_vm_resgroup_is_backup($resgroup, $prefix)
+		_, status <= _azure_vm_resgroup_is_backup($resgroup, $namespace)
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"
 		}
@@ -910,7 +912,7 @@ fn _azure_vm_get(instance, cfgname) {
 	return ""
 }
 
-fn _azure_vm_resgroup_is_backup(resgroup, prefix) {
-        out, status <= echo $resgroup | grep "^"+$prefix+"-bkp"
+fn _azure_vm_resgroup_is_backup(resgroup, namespace) {
+        out, status <= echo $resgroup | grep "^"+$namespace+"-bkp"
         return $out, $status
 }
