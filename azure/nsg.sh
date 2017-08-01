@@ -13,10 +13,14 @@ fn azure_nsg_create(name, group, location) {
 # azure_nsg_delete deletes a network security group.
 # `name` is the name of the network security group.
 # `group` is name of resource group.
+#
+# Returns an empty string on success or an error string on failure.
 fn azure_nsg_delete(name, group) {
-	(
-		az network nsg delete --name $name --resource-group $group
-	)
+        out, status <= az network nsg delete --name $name --resource-group $group
+        if $status != "0" {
+                return format("error[%s] deleting nsg[%s] resgroup[%s]", $out, $name, $group)
+        }
+        return ""
 }
 
 # azure_nsg_rule_new creates a new instance of "network security group rule".
