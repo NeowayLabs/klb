@@ -25,11 +25,16 @@ fn azure_subnet_get_id(name, group, vnet) {
 	return $subnetid, ""
 }
 
+# azure_subnet_delete deletes a subnet.
+# `name` is the name of the network security group.
+# `group` is name of resource group.
+# `vnet` is name of vnet.
+#
+# Returns an empty string on success or an error string on failure.
 fn azure_subnet_delete(name, group, vnet) {
-	(
-		azure network vnet subnet delete
-						--resource-group $group
-						--vnet-name $vnet
-						--name $name
-	)
+        out, status <= azure network vnet subnet delete --resource-group $group --vnet-name $vnet --name $name
+        if $status != "0" {
+                return format("error[%s] deleting nsg[%s] resgroup[%s] vnet[%s]", $out, $name, $group, $vnet)
+        }
+        return ""
 }
