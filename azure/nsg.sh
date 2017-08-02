@@ -33,6 +33,20 @@ fn azure_nsg_delete(name, group) {
         return ""
 }
 
+# azure_nsg_exists checks if a nsg already exists.
+# `name` is the name of the network security group.
+# `group` is name of resource group.
+#
+# Returns "0" on success and "1" otherwise (god I miss booleans =().
+fn azure_nsg_exists(name, group) {
+        # TODO: Untested
+        out, _ <= az network nsg show --name $name --resource-group $group
+        if $out == "" {
+                return "1"
+        }
+        return "0"
+}
+
 # azure_nsg_rule_new creates a new instance of "network security group rule".
 # `name` is the name of the rule.
 # `group` is name of resource group.

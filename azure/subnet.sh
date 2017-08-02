@@ -31,6 +31,20 @@ fn azure_subnet_create(name, group, vnet, address, securitygroup) {
         return ""
 }
 
+# azure_subnet_exists checks if a subnet already exists.
+# `name` is the name of the subnet.
+# `group` is name of resource group.
+#
+# Returns "0" on success and "1" otherwise (god I miss booleans =().
+fn azure_subnet_exists(name, group, vnet) {
+        # TODO: Untested
+        out, _ <= az network vnet subnet show --name $name --resource-group $group --vnet-name $vnet
+        if $out == "" {
+                return "1"
+        }
+        return "0"
+}
+
 fn azure_subnet_get_id(name, group, vnet) {
 	out, status <= (
 		azure network vnet subnet show $group $vnet $name --json
