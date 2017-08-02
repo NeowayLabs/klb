@@ -66,7 +66,7 @@ fn azure_subnet_get_id(name, group, vnet) {
 #
 # Returns an empty string on success or an error string on failure.
 fn azure_subnet_delete(name, group, vnet) {
-        out, status <= azure network vnet subnet delete --resource-group $group --vnet-name $vnet --name $name
+        out, status <= azure network vnet subnet delete -q --resource-group $group --vnet-name $vnet --name $name
         if $status != "0" {
                 return format(
 			"error[%s] deleting subnet[%s] resgroup[%s] vnet[%s]",
@@ -76,5 +76,6 @@ fn azure_subnet_delete(name, group, vnet) {
 			$vnet
 		)
         }
+        print("azure_subnet_delete: success: %s\n", $out)
         return ""
 }
