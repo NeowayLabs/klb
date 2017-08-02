@@ -17,10 +17,11 @@ fn azure_nsg_create(name, group, location) {
 # Returns an empty string on success or an error string on failure.
 fn azure_nsg_delete(name, group) {
         # WHY: az silently succeeds if the nsg does not exists =/
-        out, status <= azure network nsg delete --name $name --resource-group $group
+        out, status <= azure network nsg delete -q --name $name --resource-group $group
         if $status != "0" {
                 return format("error[%s] deleting nsg[%s] resgroup[%s]", $out, $name, $group)
         }
+        print("azure_nsg_delete: success: %s\n", $out)
         return ""
 }
 
