@@ -4,10 +4,20 @@
 # `name` is the name of the network security group.
 # `group` is name of resource group.
 # `location` is the Azure Region.
+#
+# Returns an empty string on success or an error string on failure.
 fn azure_nsg_create(name, group, location) {
-	(
-		az network nsg create --name $name --resource-group $group --location $location
-	)
+	out, status <= az network nsg create --name $name --resource-group $group --location $location
+        if $status != "0" {
+                return format(
+			"error[%s] creating nsg[%s] resgroup[%s] location[%s]",
+			$out,
+			$name,
+			$group,
+			$location
+		)
+        }
+        return ""
 }
 
 # azure_nsg_delete deletes a network security group.
