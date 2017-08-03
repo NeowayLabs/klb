@@ -12,7 +12,7 @@ fn azure_route_table_create(name, group, location) {
 #
 # Returns an empty string on success, an error message otherwise
 fn azure_route_table_delete(name, group) {
-	out, status <= azure network route-table delete --name $name --resource-group $group
+	out, status <= azure network route-table delete -q --name $name --resource-group $group
 	if $status != "0" {
 		return format("error[%s] deleting route[%s] from resgroup[%s]", $out, $name, $group)
 	}
