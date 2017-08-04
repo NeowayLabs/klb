@@ -6,10 +6,17 @@ fn azure_route_table_create(name, group, location) {
 	)
 }
 
+# azure_route_table_delete will delete the given route table
+# `name` is the route table name
+# `group` is name of resource group
+#
+# Returns an empty string on success, an error message otherwise
 fn azure_route_table_delete(name, group) {
-	(
-		azure network route-table delete --name $name --resource-group $group
-	)
+	out, status <= azure network route-table delete -q --name $name --resource-group $group
+	if $status != "0" {
+		return format("error[%s] deleting route[%s] from resgroup[%s]", $out, $name, $group)
+	}
+	return ""
 }
 
 # azure_route_table_get_id will return the Route Table ID.
