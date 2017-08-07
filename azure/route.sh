@@ -14,7 +14,7 @@ fn azure_route_table_create(name, group, location) {
 fn azure_route_table_delete(name, group) {
 	out, status <= azure network route-table delete -q --name $name --resource-group $group
 	if $status != "0" {
-		return format("error[%s] deleting route[%s] from resgroup[%s]", $out, $name, $group)
+		return format("error[%s] deleting route table[%s] from resgroup[%s]", $out, $name, $group)
 	}
 	return ""
 }
@@ -101,12 +101,24 @@ fn azure_route_table_add_route(name, group, routetable, address, hoptype, hopadd
 }
 
 fn azure_route_table_delete_route(name, group, routetable) {
-	(
+	out, status <= (
 		azure network route-table route delete
+						-q
 						--name $name
 						--resource-group $group
 						--route-table-name $routetable
 	)
+	if $status != "0" {
+		return format(
+			"error[%s] deleting route[%s] from resgroup[%s] route table[%s]",
+			$out,
+			$name,
+			$group,
+			$routetable
+		)
+	}
+
+	return ""
 }
 
 # azure_route_table_route_get_id will return the route ID.
