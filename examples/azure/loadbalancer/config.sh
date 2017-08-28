@@ -16,3 +16,9 @@ vm_name        = "loadBalancedVM"
 vm_size        = "Standard_A0"
 vm_username    = "core"
 vm_image_urn   = "CoreOS:CoreOS:Stable:1353.7.0"
+
+## Load Balancer Settings
+lb_name = "AwesomeLoadBalancer"
+lb_address_pool_name = "AwesomeAddressPool"
+frontendip_name = "AwesomeFrontendIp"
+frontendip_private_ip = "10.51.1.100"

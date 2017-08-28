@@ -76,6 +76,24 @@ echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name)
 
+subnetid, err <= azure_subnet_get_id($subnet_name, $group, $vnet)
+if $err != "" {
+        echo "error: " + $err
+        exit("1")
+}
+
+azure_lb_create($lb_name, $group, $location)
+
+frontip <= azure_lb_frontend_ip_new($frontendip_name, $group)
+frontip <= azure_lb_frontend_ip_set_lbname($frontip, $lb_name)
+frontip <= azure_lb_frontend_ip_set_subnet_id($frontip, $subnetid)
+frontip <= azure_lb_frontend_ip_set_private_ip($frontip, $frontendip_private_ip)
+
+azure_lb_frontend_ip_create($frontip)
+azure_lb_addresspool_create($lb_address_pool_name, $group, $lb_name)
+
+# TODO: Get address pool ID, add it on the nic
+
 echo "finished with success"
 echo "user: " + $vm_username
 echo "private key located at: " + $accesskey

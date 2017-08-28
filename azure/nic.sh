@@ -102,10 +102,40 @@ fn azure_nic_set_lb_inbound_nat_rule_ids(instance, natruleids) {
 	return $instance
 }
 
+fn azure_nic_add_lb_address_pool(name, group, addrpool_id) {
+        return _azure_nic_operate_lb_address_pool($name, $group, $addrpool_id, "add")
+}
+
+fn azure_nic_remove_lb_address_pool(name, group, addrpool_id) {
+        return _azure_nic_operate_lb_address_pool($name, $group, $addrpool_id, "remove")
+}
+
 fn azure_nic_create(instance) {
 	azure network nic create $instance
 }
 
 fn azure_nic_delete(name, group) {
 	azure network nic delete --name $name --resource-group $group
+}
+
+fn _azure_nic_operate_lb_address_pool(name, group, addrpool_id, op) {
+        out, status <= (
+                az network nic ip-config address-pool $op
+                --nic-name $name
+                --resource-group $group
+                --address-pool $addrpool_id
+        )
+
+        if $status != "0" {
+                return format(
+                    "error: [%s] on [%s] addrpool[%s] on nic[%s] group[%s]",
+                    $out,
+                    $op,
+                    $addrpool_id,
+                    $name,
+                    $group
+                )
+        }
+
+        return ""
 }
