@@ -107,7 +107,5 @@ fn azure_nic_create(instance) {
 }
 
 fn azure_nic_delete(name, group) {
-	(
-		azure network nic delete --name $name --resource-group $group
-	)
+	azure network nic delete --name $name --resource-group $group
 }
