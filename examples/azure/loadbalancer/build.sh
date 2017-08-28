@@ -9,6 +9,7 @@ import klb/azure/availset
 import klb/azure/vnet
 import klb/azure/nsg
 import klb/azure/route
+import klb/azure/lb
 import config.sh
 
 
