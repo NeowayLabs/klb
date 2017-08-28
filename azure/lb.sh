@@ -82,7 +82,7 @@ fn azure_lb_frontend_ip_set_subnet_vnet_name(instance, subnetvnetname) {
 }
 
 fn azure_lb_frontend_ip_create(instance) {
-	(azure network lb frontend-ip create $instance)
+	azure network lb frontend-ip create $instance
 }
 
 fn azure_lb_frontend_ip_delete(name, group, lbname) {
@@ -97,7 +97,7 @@ fn azure_lb_frontend_ip_delete(name, group, lbname) {
 # ADDRESS POLL functions
 
 fn azure_lb_addresspool_create(name, group, lbname) {
-	out           <= (
+	out <= (
 		azure network lb address-pool create
 						--resource-group $group
 						--lb-name $lbname
@@ -284,7 +284,7 @@ fn azure_lb_probe_set_path(instance, path) {
 }
 
 fn azure_lb_probe_create(instance) {
-	(azure network lb probe create $instance)
+	azure network lb probe create $instance
 }
 
 fn azure_lb_probe_delete(name, group, lbname) {

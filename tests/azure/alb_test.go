@@ -34,7 +34,7 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 	const tcpprobePort int32 = 8080
 	const httpprobePort int32 = 8081
 
-	probes := []azure.LoadBalancerProbe{
+	createLoadBalancerProbes(t, f, lbname, []azure.LoadBalancerProbe{
 		{
 			Name:     "tcpprobe",
 			Protocol: "Tcp",
@@ -50,8 +50,34 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 			Count:    20,
 			Path:     "/healthz",
 		},
-	}
+	})
 
+	createLoadBalancerRules(t, f, lbname, frontendIPName, poolname, []azure.LoadBalancerRule{
+		{
+			Name:         "tcprule",
+			ProbeName:    "tcpprobe",
+			Protocol:     "Tcp",
+			FrontendPort: tcpprobePort,
+			BackendPort:  tcpprobePort,
+		},
+		{
+			Name:         "httprule",
+			ProbeName:    "httpprobe",
+			Protocol:     "Tcp",
+			FrontendPort: httpprobePort,
+			BackendPort:  httpprobePort,
+		},
+	})
+
+}
+
+func createLoadBalancerProbes(
+	t *testing.T,
+	f fixture.F,
+	lbname string,
+	probes []azure.LoadBalancerProbe,
+) {
+	loadbalancer := azure.NewLoadBalancers(f)
 	for _, p := range probes {
 		args := []string{
 			f.ResGroupName,
@@ -68,24 +94,17 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 		f.Shell.Run("./testdata/add_alb_probe.sh", args...)
 		loadbalancer.AssertProbeExists(t, lbname, p)
 	}
+}
 
-	rules := []azure.LoadBalancerRule{
-		{
-			Name:         "tcprule",
-			ProbeName:    "tcpprobe",
-			Protocol:     "Tcp",
-			FrontendPort: tcpprobePort,
-			BackendPort:  tcpprobePort,
-		},
-		{
-			Name:         "httprule",
-			ProbeName:    "httpprobe",
-			Protocol:     "Tcp",
-			FrontendPort: httpprobePort,
-			BackendPort:  httpprobePort,
-		},
-	}
-
+func createLoadBalancerRules(
+	t *testing.T,
+	f fixture.F,
+	lbname string,
+	frontendIPName string,
+	poolname string,
+	rules []azure.LoadBalancerRule,
+) {
+	loadbalancer := azure.NewLoadBalancers(f)
 	for _, r := range rules {
 		args := []string{
 			f.ResGroupName,
