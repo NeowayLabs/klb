@@ -61,9 +61,10 @@ fn create_vm(name, subnet) {
 
 azure_login()
 
-echo "creating new resource group"
+echo "creating new resource groups"
 
 azure_group_create($group, $location)
+azure_group_create($lb_group, $location)
 
 echo "creating VNET"
 
