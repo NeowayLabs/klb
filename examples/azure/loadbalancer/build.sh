@@ -62,38 +62,38 @@ fn create_vm(name, subnet) {
 
 azure_login()
 
-#echo "creating new resource groups"
+echo "creating new resource groups"
 
-#azure_group_create($group, $location)
-#azure_group_create($lb_group, $location)
+azure_group_create($group, $location)
+azure_group_create($lb_group, $location)
 
-#echo "creating VNET"
+echo "creating VNET"
 
-#azure_vnet_create($vnet, $group, $location, $vnet_cidr, $vnet_dns_servers)
+azure_vnet_create($vnet, $group, $location, $vnet_cidr, $vnet_dns_servers)
 
-#echo "creating subnet"
+echo "creating subnet"
 
-#create_subnet($subnet_name, $subnet_cidr)
+create_subnet($subnet_name, $subnet_cidr)
 
-#echo "creating virtual machine"
+echo "creating virtual machine"
 
-#create_vm($vm_name, $subnet_name)
+create_vm($vm_name, $subnet_name)
 
-#subnetid, err <= azure_subnet_get_id($subnet_name, $group, $vnet)
-#if $err != "" {
-        #echo "error: " + $err
-        #exit("1")
-#}
+subnetid, err <= azure_subnet_get_id($subnet_name, $group, $vnet)
+if $err != "" {
+        echo "error: " + $err
+        exit("1")
+}
 
-#azure_lb_create($lb_name, $lb_group, $location)
+azure_lb_create($lb_name, $lb_group, $location)
 
-#frontip <= azure_lb_frontend_ip_new($frontendip_name, $lb_group)
-#frontip <= azure_lb_frontend_ip_set_lbname($frontip, $lb_name)
-#frontip <= azure_lb_frontend_ip_set_subnet_id($frontip, $subnetid)
-#frontip <= azure_lb_frontend_ip_set_private_ip($frontip, $frontendip_private_ip)
+frontip <= azure_lb_frontend_ip_new($frontendip_name, $lb_group)
+frontip <= azure_lb_frontend_ip_set_lbname($frontip, $lb_name)
+frontip <= azure_lb_frontend_ip_set_subnet_id($frontip, $subnetid)
+frontip <= azure_lb_frontend_ip_set_private_ip($frontip, $frontendip_private_ip)
 
-#azure_lb_frontend_ip_create($frontip)
-#azure_lb_addresspool_create($lb_address_pool_name, $lb_group, $lb_name)
+azure_lb_frontend_ip_create($frontip)
+azure_lb_addresspool_create($lb_address_pool_name, $lb_group, $lb_name)
 
 echo "adding NIC to load balancer address pool"
 nic_name = $vm_name

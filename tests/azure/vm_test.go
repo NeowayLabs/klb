@@ -2,9 +2,7 @@ package azure_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -81,23 +79,6 @@ func testStandardDiskVM(t *testing.T, f fixture.F) {
 
 func testPremiumDiskVM(t *testing.T, f fixture.F) {
 	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS")
-}
-
-func execWithIPC(t *testing.T, f fixture.F, exec func(string)) string {
-	outfile, err := ioutil.TempFile("", "klb_vm_script_ipc")
-	if err != nil {
-		t.Fatalf("error creating output file: %s", err)
-	}
-	defer os.Remove(outfile.Name()) // clean up
-
-	exec(outfile.Name())
-
-	f.Logger.Println("executed script, reading output")
-	out, err := ioutil.ReadAll(outfile)
-	if err != nil {
-		t.Fatalf("error reading output file: %s", err)
-	}
-	return string(out)
 }
 
 type VMDisk struct {

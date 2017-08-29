@@ -12,7 +12,7 @@ func TestNIC(t *testing.T) {
 	fixture.Run(t, "NICCreation", timeout, location, testNicCreate)
 	fixture.Run(
 		t,
-		"LoadBalancerAddressPoolIntegration",
+		"NICLoadBalancerAddressPoolIntegration",
 		timeout,
 		location,
 		testNicLoadBalancerAddressPoolIntegration,
@@ -43,6 +43,25 @@ func testNicLoadBalancerAddressPoolIntegration(t *testing.T, f fixture.F) {
 	const poolname = "niclbpool"
 
 	createLoadBalancer(t, f, vnet, subnet, lbname, frontendIPName, lbPrivateIP, poolname)
+	loadbalancer := azure.NewLoadBalancers(f)
+	loadbalancer.AssertExists(t, lbname, frontendIPName, lbPrivateIP, poolname)
+
+	poolID := getAddressPoolID(t, f, lbname, poolname)
+	if poolID == "" {
+		t.Fatal("unexpected empty pool ID")
+	}
+}
+
+func getAddressPoolID(t *testing.T, f fixture.F, lbname string, poolname string) string {
+	return execWithIPC(t, f, func(outfile string) {
+		f.Shell.Run(
+			"./testdata/alb_get_pool_id.sh",
+			poolname,
+			f.ResGroupName,
+			lbname,
+			outfile,
+		)
+	})
 }
 
 func testNicCreate(t *testing.T, f fixture.F) {
