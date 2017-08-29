@@ -25,47 +25,33 @@ func NewNic(f fixture.F) *Nic {
 
 // AssertExists checks if nic exists in the resource group.
 // Fail tests otherwise.
-func (nic *Nic) AssertExists(t *testing.T, name string, address string) {
+func (nic *Nic) AssertExists(t *testing.T, name string, privateIP string) {
 	nic.f.Retrier.Run(newID("Nic", "AssertExists", name), func() error {
-		// FIXME: Use GetIPConfigs here to check existence of NIC
 
-		n, err := nic.client.Get(nic.f.ResGroupName, name, "")
+		ipconfigs, err := nic.GetIPConfigs(t, name)
 		if err != nil {
 			return err
 		}
 
-		if n.InterfacePropertiesFormat == nil {
-			return errors.New("The field InterfacePropertiesFormat is nil!")
-		}
-		properties := *n.InterfacePropertiesFormat
-
-		if properties.IPConfigurations == nil {
-			return errors.New("The field IPConfigurations is nil!")
-		}
-		ip := *properties.IPConfigurations
-
-		if len(ip) == 0 || ip[0].PrivateIPAddress == nil {
-			return errors.New("The field PrivateIPAddress is nil!")
+		for _, ipconfig := range ipconfigs {
+			if ipconfig.PrivateIPAddress == privateIP {
+				return nil
+			}
 		}
 
-		privateAddress := *ip[0].PrivateIPAddress
-		if privateAddress != address {
-			return errors.New("Nic created with wrong Address. Expected: " + address + "Actual: " + privateAddress)
-		}
-
-		return nil
+		return fmt.Errorf("unable to find privateIP[%s] on ipconfigs[%s]", privateIP, ipconfigs)
 	})
 }
 
 type NicIPConfig struct {
-	Name                            string
-	PrivateIPAddress                string
-	LoadBalancerBackendAddressPools []string
+	Name               string
+	PrivateIPAddress   string
+	LBBackendAddrPools []string
 }
 
-func (nic *Nic) GetIPConfigs(t *testing.T, name string, address string) ([]NicIPConfig, error) {
+func (nic *Nic) GetIPConfigs(t *testing.T, name string) ([]NicIPConfig, error) {
 
-	var properties []NicIPConfig
+	var ipconfigs []NicIPConfig
 
 	wraperror := func(err error) error {
 		return fmt.Errorf("Nic.GetInfo: error[%s]", err)
@@ -73,22 +59,53 @@ func (nic *Nic) GetIPConfigs(t *testing.T, name string, address string) ([]NicIP
 
 	n, err := nic.client.Get(nic.f.ResGroupName, name, "")
 	if err != nil {
-		return properties, wraperror(err)
+		return []NicIPConfig{}, wraperror(err)
 	}
 
 	if n.InterfacePropertiesFormat == nil {
-		return properties, wraperror(errors.New("The field InterfacePropertiesFormat is nil!"))
+		return []NicIPConfig{}, wraperror(errors.New("The field InterfacePropertiesFormat is nil!"))
 	}
 
 	propertiesFormat := *n.InterfacePropertiesFormat
 
 	if propertiesFormat.IPConfigurations == nil {
-		return properties, wraperror(errors.New("No IPConfigurations found on NIC"))
+		return []NicIPConfig{}, wraperror(errors.New("No IPConfigurations found on NIC"))
 	}
 
-	//ipconfigs := *propertiesFormat.IPConfigurations
-	//for _, ipconfig := range ipconfigs {
-	//}
+	for _, azIPConfig := range *propertiesFormat.IPConfigurations {
+		ipconfig := NicIPConfig{}
 
-	return properties, nil
+		if azIPConfig.Name == nil {
+			return []NicIPConfig{}, wraperror(fmt.Errorf("ip config[%s] has nil Name", azIPConfig))
+		}
+
+		if azIPConfig.InterfaceIPConfigurationPropertiesFormat == nil {
+			return []NicIPConfig{}, wraperror(fmt.Errorf("ip config[%s] has nil properties", azIPConfig))
+		}
+
+		if azIPConfig.InterfaceIPConfigurationPropertiesFormat.PrivateIPAddress == nil {
+			return []NicIPConfig{}, wraperror(fmt.Errorf("ip config[%s] has nil private IP address", azIPConfig))
+		}
+
+		ipconfig.Name = *azIPConfig.Name
+		ipconfig.PrivateIPAddress = *azIPConfig.InterfaceIPConfigurationPropertiesFormat.PrivateIPAddress
+
+		if azIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools != nil {
+			pools := *azIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools
+			poolsNames := []string{}
+
+			for _, pool := range pools {
+				if pool.Name == nil {
+					return []NicIPConfig{}, wraperror(fmt.Errorf("pool[%s] has no name", pool))
+				}
+				poolsNames = append(poolsNames, *pool.Name)
+			}
+
+			ipconfig.LBBackendAddrPools = poolsNames
+		}
+
+		ipconfigs = append(ipconfigs, ipconfig)
+	}
+
+	return ipconfigs, nil
 }
