@@ -7,8 +7,6 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
-// TODO: Test add/remove load balancer address pool
-
 func TestNIC(t *testing.T) {
 	t.Parallel()
 	fixture.Run(t, "NICCreation", timeout, location, testNicCreate)
@@ -22,7 +20,6 @@ func TestNIC(t *testing.T) {
 }
 
 func testNicLoadBalancerAddressPoolIntegration(t *testing.T, f fixture.F) {
-	t.Skip("TODO")
 
 	vnet := genVnetName()
 	nsg := genNsgName()
@@ -39,6 +36,13 @@ func testNicLoadBalancerAddressPoolIntegration(t *testing.T, f fixture.F) {
 
 	nics := azure.NewNic(f)
 	nics.AssertExists(t, nic, nsg, privateIP)
+
+	const lbname = "niclb"
+	const frontendIPName = "nicFrontIP"
+	const lbPrivateIP = "10.66.1.150"
+	const poolname = "niclbpool"
+
+	createLoadBalancer(t, f, vnet, subnet, lbname, frontendIPName, lbPrivateIP, poolname)
 }
 
 func testNicCreate(t *testing.T, f fixture.F) {
