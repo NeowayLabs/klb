@@ -104,7 +104,13 @@ if $err != "" {
 
 echo "Got address pool id: " + $addrpool_id
 
-err <= azure_nic_add_lb_address_pool($nic_name, $group, $addrpool_id)
+err <= azure_nic_add_lb_address_pool(
+    $nic_name,
+    "default-ip-config",
+    $group,
+    $addrpool_id
+)
+
 if $err != "" {
 	print("error[%s] adding load balancer address pool to NIC\n", $err)
 	exit("1")
