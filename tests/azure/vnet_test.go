@@ -1,8 +1,6 @@
 package azure_test
 
 import (
-	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
@@ -11,7 +9,7 @@ import (
 )
 
 func genVnetName() string {
-	return fmt.Sprintf("klb-vnet-tests-%d", rand.Intn(9999999999))
+	return fixture.NewUniqueName("vnet")
 }
 
 type vnetDescription struct {

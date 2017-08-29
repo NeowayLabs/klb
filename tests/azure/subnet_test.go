@@ -1,8 +1,6 @@
 package azure_test
 
 import (
-	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
@@ -10,7 +8,7 @@ import (
 )
 
 func genSubnetName() string {
-	return fmt.Sprintf("klb-subnet-tests-%d", rand.Intn(9999999999))
+	return fixture.NewUniqueName("subnet")
 }
 
 func testSubnetCreate(t *testing.T, f fixture.F) {

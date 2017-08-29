@@ -1,8 +1,6 @@
 package azure_test
 
 import (
-	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
@@ -10,7 +8,7 @@ import (
 )
 
 func genNsgName() string {
-	return fmt.Sprintf("klb-nsg-tests-%d", rand.Intn(999999999))
+	return fixture.NewUniqueName("nsg")
 }
 
 func testNsgCreate(t *testing.T, f fixture.F) {

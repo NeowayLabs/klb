@@ -1,16 +1,41 @@
 package azure_test
 
 import (
-	"fmt"
-	"math/rand"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
-func genNicName() string {
-	return fmt.Sprintf("klb-nic-tests-%d", rand.Intn(99999999))
+// TODO: Test add/remove load balancer address pool
+
+func TestNic(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "Creation", timeout, location, testNicCreate)
+	fixture.Run(
+		t,
+		"LoadBalancerAddressPoolIntegration",
+		timeout,
+		location,
+		testNicLoadBalancerAddressPoolIntegration,
+	)
+}
+
+func testNicLoadBalancerAddressPoolIntegration(t *testing.T, f fixture.F) {
+	t.Skip("TODO")
+
+	vnet := genVnetName()
+	nsg := genNsgName()
+	nic := genNicName()
+	subnet := genSubnetName()
+	vnetCIDR := "10.66.0.0/16"
+	privateIP := "10.66.1.100"
+	subnetCIDR := "10.66.1.0/24"
+
+	createNIC(t, f, vnet, nsg, nic, subnet, vnetCIDR, subnetCIDR, privateIP)
+
+	nics := azure.NewNic(f)
+	nics.AssertExists(t, nic, nsg, privateIP)
 }
 
 func testNicCreate(t *testing.T, f fixture.F) {
@@ -18,28 +43,36 @@ func testNicCreate(t *testing.T, f fixture.F) {
 	nsg := genNsgName()
 	nic := genNicName()
 	subnet := genSubnetName()
-	vnetAddress := "10.116.0.0/16"
-	addrnic := "10.116.1.100"
-	subnetAddress := "10.116.1.0/24"
+	vnetCIDR := "10.116.0.0/16"
+	privateIP := "10.116.1.100"
+	subnetCIDR := "10.116.1.0/24"
 
-	f.Shell.Run(
-		"./testdata/create_nsg.sh",
-		nsg,
-		f.ResGroupName,
-		f.Location,
-	)
+	createNIC(t, f, vnet, nsg, nic, subnet, vnetCIDR, subnetCIDR, privateIP)
 
-	createVNet(t, f, vnetDescription{
-		name:     vnet,
-		vnetAddr: vnetAddress,
-	})
+	nics := azure.NewNic(f)
+	nics.AssertExists(t, nic, nsg, privateIP)
+}
+
+func createNIC(
+	t *testing.T,
+	f fixture.F,
+	vnet string,
+	nsg string,
+	nic string,
+	subnet string,
+	vnetCIDR string,
+	subnetCIDR string,
+	privateIP string,
+) {
+	createNSG(t, f, nsg)
+	createVNet(t, f, vnetDescription{name: vnet, vnetAddr: vnetCIDR})
 
 	f.Shell.Run(
 		"./testdata/create_subnet.sh",
 		subnet,
 		f.ResGroupName,
 		vnet,
-		subnetAddress,
+		subnetCIDR,
 		nsg,
 	)
 
@@ -50,14 +83,19 @@ func testNicCreate(t *testing.T, f fixture.F) {
 		f.Location,
 		vnet,
 		subnet,
-		addrnic,
+		privateIP,
 	)
-	nics := azure.NewNic(f)
-
-	nics.AssertExists(t, nic, nsg, addrnic)
 }
 
-func TestNic(t *testing.T) {
-	t.Parallel()
-	fixture.Run(t, "Nic_Create", timeout, location, testNicCreate)
+func createNSG(t *testing.T, f fixture.F, name string) {
+	f.Shell.Run(
+		"./testdata/create_nsg.sh",
+		name,
+		f.ResGroupName,
+		f.Location,
+	)
+}
+
+func genNicName() string {
+	return fixture.NewUniqueName("nic")
 }

@@ -8,25 +8,23 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
+func TestLoadBalancer(t *testing.T) {
+	t.Parallel()
+	fixture.Run(t, "LoadBalancer", timeout, location, testLoadBalancer)
+}
+
 func testLoadBalancer(t *testing.T, f fixture.F) {
-	const cidr = "10.120.0.0/16"
-	const subnetaddr = "10.120.1.0/24"
+	const vnetCIDR = "10.120.0.0/16"
+	const subnetCIDR = "10.120.1.0/24"
 	const lbname = "loadbalancer"
 	const frontendIPName = "lbfrontendip"
 	const lbPrivateIP = "10.120.1.4"
 	const poolname = "lbpool"
 
-	f.Shell.Run(
-		"./testdata/create_alb.sh",
-		f.ResGroupName,
-		f.Location,
-		cidr,
-		subnetaddr,
-		lbname,
-		frontendIPName,
-		lbPrivateIP,
-		poolname,
-	)
+	t.Skip("FIXME")
+	// TODO: create subnet/vnet/nsg
+
+	createLoadBalancer(t, f, vnetCIDR, subnetCIDR, lbname, frontendIPName, lbPrivateIP, poolname)
 
 	loadbalancer := azure.NewLoadBalancers(f)
 	loadbalancer.AssertExists(t, lbname, frontendIPName, lbPrivateIP, poolname)
@@ -69,6 +67,29 @@ func testLoadBalancer(t *testing.T, f fixture.F) {
 		},
 	})
 
+}
+
+func createLoadBalancer(
+	t *testing.T,
+	f fixture.F,
+	vnet string,
+	subnet string,
+	lbname string,
+	frontendIPName string,
+	privateIP string,
+	poolname string,
+) {
+	f.Shell.Run(
+		"./testdata/create_alb.sh",
+		f.ResGroupName,
+		f.Location,
+		vnet,
+		subnet,
+		lbname,
+		frontendIPName,
+		privateIP,
+		poolname,
+	)
 }
 
 func createLoadBalancerProbes(
@@ -120,9 +141,4 @@ func createLoadBalancerRules(
 		f.Shell.Run("./testdata/add_alb_rule.sh", args...)
 		loadbalancer.AssertRuleExists(t, lbname, r)
 	}
-}
-
-func TestLoadBalancer(t *testing.T) {
-	t.Parallel()
-	fixture.Run(t, "LoadBalancer", timeout, location, testLoadBalancer)
 }
