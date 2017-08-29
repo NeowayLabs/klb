@@ -61,7 +61,7 @@ fn azure_disk_create(instance) {
 # azure_disk_get_id returns the id of a previously created
 # disk. This id is used to attach the disk on a VM.
 fn azure_disk_get_id(resgroup, name) {
-	res <= az disk show -g $resgroup -n $name --query "id"
+	res <= az disk show -g $resgroup -n $name | jq -r ".id"
 
 	return $res
 }

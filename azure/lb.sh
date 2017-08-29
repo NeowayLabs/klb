@@ -308,12 +308,16 @@ fn azure_lb_addresspool_get_id(poolname, group, lbname) {
 		--name $poolname
 		--resource-group $group
 		--lb-name $lbname
-		--query "id"
 	)
 
 	if $status != "0" {
 		return "", format("error[%s] getting addresspool id", $out)
 	}
 
-	return $out, ""
+	id, status <= echo $out | jq -r ".id"
+	if $status != "0" {
+		return "", format("error[%s] parsing addresspool id", $id)
+	}
+
+	return $id, ""
 }

@@ -128,19 +128,20 @@ fn azure_nic_delete(name, group) {
 fn _azure_nic_operate_lb_address_pool(name, ipconfig, group, addrpool_id, op) {
         out, status <= (
                 az network nic ip-config address-pool $op
+                --address-pool $addrpool_id
                 --nic-name $name
                 --ip-config-name $ipconfig
                 --resource-group $group
-                --address-pool $addrpool_id
         )
 
         if $status != "0" {
                 return format(
-                    "error: [%s] on [%s] addrpool[%s] on nic[%s] group[%s]",
+                    "error: [%s] on [%s] addrpool[%s] on nic[%s] ipconfig[%s] group[%s]",
                     $out,
                     $op,
                     $addrpool_id,
                     $name,
+                    $ipconfig,
                     $group
                 )
         }
