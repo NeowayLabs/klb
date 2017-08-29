@@ -83,17 +83,31 @@ if $err != "" {
         exit("1")
 }
 
-azure_lb_create($lb_name, $group, $location)
+azure_lb_create($lb_name, $lb_group, $location)
 
-frontip <= azure_lb_frontend_ip_new($frontendip_name, $group)
+frontip <= azure_lb_frontend_ip_new($frontendip_name, $lb_group)
 frontip <= azure_lb_frontend_ip_set_lbname($frontip, $lb_name)
 frontip <= azure_lb_frontend_ip_set_subnet_id($frontip, $subnetid)
 frontip <= azure_lb_frontend_ip_set_private_ip($frontip, $frontendip_private_ip)
 
 azure_lb_frontend_ip_create($frontip)
-azure_lb_addresspool_create($lb_address_pool_name, $group, $lb_name)
+azure_lb_addresspool_create($lb_address_pool_name, $lb_group, $lb_name)
 
-# TODO: Get address pool ID, add it on the nic
+echo "adding NIC to load balancer address pool"
+nic_name = $vm_name
+addrpool_id, err <= azure_lb_addresspool_get_id($lb_address_pool_name, $lb_group, $lb_name)
+if $err != "" {
+	print("error[%s] getting address pool ID\n", $err)
+	exit("1")
+}
+
+echo "Got address pool id: " + $addrpool_id
+
+err <= azure_nic_add_lb_address_pool($nic_name, $group, $addrpool_id)
+if $err != "" {
+	print("error[%s] adding load balancer address pool to NIC\n", $err)
+	exit("1")
+}
 
 echo "finished with success"
 echo "user: " + $vm_username

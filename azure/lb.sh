@@ -295,3 +295,25 @@ fn azure_lb_probe_delete(name, group, lbname) {
 					--lb-name $lbname
 	)
 }
+
+# azure_lb_addresspool_get_id gets the ID of a
+# load balancer address pool.
+#
+# Returns the ID and an empty string on success,
+# otherwise returns an empty ID and an non-empty error message
+fn azure_lb_addresspool_get_id(poolname, group, lbname) {
+
+	out, status <= (
+		az network lb address-pool show
+		--name $poolname
+		--resource-group $group
+		--lb-name $lbname
+		--query "id"
+	)
+
+	if $status != "0" {
+		return "", format("error[%s] getting addresspool id", $out)
+	}
+
+	return $out, ""
+}

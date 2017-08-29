@@ -18,6 +18,8 @@ vm_username    = "core"
 vm_image_urn   = "CoreOS:CoreOS:Stable:1353.7.0"
 
 ## Load Balancer Settings
+## Our scenario uses load balancers on different resource groups
+lb_group = "klb-examples-loadbalancer2"
 lb_name = "AwesomeLoadBalancer"
 lb_address_pool_name = "AwesomeAddressPool"
 frontendip_name = "AwesomeFrontendIp"
