@@ -14,17 +14,21 @@ func TestLoadBalancer(t *testing.T) {
 }
 
 func testLoadBalancer(t *testing.T, f fixture.F) {
+
+	const nsg = "lbnsg"
+	const vnet = "lbvnet"
 	const vnetCIDR = "10.120.0.0/16"
+	const subnet = "lbsubnet"
 	const subnetCIDR = "10.120.1.0/24"
 	const lbname = "loadbalancer"
 	const frontendIPName = "lbfrontendip"
 	const lbPrivateIP = "10.120.1.4"
 	const poolname = "lbpool"
 
-	t.Skip("FIXME")
-	// TODO: create subnet/vnet/nsg
-
-	createLoadBalancer(t, f, vnetCIDR, subnetCIDR, lbname, frontendIPName, lbPrivateIP, poolname)
+	createVNET(t, f, vnetDescription{name: vnet, vnetAddr: vnetCIDR})
+	createNSG(t, f, nsg)
+	createSubnet(t, f, vnet, subnet, subnetCIDR, nsg)
+	createLoadBalancer(t, f, vnet, subnet, lbname, frontendIPName, lbPrivateIP, poolname)
 
 	loadbalancer := azure.NewLoadBalancers(f)
 	loadbalancer.AssertExists(t, lbname, frontendIPName, lbPrivateIP, poolname)

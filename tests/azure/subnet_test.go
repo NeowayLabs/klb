@@ -18,7 +18,7 @@ func testSubnetCreate(t *testing.T, f fixture.F) {
 	vnetAddress := "10.116.0.0/16"
 	subnetAddress := "10.116.1.0/24"
 
-	createVNet(t, f, vnetDescription{
+	createVNET(t, f, vnetDescription{
 		name:     vnet,
 		vnetAddr: vnetAddress,
 	})

@@ -20,7 +20,18 @@ dnsservers            = ("8.8.8.8" "8.8.4.4")
 azure_login()
 
 # Our main production use case is using subnet id
-subnetid, status <= azure_subnet_get_id($subnet, $resgroup, $vnet)
+print(
+	"getting subnet id for resgroup[%s] vnet[%s] subnet[%s]\n",
+	$resgroup,
+	$vnet,
+	$subnet
+)
+subnetid, err <= azure_subnet_get_id($subnet, $resgroup, $vnet)
+
+if $err != "" {
+	print("error[%s] getting subnetid\n", $err)
+	exit("1")
+}
 
 azure_lb_create($lbname, $resgroup, $location)
 

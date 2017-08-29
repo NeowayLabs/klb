@@ -9,9 +9,9 @@ import (
 
 // TODO: Test add/remove load balancer address pool
 
-func TestNic(t *testing.T) {
+func TestNIC(t *testing.T) {
 	t.Parallel()
-	fixture.Run(t, "Creation", timeout, location, testNicCreate)
+	fixture.Run(t, "NICCreation", timeout, location, testNicCreate)
 	fixture.Run(
 		t,
 		"LoadBalancerAddressPoolIntegration",
@@ -32,7 +32,10 @@ func testNicLoadBalancerAddressPoolIntegration(t *testing.T, f fixture.F) {
 	privateIP := "10.66.1.100"
 	subnetCIDR := "10.66.1.0/24"
 
-	createNIC(t, f, vnet, nsg, nic, subnet, vnetCIDR, subnetCIDR, privateIP)
+	createVNET(t, f, vnetDescription{name: vnet, vnetAddr: vnetCIDR})
+	createNSG(t, f, nsg)
+	createSubnet(t, f, vnet, subnet, subnetCIDR, nsg)
+	createNIC(t, f, vnet, subnet, nic, privateIP)
 
 	nics := azure.NewNic(f)
 	nics.AssertExists(t, nic, nsg, privateIP)
@@ -47,7 +50,10 @@ func testNicCreate(t *testing.T, f fixture.F) {
 	privateIP := "10.116.1.100"
 	subnetCIDR := "10.116.1.0/24"
 
-	createNIC(t, f, vnet, nsg, nic, subnet, vnetCIDR, subnetCIDR, privateIP)
+	createVNET(t, f, vnetDescription{name: vnet, vnetAddr: vnetCIDR})
+	createNSG(t, f, nsg)
+	createSubnet(t, f, vnet, subnet, subnetCIDR, nsg)
+	createNIC(t, f, vnet, subnet, nic, privateIP)
 
 	nics := azure.NewNic(f)
 	nics.AssertExists(t, nic, nsg, privateIP)
@@ -57,25 +63,10 @@ func createNIC(
 	t *testing.T,
 	f fixture.F,
 	vnet string,
-	nsg string,
-	nic string,
 	subnet string,
-	vnetCIDR string,
-	subnetCIDR string,
+	nic string,
 	privateIP string,
 ) {
-	createNSG(t, f, nsg)
-	createVNet(t, f, vnetDescription{name: vnet, vnetAddr: vnetCIDR})
-
-	f.Shell.Run(
-		"./testdata/create_subnet.sh",
-		subnet,
-		f.ResGroupName,
-		vnet,
-		subnetCIDR,
-		nsg,
-	)
-
 	f.Shell.Run(
 		"./testdata/create_nic.sh",
 		f.ResGroupName,
@@ -84,6 +75,24 @@ func createNIC(
 		vnet,
 		subnet,
 		privateIP,
+	)
+}
+
+func createSubnet(
+	t *testing.T,
+	f fixture.F,
+	vnet string,
+	subnet string,
+	subnetCIDR string,
+	nsg string,
+) {
+	f.Shell.Run(
+		"./testdata/create_subnet.sh",
+		subnet,
+		f.ResGroupName,
+		vnet,
+		subnetCIDR,
+		nsg,
 	)
 }
 

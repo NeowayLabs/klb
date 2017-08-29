@@ -296,7 +296,7 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 		faultdomain,
 	)
 
-	createVNet(t, f, vnetDescription{
+	createVNET(t, f, vnetDescription{
 		name:     resources.vnet,
 		vnetAddr: vnetAddress,
 	})

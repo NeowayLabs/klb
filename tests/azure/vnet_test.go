@@ -18,7 +18,7 @@ type vnetDescription struct {
 	dnsAddresses []string
 }
 
-func createVNet(t *testing.T, f fixture.F, desc vnetDescription) {
+func createVNET(t *testing.T, f fixture.F, desc vnetDescription) {
 	if len(desc.dnsAddresses) == 0 {
 		desc.dnsAddresses = []string{"8.8.8.8"}
 	}
@@ -41,7 +41,7 @@ func testVnetCreate(t *testing.T, f fixture.F) {
 	subnetAddress := "10.116.1.0/24"
 	dnsAddresses := []string{"8.8.8.8", "4.4.4.4"}
 
-	createVNet(t, f, vnetDescription{
+	createVNET(t, f, vnetDescription{
 		name:         vnet,
 		vnetAddr:     vnetAddress,
 		dnsAddresses: dnsAddresses,
