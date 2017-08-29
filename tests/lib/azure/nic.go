@@ -2,6 +2,7 @@ package azure
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/arm/network"
@@ -24,8 +25,10 @@ func NewNic(f fixture.F) *Nic {
 
 // AssertExists checks if nic exists in the resource group.
 // Fail tests otherwise.
-func (nic *Nic) AssertExists(t *testing.T, name string, nsg string, address string) {
+func (nic *Nic) AssertExists(t *testing.T, name string, address string) {
 	nic.f.Retrier.Run(newID("Nic", "AssertExists", name), func() error {
+		// FIXME: Use GetIPConfigs here to check existence of NIC
+
 		n, err := nic.client.Get(nic.f.ResGroupName, name, "")
 		if err != nil {
 			return err
@@ -52,4 +55,40 @@ func (nic *Nic) AssertExists(t *testing.T, name string, nsg string, address stri
 
 		return nil
 	})
+}
+
+type NicIPConfig struct {
+	Name                            string
+	PrivateIPAddress                string
+	LoadBalancerBackendAddressPools []string
+}
+
+func (nic *Nic) GetIPConfigs(t *testing.T, name string, address string) ([]NicIPConfig, error) {
+
+	var properties []NicIPConfig
+
+	wraperror := func(err error) error {
+		return fmt.Errorf("Nic.GetInfo: error[%s]", err)
+	}
+
+	n, err := nic.client.Get(nic.f.ResGroupName, name, "")
+	if err != nil {
+		return properties, wraperror(err)
+	}
+
+	if n.InterfacePropertiesFormat == nil {
+		return properties, wraperror(errors.New("The field InterfacePropertiesFormat is nil!"))
+	}
+
+	propertiesFormat := *n.InterfacePropertiesFormat
+
+	if propertiesFormat.IPConfigurations == nil {
+		return properties, wraperror(errors.New("No IPConfigurations found on NIC"))
+	}
+
+	//ipconfigs := *propertiesFormat.IPConfigurations
+	//for _, ipconfig := range ipconfigs {
+	//}
+
+	return properties, nil
 }

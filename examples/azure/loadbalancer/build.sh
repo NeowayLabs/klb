@@ -41,6 +41,7 @@ fn create_vm(name, subnet) {
 	nic <= azure_nic_new($name, $group, $location)
 	nic <= azure_nic_set_vnet($nic, $vnet)
 	nic <= azure_nic_set_subnet($nic, $subnet)
+        nic <= azure_nic_set_ip_config_name($nic, $ipconfig_name)
 
 	azure_nic_create($nic)
 
@@ -106,7 +107,7 @@ echo "Got address pool id: " + $addrpool_id
 
 err <= azure_nic_add_lb_address_pool(
     $nic_name,
-    "default-ip-config",
+    $ipconfig_name,
     $group,
     $addrpool_id
 )

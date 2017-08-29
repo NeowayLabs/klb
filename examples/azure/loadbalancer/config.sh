@@ -13,6 +13,7 @@ subnet_cidr      = "10.51.1.0/24"
 
 ## VMs Settings
 vm_name        = "loadBalancedVM"
+ipconfig_name  = $vm_name + "-ip-config"
 vm_size        = "Standard_A0"
 vm_username    = "core"
 vm_image_urn   = "CoreOS:CoreOS:Stable:1353.7.0"

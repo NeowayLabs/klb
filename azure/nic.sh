@@ -55,6 +55,13 @@ fn azure_nic_set_secgrp(instance, secgrp) {
 	return $instance
 }
 
+fn azure_nic_set_ip_config_name(instance, name) {
+        instance <= append($instance, "--ip-config-name")
+	instance <= append($instance, $name)
+
+	return $instance
+}
+
 fn azure_nic_set_ipfw(instance, ipfw) {
 	instance <= append($instance, "--enable-ip-forwarding")
 	instance <= append($instance, $ipfw)
