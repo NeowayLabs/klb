@@ -44,9 +44,9 @@ func (nic *Nic) AssertExists(t *testing.T, name string, privateIP string) {
 }
 
 type NicIPConfig struct {
-	Name               string
-	PrivateIPAddress   string
-	LBBackendAddrPools []string
+	Name                  string
+	PrivateIPAddress      string
+	LBBackendAddrPoolsIDs []string
 }
 
 func (nic *Nic) GetIPConfigs(t *testing.T, name string) ([]NicIPConfig, error) {
@@ -92,16 +92,16 @@ func (nic *Nic) GetIPConfigs(t *testing.T, name string) ([]NicIPConfig, error) {
 
 		if azIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools != nil {
 			pools := *azIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools
-			poolsNames := []string{}
+			poolsIDs := []string{}
 
 			for _, pool := range pools {
-				if pool.Name == nil {
+				if pool.ID == nil {
 					return []NicIPConfig{}, wraperror(fmt.Errorf("pool[%s] has no name", pool))
 				}
-				poolsNames = append(poolsNames, *pool.Name)
+				poolsIDs = append(poolsIDs, *pool.ID)
 			}
 
-			ipconfig.LBBackendAddrPools = poolsNames
+			ipconfig.LBBackendAddrPoolsIDs = poolsIDs
 		}
 
 		ipconfigs = append(ipconfigs, ipconfig)

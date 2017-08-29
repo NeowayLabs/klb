@@ -10,6 +10,7 @@ addrpool_id = $ARGS[4]
 
 azure_login()
 
+print("adding lb address pool[%s] to nic[%s]\n", $addrpool_id, $nic_name)
 err <= azure_nic_add_lb_address_pool(
     $nic_name,
     $ipconfig_name,

@@ -146,3 +146,15 @@ func createLoadBalancerRules(
 		loadbalancer.AssertRuleExists(t, lbname, r)
 	}
 }
+
+func getLBAddressPoolID(t *testing.T, f fixture.F, lbname string, poolname string) string {
+	return execWithIPC(t, f, func(outfile string) {
+		f.Shell.Run(
+			"./testdata/alb_get_pool_id.sh",
+			poolname,
+			f.ResGroupName,
+			lbname,
+			outfile,
+		)
+	})
+}

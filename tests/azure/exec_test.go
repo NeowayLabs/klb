@@ -3,13 +3,14 @@ package azure_test
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
 func execWithIPC(t *testing.T, f fixture.F, exec func(string)) string {
-	outfile, err := ioutil.TempFile("", "klb_vm_script_ipc")
+	outfile, err := ioutil.TempFile("", "klb_script_ipc")
 	if err != nil {
 		t.Fatalf("error creating output file: %s", err)
 	}
@@ -22,5 +23,5 @@ func execWithIPC(t *testing.T, f fixture.F, exec func(string)) string {
 	if err != nil {
 		t.Fatalf("error reading output file: %s", err)
 	}
-	return string(out)
+	return strings.Trim(strings.TrimSpace(string(out)), "\n")
 }
