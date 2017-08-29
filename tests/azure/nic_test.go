@@ -88,6 +88,10 @@ func testNicLoadBalancerAddressPoolIntegration(t *testing.T, f fixture.F) {
 
 	ipconfig = getIPConfig(t, f, nic)
 	assertLBBackendAddrPoolsOnNIC(t, ipconfig, []string{poolID})
+
+	removeLBAddressPoolFromNIC(t, f, nic, ipconfig.Name, poolID)
+	ipconfig = getIPConfig(t, f, nic)
+	assertLBBackendAddrPoolsOnNIC(t, ipconfig, []string{})
 }
 
 func testNicCreate(t *testing.T, f fixture.F) {
@@ -167,6 +171,22 @@ func addLBAddressPoolOnNIC(
 ) {
 	f.Shell.Run(
 		"./testdata/nic_add_lb_address_pool.sh",
+		nicName,
+		ipconfigName,
+		f.ResGroupName,
+		addrpoolID,
+	)
+}
+
+func removeLBAddressPoolFromNIC(
+	t *testing.T,
+	f fixture.F,
+	nicName string,
+	ipconfigName string,
+	addrpoolID string,
+) {
+	f.Shell.Run(
+		"./testdata/nic_remove_lb_address_pool.sh",
 		nicName,
 		ipconfigName,
 		f.ResGroupName,
