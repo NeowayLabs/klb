@@ -35,7 +35,7 @@ func testNicLoadBalancerAddressPoolIntegration(t *testing.T, f fixture.F) {
 	createNIC(t, f, vnet, subnet, nic, privateIP)
 
 	nics := azure.NewNic(f)
-	nics.AssertExists(t, nic, nsg, privateIP)
+	nics.AssertExists(t, nic, privateIP)
 
 	const lbname = "niclb"
 	const frontendIPName = "nicFrontIP"
@@ -60,7 +60,7 @@ func testNicCreate(t *testing.T, f fixture.F) {
 	createNIC(t, f, vnet, subnet, nic, privateIP)
 
 	nics := azure.NewNic(f)
-	nics.AssertExists(t, nic, nsg, privateIP)
+	nics.AssertExists(t, nic, privateIP)
 }
 
 func createNIC(
