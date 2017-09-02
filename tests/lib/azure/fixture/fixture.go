@@ -71,13 +71,7 @@ func Run(
 		defer teardown()
 
 		session := NewSession(t)
-		resgroup := fmt.Sprintf(
-			"klb-test-fixture-%s-%d-%d",
-			testname,
-			time.Now().Unix(),
-			rand.Intn(99999),
-		)
-
+		resgroup := NewUniqueName(testname)
 		resources := NewResourceGroup(ctx, t, session, logger)
 		defer func() {
 			// We cant use an expired context when cleaning up state from Azure.
@@ -106,4 +100,13 @@ func Run(
 		})
 		logger.Printf("fixture: finished, failed=%t", t.Failed())
 	})
+}
+
+func NewUniqueName(prefix string) string {
+	return fmt.Sprintf(
+		"klb-%s-%d-%d",
+		prefix,
+		time.Now().Unix(),
+		rand.Intn(99999),
+	)
 }

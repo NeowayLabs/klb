@@ -82,7 +82,7 @@ fn azure_lb_frontend_ip_set_subnet_vnet_name(instance, subnetvnetname) {
 }
 
 fn azure_lb_frontend_ip_create(instance) {
-	(azure network lb frontend-ip create $instance)
+	azure network lb frontend-ip create $instance
 }
 
 fn azure_lb_frontend_ip_delete(name, group, lbname) {
@@ -97,7 +97,7 @@ fn azure_lb_frontend_ip_delete(name, group, lbname) {
 # ADDRESS POLL functions
 
 fn azure_lb_addresspool_create(name, group, lbname) {
-	out           <= (
+	out <= (
 		azure network lb address-pool create
 						--resource-group $group
 						--lb-name $lbname
@@ -284,7 +284,7 @@ fn azure_lb_probe_set_path(instance, path) {
 }
 
 fn azure_lb_probe_create(instance) {
-	(azure network lb probe create $instance)
+	azure network lb probe create $instance
 }
 
 fn azure_lb_probe_delete(name, group, lbname) {
@@ -294,4 +294,30 @@ fn azure_lb_probe_delete(name, group, lbname) {
 					--resource-group $group
 					--lb-name $lbname
 	)
+}
+
+# azure_lb_addresspool_get_id gets the ID of a
+# load balancer address pool.
+#
+# Returns the ID and an empty string on success,
+# otherwise returns an empty ID and an non-empty error message
+fn azure_lb_addresspool_get_id(poolname, group, lbname) {
+
+	out, status <= (
+		az network lb address-pool show
+		--name $poolname
+		--resource-group $group
+		--lb-name $lbname
+	)
+
+	if $status != "0" {
+		return "", format("error[%s] getting addresspool id", $out)
+	}
+
+	id, status <= echo $out | jq -r ".id"
+	if $status != "0" {
+		return "", format("error[%s] parsing addresspool id", $id)
+	}
+
+	return $id, ""
 }
