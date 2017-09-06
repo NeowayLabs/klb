@@ -72,6 +72,15 @@ fn azure_vm_set_username(instance, username) {
 	return $instance
 }
 
+# azure_vm_set_password sets the Password for the "Virtual Machine".
+# `instance` is the name of the instance.
+# `password` is the password for the virtual machine.
+fn azure_vm_set_password(instance, password) {
+        instance <= append($instance, "--admin-password")
+        instance <= append($instance, $password)
+
+        return $instance
+}
 # azure_vm_set_publickeyfile sets the SSH public key of "Virtual Machine".
 # `instance` is the name of the instance.
 # `publickeyfile` is the SSH public key or public key file path.
