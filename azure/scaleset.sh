@@ -93,6 +93,16 @@ fn azure_vmss_set_subnet(instance, subnet) {
 	return $instance
 }
 
+# azure_vmss_set_lb sets instance a name to use when creating a new load balancer (default) or referencing an existing one.
+# `instance` is the name of the instance.
+# `lb` reference an existing load balancer by ID or specify "" for none.
+fn azure_vmss_set_lb(instance, lb) {
+	instance <= append($instance, "--lb")
+	instance <= append($instance, $lb)
+
+	return $instance
+}
+
 # azure_vm_create creates a "Virtual Machine Scale Set".
 # `instance` is the name of the instance.
 fn azure_vmss_create(instance) {
