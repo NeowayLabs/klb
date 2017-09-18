@@ -28,6 +28,26 @@ fn azure_vmss_set_imageurn(instance, imageurn) {
 	return $instance
 }
 
+# azure_vmss_set_username sets the Username for the "Virtual Machines Scale Set".
+# `instance` is the name of the instance.
+# `username` is the username for the "Virtual Machine" in "Scale Set".
+fn azure_vmss_set_username(instance, username) {
+	instance <= append($instance, "--admin-username")
+	instance <= append($instance, $username)
+
+	return $instance
+}
+
+# azure_vmss_set_password sets the Password for the "Virtual Machines Scale Set".
+# `instance` is the name of the instance.
+# `password` is the password for the "Virtual Machine" in "Scale Set".
+fn azure_vmss_set_password(instance, password) {
+        instance <= append($instance, "--admin-password")
+        instance <= append($instance, $password)
+
+        return $instance
+}
+
 # azure_vmss_set_publickeyfile sets the SSH public key of "Virtual Machines Scale Set".
 # `instance` is the name of the instance.
 # `publickeyfile` is the SSH public key or public key file path.
@@ -50,7 +70,7 @@ fn azure_vmss_set_customdata(instance, customdata) {
 
 # azure_vmss_set_vmsize sets the size or sku of "Virtual Machine" in "Scale Set".
 # `instance` is the name of the instance.
-# `size` or `sku` is the size of virtual machine.
+# `size` or `sku` is the size of "Virtual Machine" in "Scale Set".
 # See https://goo.gl/vxW7we for size info.
 fn azure_vmss_set_vmsize(instance, vmsize) {
 	instance <= append($instance, "--vm-sku")
