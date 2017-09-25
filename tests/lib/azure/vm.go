@@ -159,7 +159,9 @@ func (vm *VM) AssertAttachedDataDisk(
 			if disk.StorageAccountType != storageAccountType {
 				continue
 			}
-			// TODO validate caching
+			if disk.Caching != caching {
+				continue
+			}
 			return nil
 		}
 
