@@ -102,9 +102,22 @@ type VMDisk struct {
 	Caching string
 }
 
+func validateDisk(t *testing.T, disk VMDisk) {
+	if disk.Name == "" {
+		t.Fatal("disk name cant be empty")
+	}
+	if disk.Sku == "" {
+		t.Fatal("disk sku cant be empty")
+	}
+	if disk.Caching == "" {
+		t.Fatal("disk caching cant be empty")
+	}
+}
+
 func attachDisks(t *testing.T, f fixture.F, vmname string, disks []VMDisk) {
 	vms := azure.NewVM(f)
 	for _, disk := range disks {
+		validateDisk(t, disk)
 		attachNewDiskOnVM(t, f, vmname, disk.Name, disk.Size, disk.Sku, disk.Caching)
 		vms.AssertAttachedDataDisk(t, vmname, disk.Name, disk.Size, disk.Sku, disk.Caching)
 	}
