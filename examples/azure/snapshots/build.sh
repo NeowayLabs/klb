@@ -86,9 +86,9 @@ echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name, "Premium_LRS")
 
-azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "100", "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "200", "Standard_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "bigPremiumDisk", "1023", "Premium_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "100", "Premium_LRS", "None")
+azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "200", "Standard_LRS", "None")
+azure_vm_disk_attach_new($vm_name, $group, "bigPremiumDisk", "1023", "Premium_LRS", "None")
 
 echo "created main VM"
 echo "creating backup VM"

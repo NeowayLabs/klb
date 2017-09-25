@@ -325,9 +325,9 @@ fn azure_vm_disk_attach_lun(name, resgroup, diskID, lun) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun
 }
 
-# azure_vm_disk_attach_new creats a new disk and attaches to the VM.
-fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
-	az vm disk attach -g $resgroup --vm-name $name --disk $diskname --new --size-gb $size --sku $sku
+# azure_vm_disk_attach_new creates a new disk and attaches to the VM.
+fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku, caching) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskname --new --size-gb $size --sku $sku --caching $caching
 }
 
 # azure_vm_get_datadisks_ids will returns a list with the

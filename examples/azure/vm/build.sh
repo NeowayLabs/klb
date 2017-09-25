@@ -101,7 +101,7 @@ range    <= split($sequence, "\n")
 print("creating %q disks with size %q\n", $vm_disks_count, $vm_disks_size)
 
 for i in $range {
-	azure_vm_disk_attach_new($vm_name, $group, "disk"+$i, $vm_disks_size, "Premium_LRS")
+	azure_vm_disk_attach_new($vm_name, $group, "disk"+$i, $vm_disks_size, "Premium_LRS", "None")
 }
 
 echo "finished with success"
