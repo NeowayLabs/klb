@@ -16,15 +16,17 @@ type VM struct {
 }
 
 type VMDataDisk struct {
-	Lun    int
-	Name   string
-	SizeGB int
+	Lun     int
+	Name    string
+	SizeGB  int
+	Caching string
 }
 
 type VMOsDisk struct {
-	OsType string
-	Name   string
-	SizeGB int
+	OsType  string
+	Name    string
+	SizeGB  int
+	Caching string
 }
 
 func NewVM(f fixture.F) *VM {
@@ -40,7 +42,7 @@ func (vm *VM) OsDisk(t *testing.T, vmname string) VMOsDisk {
 
 	var osdisk *VMOsDisk
 
-	vm.f.Retrier.Run(newID("VM", "DataDisks", vmname), func() error {
+	vm.f.Retrier.Run(newID("VM", "OsDisk", vmname), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
 		if err != nil {
 			return err
@@ -66,9 +68,10 @@ func (vm *VM) OsDisk(t *testing.T, vmname string) VMOsDisk {
 		}
 
 		osdisk = &VMOsDisk{
-			Name:   *storageProfile.OsDisk.Name,
-			SizeGB: int(*storageProfile.OsDisk.DiskSizeGB),
-			OsType: string(storageProfile.OsDisk.OsType),
+			Name:    *storageProfile.OsDisk.Name,
+			SizeGB:  int(*storageProfile.OsDisk.DiskSizeGB),
+			OsType:  string(storageProfile.OsDisk.OsType),
+			Caching: string(storageProfile.OsDisk.Caching),
 		}
 
 		return nil
@@ -113,9 +116,10 @@ func (vm *VM) DataDisks(t *testing.T, vmname string) []VMDataDisk {
 				continue
 			}
 			disksinfo = append(disksinfo, VMDataDisk{
-				Name:   *disk.Name,
-				Lun:    int(*disk.Lun),
-				SizeGB: int(*disk.DiskSizeGB),
+				Name:    *disk.Name,
+				Lun:     int(*disk.Lun),
+				SizeGB:  int(*disk.DiskSizeGB),
+				Caching: string(disk.Caching),
 			})
 		}
 
