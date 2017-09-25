@@ -16,10 +16,11 @@ type VM struct {
 }
 
 type VMDataDisk struct {
-	Lun     int
-	Name    string
-	SizeGB  int
-	Caching string
+	Lun                int
+	Name               string
+	SizeGB             int
+	Caching            string
+	StorageAccountType string
 }
 
 type VMOsDisk struct {
@@ -115,11 +116,15 @@ func (vm *VM) DataDisks(t *testing.T, vmname string) []VMDataDisk {
 			if disk.DiskSizeGB == nil {
 				continue
 			}
+			if disk.ManagedDisk == nil {
+				continue
+			}
 			disksinfo = append(disksinfo, VMDataDisk{
-				Name:    *disk.Name,
-				Lun:     int(*disk.Lun),
-				SizeGB:  int(*disk.DiskSizeGB),
-				Caching: string(disk.Caching),
+				Name:               *disk.Name,
+				Lun:                int(*disk.Lun),
+				SizeGB:             int(*disk.DiskSizeGB),
+				Caching:            string(disk.Caching),
+				StorageAccountType: string(disk.ManagedDisk.StorageAccountType),
 			})
 		}
 
@@ -136,50 +141,25 @@ func (vm *VM) AssertAttachedDataDisk(
 	diskname string,
 	diskSizeGB int,
 	storageAccountType string,
+	caching string,
 ) {
 	vm.f.Retrier.Run(newID("VM", "AssertAttachedDataDisk", vmname), func() error {
-		v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
-		if err != nil {
-			return err
-		}
-		if v.VirtualMachineProperties == nil {
-			return fmt.Errorf("no virtual machine properties found on vm %s", vmname)
-		}
-		if v.VirtualMachineProperties.StorageProfile == nil {
-			return fmt.Errorf("no storage profile found on vm %s", vmname)
-		}
 
-		storageProfile := v.VirtualMachineProperties.StorageProfile
-		if storageProfile.DataDisks == nil {
-			return fmt.Errorf("no data disks found on vm %s", vmname)
-		}
+		disks := vm.DataDisks(t, vmname)
 
-		vm.f.Logger.Printf("expected disk %q size[%d] %q", diskname, diskSizeGB, storageAccountType)
-		for _, disk := range *storageProfile.DataDisks {
-			if disk.Name == nil {
-				continue
-			}
-			if disk.DiskSizeGB == nil {
-				continue
-			}
-			if disk.ManagedDisk == nil {
-				continue
-			}
-			gotName := *disk.Name
-			gotDiskSize := int(*disk.DiskSizeGB)
-			gotStorageAccountType := string(disk.ManagedDisk.StorageAccountType)
+		for _, disk := range disks {
+			vm.f.Logger.Printf("got disk %+v", disk)
 
-			vm.f.Logger.Printf("got disk %q size[%d] %q", gotName, gotDiskSize, gotStorageAccountType)
-
-			if gotName != diskname {
+			if disk.Name != diskname {
 				continue
 			}
-			if gotDiskSize != diskSizeGB {
+			if disk.SizeGB != diskSizeGB {
 				continue
 			}
-			if gotStorageAccountType != storageAccountType {
+			if disk.StorageAccountType != storageAccountType {
 				continue
 			}
+			// TODO validate caching
 			return nil
 		}
 
