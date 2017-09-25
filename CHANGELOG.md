@@ -1,7 +1,10 @@
 # Release 0.9.0
 
-* Add cache policy to klb **azure_vm_disk_attach_new** breaking its API
-* Add cache policy to **azure_vm_backup_recover**  breaking its API
+This release breaks the API of the following functions:
+
+* Add cache policy to klb **azure_vm_disk_attach_new**
+* Add cache policy to **azure_vm_backup_recover**
+* Add cache policy to **azure_vm_disk_attach**
 
 # Release 0.8.1
 

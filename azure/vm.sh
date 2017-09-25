@@ -316,6 +316,7 @@ fn azure_vm_availset_delete(name, group) {
 
 # azure_vm_disk_attach attaches an existing disk to the VM.
 fn azure_vm_disk_attach(name, resgroup, diskID) {
+	# TODO: add caching option
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskID
 }
 
