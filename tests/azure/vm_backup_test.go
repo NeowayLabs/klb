@@ -75,8 +75,8 @@ func testVMBackup(
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 50, Sku: vmSKU},
-		{Name: genUniqName(), Size: 100, Sku: vmSKU},
+		{Name: genUniqName(), Size: 50, Sku: vmSKU, Caching: "None"},
+		{Name: genUniqName(), Size: 100, Sku: vmSKU, Caching: "None"},
 	}
 	attachDisks(t, f, vm, disks)
 
