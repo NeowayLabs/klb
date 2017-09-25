@@ -42,10 +42,10 @@ fn azure_vmss_set_username(instance, username) {
 # `instance` is the name of the instance.
 # `password` is the password for the "Virtual Machine" in "Scale Set".
 fn azure_vmss_set_password(instance, password) {
-        instance <= append($instance, "--admin-password")
-        instance <= append($instance, $password)
+	instance <= append($instance, "--admin-password")
+	instance <= append($instance, $password)
 
-        return $instance
+	return $instance
 }
 
 # azure_vmss_set_publickeyfile sets the SSH public key of "Virtual Machines Scale Set".
@@ -99,6 +99,9 @@ fn azure_vmss_set_instancecount(instance, count) {
 	return $instance
 }
 
+# azure_vmss_set_vnet sets instance vnet of "Virtual Machines Scale Set".
+# `instance` is the name of the instance.
+# `vnet` is a vnet's id of VM's instances on "scale set".
 fn azure_vmss_set_vnet(instance, vnet) {
 	instance <= append($instance, "--vnet-name")
 	instance <= append($instance, $vnet)
@@ -106,6 +109,9 @@ fn azure_vmss_set_vnet(instance, vnet) {
 	return $instance
 }
 
+# azure_vmss_set_subnet sets instance subnet of "Virtual Machines Scale Set".
+# `instance` is the name of the instance.
+# `subnet` is a subnet's id of VM's instances on "scale set".
 fn azure_vmss_set_subnet(instance, subnet) {
 	instance <= append($instance, "--subnet")
 	instance <= append($instance, $subnet)
