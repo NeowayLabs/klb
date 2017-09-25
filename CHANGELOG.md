@@ -1,3 +1,8 @@
+# Release 0.9.0
+
+* Add cache policy to klb **azure_vm_disk_attach_new** breaking its API
+* Add cache policy to **azure_vm_backup_recover**  breaking its API
+
 # Release 0.8.1
 
 Fix snapshot creation to allow the storage sku
