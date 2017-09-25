@@ -79,20 +79,20 @@ func testVMCreation(
 	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku, caching)
 }
 
-func testReadCacheVM(t *testing.T, f fixture.F) {
-	// TODO
+func testPremiumDiskVM(t *testing.T, f fixture.F) {
+	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS", "None")
 }
 
-func testRWCacheVM(t *testing.T, f fixture.F) {
-	// TODO
+func testVMPremiumDiskReadCache(t *testing.T, f fixture.F) {
+	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS", "ReadOnly")
+}
+
+func testVMPremiumDiskRWCache(t *testing.T, f fixture.F) {
+	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS", "ReadWrite")
 }
 
 func testStandardDiskVM(t *testing.T, f fixture.F) {
 	testVMCreation(t, f, "Basic_A0", "Standard_LRS", "None")
-}
-
-func testPremiumDiskVM(t *testing.T, f fixture.F) {
-	testVMCreation(t, f, "Standard_DS4_v2", "Premium_LRS", "None")
 }
 
 type VMDisk struct {
@@ -336,8 +336,8 @@ func TestVM(t *testing.T) {
 	vmtesttimeout := 45 * time.Minute
 	fixture.Run(t, "VMCreationStandardDisk", vmtesttimeout, location, testStandardDiskVM)
 	fixture.Run(t, "VMCreationPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
-	fixture.Run(t, "VMCreationCacheRead", vmtesttimeout, location, testReadCacheVM)
-	fixture.Run(t, "VMCreationCacheRW", vmtesttimeout, location, testRWCacheVM)
+	fixture.Run(t, "VMCreationCacheRead", vmtesttimeout, location, testVMPremiumDiskReadCache)
+	fixture.Run(t, "VMCreationCacheRW", vmtesttimeout, location, testVMPremiumDiskRWCache)
 	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
 	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
 	fixture.Run(t, "VMPremiumDiskToStdSnapshot", vmtesttimeout, location, testVMPremiumDiskToStdSnapshot)
