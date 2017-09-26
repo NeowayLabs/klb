@@ -237,8 +237,8 @@ fn azure_vm_set_storagesku(instance, storagesku) {
 # `instance` is the name of the instance.
 # `caching` is the caching type, possible values: None, ReadOnly, ReadWrite
 fn azure_vm_set_osdisk_caching(instance, caching) {
-	#instance <= append($instance, "--os-disk-caching")
-	#instance <= append($instance, $caching)
+	instance <= append($instance, "--os-disk-caching")
+	instance <= append($instance, $caching)
 	return $instance
 }
 
@@ -246,7 +246,8 @@ fn azure_vm_set_osdisk_caching(instance, caching) {
 # `instance` is the name of the instance.
 # `caching` is the caching type, possible values: None, ReadOnly, ReadWrite
 fn azure_vm_set_datadisk_caching(instance, caching) {
-	# TODO
+	instance <= append($instance, "--data-disk-caching")
+	instance <= append($instance, $caching)
 	return $instance
 }
 

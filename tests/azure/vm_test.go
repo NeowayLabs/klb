@@ -22,7 +22,7 @@ func TestVM(t *testing.T) {
 	vmtesttimeout := 45 * time.Minute
 	fixture.Run(t, "VMStandardDisk", vmtesttimeout, location, testStandardDiskVM)
 	fixture.Run(t, "VMPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
-	fixture.Run(t, "VMPremiumDiskCacheRead", vmtesttimeout, location, testVMPremiumDiskReadCache)
+	fixture.Run(t, "VMPremiumDiskReadCache", vmtesttimeout, location, testVMPremiumDiskReadCache)
 	fixture.Run(t, "VMPremiumDiskRWCache", vmtesttimeout, location, testVMPremiumDiskRWCache)
 	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
 	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
