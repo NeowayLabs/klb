@@ -15,6 +15,8 @@ func TestVMBackup(t *testing.T) {
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
 	fixture.Run(t, "VMBackupStandardLRS", vmtesttimeout, location, testVMBackupStandardLRS)
 	fixture.Run(t, "VMBackupPremiumLRS", vmtesttimeout, location, testVMBackupPremiumLRS)
+	fixture.Run(t, "VMBackupReadCache", vmtesttimeout, location, testVMBackupReadCache)
+	fixture.Run(t, "VMBackupRWCache", vmtesttimeout, location, testVMBackupRWCache)
 	fixture.Run(t, "VMBackupVMPremiumBackuptStandard", vmtesttimeout, location, testVMBackupVMPremiumBackupStandard)
 }
 
@@ -46,6 +48,14 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vms := azure.NewVM(f)
 	vms.AssertExistsByName(t, recoveredVMName)
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
+}
+
+func testVMBackupReadCache(t *testing.T, f fixture.F) {
+	t.Skip("TODO")
+}
+
+func testVMBackupRWCache(t *testing.T, f fixture.F) {
+	t.Skip("TODO")
 }
 
 func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {

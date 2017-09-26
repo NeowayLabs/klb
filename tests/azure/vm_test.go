@@ -12,6 +12,21 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
+func TestVM(t *testing.T) {
+	t.Parallel()
+	vmtesttimeout := 45 * time.Minute
+	fixture.Run(t, "VMStandardDisk", vmtesttimeout, location, testStandardDiskVM)
+	fixture.Run(t, "VMOsDiskCacheRead", vmtesttimeout, location, testOSDiskCacheRead)
+	fixture.Run(t, "VMOsDiskCacheRW", vmtesttimeout, location, testOSDiskCacheRW)
+	fixture.Run(t, "VMPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
+	fixture.Run(t, "VMPremiumDiskCacheRead", vmtesttimeout, location, testVMPremiumDiskReadCache)
+	fixture.Run(t, "VMPremiumDiskRWCache", vmtesttimeout, location, testVMPremiumDiskRWCache)
+	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
+	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
+	fixture.Run(t, "VMPremiumDiskToStdSnapshot", vmtesttimeout, location, testVMPremiumDiskToStdSnapshot)
+	fixture.Run(t, "VMDuplicatedAvSet", vmtesttimeout, location, testDuplicatedAvailabilitySet)
+}
+
 func genUniqName() string {
 	return fmt.Sprintf("klbvmt-%d", rand.Intn(999999))
 }
@@ -30,6 +45,7 @@ func createVM(
 	nic string,
 	vmSize string,
 	sku string,
+	caching string,
 ) string {
 	vm := genUniqName()
 	username := "core"
@@ -50,6 +66,7 @@ func createVM(
 		imageUrn,
 		keyFile,
 		sku,
+		caching,
 	)
 
 	f.Logger.Println("creating VM")
@@ -68,7 +85,15 @@ func testVMCreation(
 ) {
 
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+	vm := createVM(
+		t,
+		f,
+		resources.availSet,
+		resources.nic,
+		vmSize,
+		sku,
+		caching,
+	)
 
 	diskname := "createVMExtraDisk"
 	size := 10
@@ -77,6 +102,14 @@ func testVMCreation(
 
 	vms := azure.NewVM(f)
 	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku, caching)
+}
+
+func testOSDiskCacheRead(t *testing.T, f fixture.F) {
+	t.Skip("TODO")
+}
+
+func testOSDiskCacheRW(t *testing.T, f fixture.F) {
+	t.Skip("TODO")
 }
 
 func testPremiumDiskVM(t *testing.T, f fixture.F) {
@@ -132,7 +165,7 @@ func testVMSnapshot(
 	disks []VMDisk,
 ) {
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, "None")
 
 	vms := azure.NewVM(f)
 
@@ -158,7 +191,7 @@ func testVMSnapshot(
 
 	nic := genNicName()
 	createVMNIC(f, nic, resources.vnet, resources.subnet)
-	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, vmSKU)
+	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, vmSKU, "None")
 
 	for _, id := range ids {
 		attachSnapshotOnVM(t, f, vmbackup, id, vmSKU)
@@ -342,17 +375,4 @@ func attachNewDiskOnVM(
 		sku,
 		caching,
 	)
-}
-
-func TestVM(t *testing.T) {
-	t.Parallel()
-	vmtesttimeout := 45 * time.Minute
-	fixture.Run(t, "VMStandardDisk", vmtesttimeout, location, testStandardDiskVM)
-	fixture.Run(t, "VMPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
-	fixture.Run(t, "VMPremiumDiskCacheRead", vmtesttimeout, location, testVMPremiumDiskReadCache)
-	fixture.Run(t, "VMPremiumDiskRWCache", vmtesttimeout, location, testVMPremiumDiskRWCache)
-	fixture.Run(t, "VMSnapshotStandard", vmtesttimeout, location, testVMSnapshotStandard)
-	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
-	fixture.Run(t, "VMPremiumDiskToStdSnapshot", vmtesttimeout, location, testVMPremiumDiskToStdSnapshot)
-	fixture.Run(t, "VMDuplicatedAvSet", vmtesttimeout, location, testDuplicatedAvailabilitySet)
 }

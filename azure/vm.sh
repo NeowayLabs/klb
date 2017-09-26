@@ -233,6 +233,22 @@ fn azure_vm_set_storagesku(instance, storagesku) {
 	return $instance
 }
 
+# azure_vm_set_osdisk_caching sets the os disk caching type
+# `instance` is the name of the instance.
+# `caching` is the caching type, possible values: None, ReadOnly, ReadWrite
+fn azure_vm_set_osdisk_caching(instance, caching) {
+	# TODO
+	return $instance
+}
+
+# azure_vm_set_datadisk_caching sets the data disk caching type
+# `instance` is the name of the instance.
+# `caching` is the caching type, possible values: None, ReadOnly, ReadWrite
+fn azure_vm_set_datadisk_caching(instance, caching) {
+	# TODO
+	return $instance
+}
+
 # azure_vm_create creates a "Virtual Machine".
 # `instance` is the name of the instance.
 fn azure_vm_create(instance) {
@@ -739,7 +755,6 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 	if $osdiskname != "" {
 		msg <= format("found os disk name %q on vm instance: ", $osdiskname)
-		
 		return $msg+"should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
 	}
 
@@ -747,7 +762,6 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 	if $sku != "" {
 		msg <= format("found storage-sku %q on vm instance: ", $sku)
-		
 		return $msg+"should not call azure_vm_set_storagesku on a vm that is being recovered from backup"
 	}
 
@@ -776,9 +790,7 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 			osdiskid = $id
 		} else {
 			lun <= _azure_vm_backup_datadisk_lun($name)
-			
 			idlun = ($id $lun)
-			
 			datadisks <= append($datadisks, $idlun)
 		}
 	}
@@ -800,6 +812,7 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 	log("created os disk: "+$osdisk)
 
+	# TODO: set caching on VM
 	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
 
 	log("creating VM")
@@ -826,6 +839,7 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 		log("created disk id: "+$diskid)
 		log("attaching on VM")
+		# TODO: set caching on VM disk attach
 		azure_vm_disk_attach($vmname, $resgroup, $diskid)
 		log("attached")
 	}
