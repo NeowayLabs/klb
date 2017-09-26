@@ -10,6 +10,7 @@ import (
 )
 
 func TestVMBackup(t *testing.T) {
+	t.Skip("TODO")
 	t.Parallel()
 
 	vmtesttimeout := 45 * time.Minute
@@ -53,19 +54,31 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 }
 
 func testVMBackupReadCache(t *testing.T, f fixture.F) {
-	t.Skip("TODO")
-}
-
-func testVMBackupRWCache(t *testing.T, f fixture.F) {
-	t.Skip("TODO")
-}
-
-func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
-	backupNamespace := "klb"
 	testVMBackup(
 		t,
 		f,
-		backupNamespace,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"Read",
+		"Premium_LRS",
+	)
+}
+
+func testVMBackupRWCache(t *testing.T, f fixture.F) {
+	testVMBackup(
+		t,
+		f,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"ReadWrite",
+		"Premium_LRS",
+	)
+}
+
+func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
+	testVMBackup(
+		t,
+		f,
 		"Standard_DS4_v2",
 		"Premium_LRS",
 		"None",
@@ -74,11 +87,9 @@ func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
 }
 
 func testVMPremiumBackupToStandard(t *testing.T, f fixture.F) {
-	backupNamespace := "klb"
 	testVMBackup(
 		t,
 		f,
-		backupNamespace,
 		"Standard_DS4_v2",
 		"Premium_LRS",
 		"None",
@@ -87,11 +98,9 @@ func testVMPremiumBackupToStandard(t *testing.T, f fixture.F) {
 }
 
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
-	backupNamespace := "klb"
 	testVMBackup(
 		t,
 		f,
-		backupNamespace,
 		"Basic_A2",
 		"Standard_LRS",
 		"None",
@@ -102,13 +111,13 @@ func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
 func testVMBackup(
 	t *testing.T,
 	f fixture.F,
-	backupNamespace string,
 	vmSize string,
 	vmSKU string,
 	vmCaching string,
 	backupSKU string,
 ) {
 
+	backupNamespace := "klb"
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, vmCaching)
 
@@ -182,7 +191,8 @@ func assertRecoveredVMDisks(t *testing.T, f fixture.F, vmName string, recoveredV
 
 	// WHY: Names cant be equal
 	if originalOSDisk.SizeGB != restoredOSDisk.SizeGB ||
-		originalOSDisk.OsType != restoredOSDisk.OsType {
+		originalOSDisk.OsType != restoredOSDisk.OsType ||
+		originalOSDisk.Caching != restoredOSDisk.Caching {
 		t.Fatalf("os disk: %+v != %+v", originalOSDisk, restoredOSDisk)
 	}
 
@@ -206,6 +216,13 @@ func assertRecoveredVMDisks(t *testing.T, f fixture.F, vmName string, recoveredV
 				if recoveredDataDisk.SizeGB != dataDisk.SizeGB {
 					t.Fatalf(
 						"expected disks with same LUN to have same size, %+v != %+v",
+						dataDisk,
+						recoveredDataDisk,
+					)
+				}
+				if recoveredDataDisk.Caching != dataDisk.Caching {
+					t.Fatalf(
+						"expected disks with same LUN to have same caching, %+v != %+v",
 						dataDisk,
 						recoveredDataDisk,
 					)
