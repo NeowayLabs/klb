@@ -31,7 +31,7 @@ func TestVM(t *testing.T) {
 }
 
 func genUniqName() string {
-	return fixture.NewUniqueName("vmtest")
+	return fixture.NewUniqueName("vm")
 }
 
 func createVM(
@@ -94,12 +94,16 @@ func testVMCreation(
 	vms := azure.NewVM(f)
 	osdisk := vms.OsDisk(t, vm)
 
-	if osdisk.Caching != caching {
-		t.Fatalf(
-			"expected osdisk caching to be[%s] but it is [%s]",
-			caching,
-			osdisk.Caching,
-		)
+	if caching != "None" {
+		// Why: OS Disks don't support None caching,
+		// we ignore when the caching config is None
+		if caching != osdisk.Caching {
+			t.Fatalf(
+				"expected osdisk caching to be[%s] but it is [%s]",
+				caching,
+				osdisk.Caching,
+			)
+		}
 	}
 
 	diskname := "createVMExtraDisk"

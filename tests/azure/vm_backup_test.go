@@ -19,19 +19,19 @@ func TestVMBackup(t *testing.T) {
 	fixture.Run(t, "VMBackupPremiumLRS", vmtesttimeout, location, testVMBackupPremiumLRS)
 	fixture.Run(t, "VMBackupReadCache", vmtesttimeout, location, testVMBackupReadCache)
 	fixture.Run(t, "VMBackupRWCache", vmtesttimeout, location, testVMBackupRWCache)
-	fixture.Run(t, "VMBackupVMPremiumBackuptStandard", vmtesttimeout, location, testVMBackupVMPremiumBackupStandard)
+	fixture.Run(t, "VMBackupPremiumBackupToStandard", vmtesttimeout, location, testVMPremiumBackupToStandard)
 }
 
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
 	caching := "None"
-	backupPrefix := "klb-tests-osdisk"
+	backupNamespace := "klb"
 
 	resources := createVMResources(t, f)
 	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku, caching)
 
-	vmBackup := backupVM(t, f, vm, backupPrefix, sku)
+	vmBackup := backupVM(t, f, vm, backupNamespace, sku)
 	assertResourceGroupExists(t, f, vmBackup)
 	defer deleteBackup(t, f, vmBackup)
 
@@ -61,11 +61,11 @@ func testVMBackupRWCache(t *testing.T, f fixture.F) {
 }
 
 func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
-	backupPrefix := "klb-tests-premium"
+	backupNamespace := "klb"
 	testVMBackup(
 		t,
 		f,
-		backupPrefix,
+		backupNamespace,
 		"Standard_DS4_v2",
 		"Premium_LRS",
 		"None",
@@ -73,12 +73,12 @@ func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
 	)
 }
 
-func testVMBackupVMPremiumBackupStandard(t *testing.T, f fixture.F) {
-	backupPrefix := "klb-tests-premium"
+func testVMPremiumBackupToStandard(t *testing.T, f fixture.F) {
+	backupNamespace := "klb"
 	testVMBackup(
 		t,
 		f,
-		backupPrefix,
+		backupNamespace,
 		"Standard_DS4_v2",
 		"Premium_LRS",
 		"None",
@@ -87,11 +87,11 @@ func testVMBackupVMPremiumBackupStandard(t *testing.T, f fixture.F) {
 }
 
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
-	backupPrefix := "klb-tests-stdsku"
+	backupNamespace := "klb"
 	testVMBackup(
 		t,
 		f,
-		backupPrefix,
+		backupNamespace,
 		"Basic_A2",
 		"Standard_LRS",
 		"None",
@@ -102,7 +102,7 @@ func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
 func testVMBackup(
 	t *testing.T,
 	f fixture.F,
-	backupPrefix string,
+	backupNamespace string,
 	vmSize string,
 	vmSKU string,
 	vmCaching string,
@@ -119,11 +119,11 @@ func testVMBackup(
 	}
 	attachDisks(t, f, vm, disks)
 
-	vmBackup := backupVM(t, f, vm, backupPrefix, backupSKU)
+	vmBackup := backupVM(t, f, vm, backupNamespace, backupSKU)
 	assertResourceGroupExists(t, f, vmBackup)
 	defer deleteBackup(t, f, vmBackup)
 
-	backups := listBackups(t, f, vm, backupPrefix)
+	backups := listBackups(t, f, vm, backupNamespace)
 	assertEqualStringSlice(t, []string{vmBackup}, backups)
 
 	recoveredVMName := vm + "2"
@@ -141,14 +141,14 @@ func testVMBackup(
 
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 
-	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix, backupSKU)
+	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupNamespace, backupSKU)
 	assertResourceGroupExists(t, f, recoveredVMBackup)
 	defer deleteBackup(t, f, recoveredVMBackup)
 
-	recoveredVMBackups := listBackups(t, f, recoveredVMName, backupPrefix)
+	recoveredVMBackups := listBackups(t, f, recoveredVMName, backupNamespace)
 	assertEqualStringSlice(t, []string{recoveredVMBackup}, recoveredVMBackups)
 
-	allbackups := listAllBackups(t, f, backupPrefix)
+	allbackups := listAllBackups(t, f, backupNamespace)
 	assertEqualStringSlice(t, []string{vmBackup, recoveredVMBackup}, allbackups)
 }
 

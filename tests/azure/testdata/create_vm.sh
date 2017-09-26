@@ -27,7 +27,10 @@ vm <= azure_vm_set_osdiskname($vm, $osdisk)
 vm <= azure_vm_set_imageurn($vm, $imageurn)
 vm <= azure_vm_set_publickeyfile($vm, $keyfile)
 vm <= azure_vm_set_storagesku($vm, $sku)
-vm <= azure_vm_set_osdisk_caching($vm, $caching)
+if $caching != "None" {
+	# OS disk do not support no caching =/
+	vm <= azure_vm_set_osdisk_caching($vm, $caching)
+}
 vm <= azure_vm_set_datadisk_caching($vm, $caching)
 
 azure_vm_create($vm)

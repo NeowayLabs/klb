@@ -107,6 +107,6 @@ func NewUniqueName(prefix string) string {
 		"klb-%s-%d-%d",
 		prefix,
 		time.Now().Unix(),
-		rand.Intn(99999),
+		rand.Intn(9999),
 	)
 }
