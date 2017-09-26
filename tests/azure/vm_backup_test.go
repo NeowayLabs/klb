@@ -10,7 +10,6 @@ import (
 )
 
 func TestVMBackup(t *testing.T) {
-	t.Skip("TODO")
 	t.Parallel()
 
 	vmtesttimeout := 45 * time.Minute
@@ -59,7 +58,7 @@ func testVMBackupReadCache(t *testing.T, f fixture.F) {
 		f,
 		"Standard_DS4_v2",
 		"Premium_LRS",
-		"Read",
+		"ReadOnly",
 		"Premium_LRS",
 	)
 }
