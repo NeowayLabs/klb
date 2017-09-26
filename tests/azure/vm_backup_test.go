@@ -27,7 +27,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	backupPrefix := "klb-tests-osdisk"
 
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku, caching)
 
 	vmBackup := backupVM(t, f, vm, backupPrefix, sku)
 	assertResourceGroupExists(t, f, vmBackup)
@@ -108,7 +108,7 @@ func testVMBackup(
 ) {
 
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, vmCaching)
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
