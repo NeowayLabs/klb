@@ -21,6 +21,7 @@ func TestVMBackup(t *testing.T) {
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
+	caching := "None"
 	backupPrefix := "klb-tests-osdisk"
 
 	resources := createVMResources(t, f)
@@ -39,6 +40,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 		resources.subnet,
 		vmSize,
 		sku,
+		caching,
 		vmBackup,
 	)
 	vms := azure.NewVM(f)
@@ -48,17 +50,41 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 
 func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
 	backupPrefix := "klb-tests-premium"
-	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS", "Premium_LRS")
+	testVMBackup(
+		t,
+		f,
+		backupPrefix,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"None",
+		"Premium_LRS",
+	)
 }
 
 func testVMBackupVMPremiumBackupStandard(t *testing.T, f fixture.F) {
 	backupPrefix := "klb-tests-premium"
-	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS", "Standard_LRS")
+	testVMBackup(
+		t,
+		f,
+		backupPrefix,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"None",
+		"Standard_LRS",
+	)
 }
 
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
 	backupPrefix := "klb-tests-stdsku"
-	testVMBackup(t, f, backupPrefix, "Basic_A2", "Standard_LRS", "Standard_LRS")
+	testVMBackup(
+		t,
+		f,
+		backupPrefix,
+		"Basic_A2",
+		"Standard_LRS",
+		"None",
+		"Standard_LRS",
+	)
 }
 
 func testVMBackup(
@@ -67,6 +93,7 @@ func testVMBackup(
 	backupPrefix string,
 	vmSize string,
 	vmSKU string,
+	vmCaching string,
 	backupSKU string,
 ) {
 
@@ -75,8 +102,8 @@ func testVMBackup(
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 50, Sku: vmSKU, Caching: "None"},
-		{Name: genUniqName(), Size: 100, Sku: vmSKU, Caching: "None"},
+		{Name: genUniqName(), Size: 50, Sku: vmSKU, Caching: vmCaching},
+		{Name: genUniqName(), Size: 100, Sku: vmSKU, Caching: vmCaching},
 	}
 	attachDisks(t, f, vm, disks)
 
@@ -96,6 +123,7 @@ func testVMBackup(
 		resources.subnet,
 		vmSize,
 		vmSKU,
+		vmCaching,
 		vmBackup,
 	)
 
@@ -246,6 +274,7 @@ func recoverVM(
 	subnet string,
 	vmSize string,
 	sku string,
+	caching string,
 	backupResgroup string,
 ) {
 	keyFile := "./testdata/key.pub"

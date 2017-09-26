@@ -151,6 +151,6 @@ backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
 backupvm <= azure_vm_set_ostype($backupvm, "linux")
 echo "restoring backup"
 
-azure_vm_backup_recover($backupvm, "Premium_LRS", $backups[0])
+azure_vm_backup_recover($backupvm, "Premium_LRS", "None", $backups[0])
 echo "finished with success"
 

@@ -692,6 +692,10 @@ fn azure_vm_backup_exists(backup_resgroup) {
 # no storage-sku should be set on the vm instance, since it
 # will be defined on the disks created from the backup.
 #
+# The caching option defines the caching type of the
+# disks that will be attached to the recovered VM.
+# All disks recovered from the backup will have the same caching type.
+#
 # The backup_resgroup is the name of the resource group
 # where the snapshots are stored just as it is returned by
 # azure_vm_backup_create.
@@ -701,7 +705,7 @@ fn azure_vm_backup_exists(backup_resgroup) {
 #
 # This function returns an empty string on success or a
 # non empty error message if it fails.
-fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
+fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 	fn log(msg) {
 		echo "vm.backup.recover: "+$msg
 	}
