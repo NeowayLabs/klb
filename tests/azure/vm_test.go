@@ -1,8 +1,6 @@
 package azure_test
 
 import (
-	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
 	"testing"
@@ -12,12 +10,17 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
+type VMResources struct {
+	availSet string
+	vnet     string
+	subnet   string
+	nic      string
+}
+
 func TestVM(t *testing.T) {
 	t.Parallel()
 	vmtesttimeout := 45 * time.Minute
 	fixture.Run(t, "VMStandardDisk", vmtesttimeout, location, testStandardDiskVM)
-	fixture.Run(t, "VMOsDiskCacheRead", vmtesttimeout, location, testOSDiskCacheRead)
-	fixture.Run(t, "VMOsDiskCacheRW", vmtesttimeout, location, testOSDiskCacheRW)
 	fixture.Run(t, "VMPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
 	fixture.Run(t, "VMPremiumDiskCacheRead", vmtesttimeout, location, testVMPremiumDiskReadCache)
 	fixture.Run(t, "VMPremiumDiskRWCache", vmtesttimeout, location, testVMPremiumDiskRWCache)
@@ -28,14 +31,7 @@ func TestVM(t *testing.T) {
 }
 
 func genUniqName() string {
-	return fmt.Sprintf("klbvmt-%d", rand.Intn(999999))
-}
-
-type VMResources struct {
-	availSet string
-	vnet     string
-	subnet   string
-	nic      string
+	return fixture.NewUniqueName("vmtest")
 }
 
 func createVM(
@@ -95,21 +91,23 @@ func testVMCreation(
 		caching,
 	)
 
+	vms := azure.NewVM(f)
+	osdisk := vms.OsDisk(t, vm)
+
+	if osdisk.Caching != caching {
+		t.Fatalf(
+			"expected osdisk caching to be[%s] but it is [%s]",
+			caching,
+			osdisk.Caching,
+		)
+	}
+
 	diskname := "createVMExtraDisk"
 	size := 10
 
 	attachNewDiskOnVM(t, f, vm, diskname, size, sku, caching)
 
-	vms := azure.NewVM(f)
 	vms.AssertAttachedDataDisk(t, vm, diskname, size, sku, caching)
-}
-
-func testOSDiskCacheRead(t *testing.T, f fixture.F) {
-	t.Skip("TODO")
-}
-
-func testOSDiskCacheRW(t *testing.T, f fixture.F) {
-	t.Skip("TODO")
 }
 
 func testPremiumDiskVM(t *testing.T, f fixture.F) {

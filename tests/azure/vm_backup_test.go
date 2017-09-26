@@ -11,7 +11,9 @@ import (
 
 func TestVMBackup(t *testing.T) {
 	t.Parallel()
+
 	vmtesttimeout := 45 * time.Minute
+
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
 	fixture.Run(t, "VMBackupStandardLRS", vmtesttimeout, location, testVMBackupStandardLRS)
 	fixture.Run(t, "VMBackupPremiumLRS", vmtesttimeout, location, testVMBackupPremiumLRS)
@@ -301,6 +303,7 @@ func recoverVM(
 		keyFile,
 		ostype,
 		sku,
+		caching,
 		backupResgroup,
 	)
 }

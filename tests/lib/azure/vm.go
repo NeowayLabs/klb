@@ -165,7 +165,7 @@ func (vm *VM) AssertAttachedDataDisk(
 			return nil
 		}
 
-		return fmt.Errorf("unable to find disk %q on vm %q", diskname, vmname)
+		return fmt.Errorf("unable to find disk %q on vm %q. available disks: %s", diskname, vmname, disks)
 	})
 }
 
