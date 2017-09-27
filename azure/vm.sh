@@ -821,11 +821,12 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 	log("created os disk: "+$osdisk)
 
 	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
-	if $caching != "None" {
-	        # OS disk do not support None caching
-	        instance <= azure_vm_set_osdisk_caching($instance, $caching)
-        }
 	instance <= azure_vm_set_datadisk_caching($instance, $caching)
+	# if $caching != "None" {
+	        # OS disk do not support None caching
+	        # Right now setting os disk caching on attached os disk do not work
+		# instance <= azure_vm_set_osdisk_caching($instance, $caching)
+        # }
 
 	log("creating VM")
 	azure_vm_create($instance)
