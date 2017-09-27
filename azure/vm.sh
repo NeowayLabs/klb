@@ -820,8 +820,9 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 	log("created os disk: "+$osdisk)
 
-	# TODO: set caching on VM
 	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
+	instance <= azure_vm_set_osdisk_caching($instance, $caching)
+	instance <= azure_vm_set_datadisk_caching($instance, $caching)
 
 	log("creating VM")
 	azure_vm_create($instance)
