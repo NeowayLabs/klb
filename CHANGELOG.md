@@ -4,7 +4,7 @@ This release breaks the API of the following functions:
 
 * Add cache policy to klb **azure_vm_disk_attach_new**
 * Add cache policy to **azure_vm_backup_recover**
-* Add cache policy to **azure_vm_disk_attach**
+* Add cache policy to **azure_vm_disk_attach_lun**
 
 # Release 0.8.1
 
