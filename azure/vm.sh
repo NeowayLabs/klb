@@ -841,9 +841,9 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 		diskname = $vmname+"-disk-"+$lun
 
-		d      <= azure_disk_new($diskname, $resgroup, $location)
-		d      <= azure_disk_set_source($d, $id)
-		d      <= azure_disk_set_sku($d, $storagesku)
+		d <= azure_disk_new($diskname, $resgroup, $location)
+		d <= azure_disk_set_source($d, $id)
+		d <= azure_disk_set_sku($d, $storagesku)
 		diskid <= azure_disk_create($d)
 
 		log("created disk id: "+$diskid)
