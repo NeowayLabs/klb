@@ -333,21 +333,14 @@ fn azure_vm_availset_delete(name, group) {
 }
 
 # azure_vm_disk_attach attaches an existing disk to the VM.
-fn azure_vm_disk_attach(name, resgroup, diskID) {
-	az vm disk attach -g $resgroup --vm-name $name --disk $diskID
-}
-
-# azure_vm_disk_attach_caching attaches an existing disk to the VM with
-# the provided caching type.
-fn azure_vm_disk_attach_with_caching(name, resgroup, diskID, caching) {
-	# TODO: just to validate if it works
+fn azure_vm_disk_attach(name, resgroup, diskID, caching) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --caching $caching
 }
 
 # azure_vm_disk_attach_lun does the same as azure_vm_disk_attach
 # but with the specificied LUN.
-fn azure_vm_disk_attach_lun(name, resgroup, diskID, lun) {
-	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun
+fn azure_vm_disk_attach_lun(name, resgroup, diskID, lun, caching) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun --caching $caching
 }
 
 # azure_vm_disk_attach_new creates a new disk and attaches to the VM.
@@ -852,7 +845,7 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 		log("created disk id: "+$diskid)
 		log("attaching on VM")
-		azure_vm_disk_attach_with_caching($vmname, $resgroup, $diskid, $caching)
+		azure_vm_disk_attach_lun($vmname, $resgroup, $diskid, $lun, $caching)
 		log("attached")
 	}
 
