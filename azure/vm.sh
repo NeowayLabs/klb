@@ -337,9 +337,9 @@ fn azure_vm_disk_attach(name, resgroup, diskID, caching) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --caching $caching
 }
 
-# azure_vm_disk_attach_lun does the same as azure_vm_disk_attach
+# azure_vm_disk_attach_with_lun does the same as azure_vm_disk_attach
 # but with the specificied LUN.
-fn azure_vm_disk_attach_lun(name, resgroup, diskID, lun, caching) {
+fn azure_vm_disk_attach_with_lun(name, resgroup, diskID, caching, lun) {
 	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun --caching $caching
 }
 
@@ -845,7 +845,7 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 		log("created disk id: "+$diskid)
 		log("attaching on VM")
-		azure_vm_disk_attach_lun($vmname, $resgroup, $diskid, $lun, $caching)
+                azure_vm_disk_attach_with_lun($vmname, $resgroup, $diskid, $caching, $lun)
 		log("attached")
 	}
 
