@@ -13,7 +13,8 @@ subnet      = $ARGS[6]
 pubkey      = $ARGS[7]
 ostype      = $ARGS[8]
 storagesku  = $ARGS[9]
-bkpresgroup = $ARGS[10]
+caching     = $ARGS[10]
+bkpresgroup = $ARGS[11]
 
 azure_login()
 
@@ -47,7 +48,7 @@ vm   <= azure_vm_set_ostype($vm, $ostype)
 
 echo "creating vm from backup: "+$bkpresgroup
 
-res <= azure_vm_backup_recover($vm, $storagesku, $bkpresgroup)
+res <= azure_vm_backup_recover($vm, $storagesku, $caching, $bkpresgroup)
 
 if $res != "" {
 	echo "error: "+$res

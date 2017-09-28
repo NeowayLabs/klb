@@ -86,9 +86,9 @@ echo "creating virtual machine"
 
 create_vm($vm_name, $subnet_name, "Premium_LRS")
 
-azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "100", "Premium_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "200", "Standard_LRS")
-azure_vm_disk_attach_new($vm_name, $group, "bigPremiumDisk", "1023", "Premium_LRS")
+azure_vm_disk_attach_new($vm_name, $group, "premiumDisk", "100", "Premium_LRS", "None")
+azure_vm_disk_attach_new($vm_name, $group, "standardDisk", "200", "Standard_LRS", "None")
+azure_vm_disk_attach_new($vm_name, $group, "bigPremiumDisk", "1023", "Premium_LRS", "None")
 
 echo "created main VM"
 echo "creating backup VM"
@@ -113,6 +113,8 @@ fn log(msg) {
 	echo $ts + ":" + $msg
 }
 
+diskcaching = "None"
+
 for id in $ids {
 	snapshot_name <= addsuffix("snapshot")
 
@@ -133,7 +135,7 @@ for id in $ids {
 
 	echo "created disk with success, attaching it to backup vm"
 
-	azure_vm_disk_attach($vm_backup_name, $group, $disk_name)
+	azure_vm_disk_attach($vm_backup_name, $group, $disk_name, $diskcaching)
 
 	echo "attached disk with success"
 }

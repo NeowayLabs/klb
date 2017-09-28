@@ -233,6 +233,24 @@ fn azure_vm_set_storagesku(instance, storagesku) {
 	return $instance
 }
 
+# azure_vm_set_osdisk_caching sets the os disk caching type
+# `instance` is the name of the instance.
+# `caching` is the caching type, possible values: None, ReadOnly, ReadWrite
+fn azure_vm_set_osdisk_caching(instance, caching) {
+	instance <= append($instance, "--os-disk-caching")
+	instance <= append($instance, $caching)
+	return $instance
+}
+
+# azure_vm_set_datadisk_caching sets the data disk caching type
+# `instance` is the name of the instance.
+# `caching` is the caching type, possible values: None, ReadOnly, ReadWrite
+fn azure_vm_set_datadisk_caching(instance, caching) {
+	instance <= append($instance, "--data-disk-caching")
+	instance <= append($instance, $caching)
+	return $instance
+}
+
 # azure_vm_create creates a "Virtual Machine".
 # `instance` is the name of the instance.
 fn azure_vm_create(instance) {
@@ -315,19 +333,19 @@ fn azure_vm_availset_delete(name, group) {
 }
 
 # azure_vm_disk_attach attaches an existing disk to the VM.
-fn azure_vm_disk_attach(name, resgroup, diskID) {
-	az vm disk attach -g $resgroup --vm-name $name --disk $diskID
+fn azure_vm_disk_attach(name, resgroup, diskID, caching) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --caching $caching
 }
 
-# azure_vm_disk_attach_lun does the same as azure_vm_disk_attach
+# azure_vm_disk_attach_with_lun does the same as azure_vm_disk_attach
 # but with the specificied LUN.
-fn azure_vm_disk_attach_lun(name, resgroup, diskID, lun) {
-	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun
+fn azure_vm_disk_attach_with_lun(name, resgroup, diskID, caching, lun) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskID --lun $lun --caching $caching
 }
 
-# azure_vm_disk_attach_new creats a new disk and attaches to the VM.
-fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku) {
-	az vm disk attach -g $resgroup --vm-name $name --disk $diskname --new --size-gb $size --sku $sku
+# azure_vm_disk_attach_new creates a new disk and attaches to the VM.
+fn azure_vm_disk_attach_new(name, resgroup, diskname, size, sku, caching) {
+	az vm disk attach -g $resgroup --vm-name $name --disk $diskname --new --size-gb $size --sku $sku --caching $caching
 }
 
 # azure_vm_get_datadisks_ids will returns a list with the
@@ -691,6 +709,10 @@ fn azure_vm_backup_exists(backup_resgroup) {
 # no storage-sku should be set on the vm instance, since it
 # will be defined on the disks created from the backup.
 #
+# The caching option defines the caching type of the
+# disks that will be attached to the recovered VM.
+# All disks recovered from the backup will have the same caching type.
+#
 # The backup_resgroup is the name of the resource group
 # where the snapshots are stored just as it is returned by
 # azure_vm_backup_create.
@@ -700,7 +722,7 @@ fn azure_vm_backup_exists(backup_resgroup) {
 #
 # This function returns an empty string on success or a
 # non empty error message if it fails.
-fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
+fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 	fn log(msg) {
 		echo "vm.backup.recover: "+$msg
 	}
@@ -734,7 +756,6 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 
 	if $osdiskname != "" {
 		msg <= format("found os disk name %q on vm instance: ", $osdiskname)
-		
 		return $msg+"should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
 	}
 
@@ -742,7 +763,6 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 
 	if $sku != "" {
 		msg <= format("found storage-sku %q on vm instance: ", $sku)
-		
 		return $msg+"should not call azure_vm_set_storagesku on a vm that is being recovered from backup"
 	}
 
@@ -771,9 +791,7 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 			osdiskid = $id
 		} else {
 			lun <= _azure_vm_backup_datadisk_lun($name)
-			
 			idlun = ($id $lun)
-			
 			datadisks <= append($datadisks, $idlun)
 		}
 	}
@@ -796,6 +814,12 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 	log("created os disk: "+$osdisk)
 
 	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
+	instance <= azure_vm_set_datadisk_caching($instance, $caching)
+	# if $caching != "None" {
+	        # OS disk do not support None caching
+	        # Right now setting os disk caching on attached os disk do not work
+		# instance <= azure_vm_set_osdisk_caching($instance, $caching)
+        # }
 
 	log("creating VM")
 	azure_vm_create($instance)
@@ -814,14 +838,14 @@ fn azure_vm_backup_recover(instance, storagesku, backup_resgroup) {
 
 		diskname = $vmname+"-disk-"+$lun
 
-		d      <= azure_disk_new($diskname, $resgroup, $location)
-		d      <= azure_disk_set_source($d, $id)
-		d      <= azure_disk_set_sku($d, $storagesku)
+		d <= azure_disk_new($diskname, $resgroup, $location)
+		d <= azure_disk_set_source($d, $id)
+		d <= azure_disk_set_sku($d, $storagesku)
 		diskid <= azure_disk_create($d)
 
 		log("created disk id: "+$diskid)
 		log("attaching on VM")
-		azure_vm_disk_attach($vmname, $resgroup, $diskid)
+                azure_vm_disk_attach_with_lun($vmname, $resgroup, $diskid, $caching, $lun)
 		log("attached")
 	}
 

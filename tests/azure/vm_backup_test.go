@@ -11,22 +11,27 @@ import (
 
 func TestVMBackup(t *testing.T) {
 	t.Parallel()
+
 	vmtesttimeout := 45 * time.Minute
+
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
 	fixture.Run(t, "VMBackupStandardLRS", vmtesttimeout, location, testVMBackupStandardLRS)
 	fixture.Run(t, "VMBackupPremiumLRS", vmtesttimeout, location, testVMBackupPremiumLRS)
-	fixture.Run(t, "VMBackupVMPremiumBackuptStandard", vmtesttimeout, location, testVMBackupVMPremiumBackupStandard)
+	fixture.Run(t, "VMBackupReadCache", vmtesttimeout, location, testVMBackupReadCache)
+	fixture.Run(t, "VMBackupRWCache", vmtesttimeout, location, testVMBackupRWCache)
+	fixture.Run(t, "VMBackupPremiumBackupToStandard", vmtesttimeout, location, testVMPremiumBackupToStandard)
 }
 
 func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	vmSize := "Basic_A2"
 	sku := "Standard_LRS"
-	backupPrefix := "klb-tests-osdisk"
+	caching := "None"
+	backupNamespace := "klb"
 
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku, caching)
 
-	vmBackup := backupVM(t, f, vm, backupPrefix, sku)
+	vmBackup := backupVM(t, f, vm, backupNamespace, sku)
 	assertResourceGroupExists(t, f, vmBackup)
 	defer deleteBackup(t, f, vmBackup)
 
@@ -39,6 +44,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 		resources.subnet,
 		vmSize,
 		sku,
+		caching,
 		vmBackup,
 	)
 	vms := azure.NewVM(f)
@@ -46,45 +52,86 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 }
 
-func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
-	backupPrefix := "klb-tests-premium"
-	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS", "Premium_LRS")
+func testVMBackupReadCache(t *testing.T, f fixture.F) {
+	testVMBackup(
+		t,
+		f,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"ReadOnly",
+		"Premium_LRS",
+	)
 }
 
-func testVMBackupVMPremiumBackupStandard(t *testing.T, f fixture.F) {
-	backupPrefix := "klb-tests-premium"
-	testVMBackup(t, f, backupPrefix, "Standard_DS4_v2", "Premium_LRS", "Standard_LRS")
+func testVMBackupRWCache(t *testing.T, f fixture.F) {
+	testVMBackup(
+		t,
+		f,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"ReadWrite",
+		"Premium_LRS",
+	)
+}
+
+func testVMBackupPremiumLRS(t *testing.T, f fixture.F) {
+	testVMBackup(
+		t,
+		f,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"None",
+		"Premium_LRS",
+	)
+}
+
+func testVMPremiumBackupToStandard(t *testing.T, f fixture.F) {
+	testVMBackup(
+		t,
+		f,
+		"Standard_DS4_v2",
+		"Premium_LRS",
+		"None",
+		"Standard_LRS",
+	)
 }
 
 func testVMBackupStandardLRS(t *testing.T, f fixture.F) {
-	backupPrefix := "klb-tests-stdsku"
-	testVMBackup(t, f, backupPrefix, "Basic_A2", "Standard_LRS", "Standard_LRS")
+	testVMBackup(
+		t,
+		f,
+		"Basic_A2",
+		"Standard_LRS",
+		"None",
+		"Standard_LRS",
+	)
 }
 
 func testVMBackup(
 	t *testing.T,
 	f fixture.F,
-	backupPrefix string,
 	vmSize string,
 	vmSKU string,
+	vmCaching string,
 	backupSKU string,
 ) {
 
+	backupNamespace := "klb"
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, vmCaching)
 
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
-		{Name: genUniqName(), Size: 50, Sku: vmSKU},
-		{Name: genUniqName(), Size: 100, Sku: vmSKU},
+		{Name: genUniqName(), Size: 50, Sku: vmSKU, Caching: vmCaching},
+		{Name: genUniqName(), Size: 100, Sku: vmSKU, Caching: vmCaching},
 	}
 	attachDisks(t, f, vm, disks)
 
-	vmBackup := backupVM(t, f, vm, backupPrefix, backupSKU)
+	vmBackup := backupVM(t, f, vm, backupNamespace, backupSKU)
 	assertResourceGroupExists(t, f, vmBackup)
 	defer deleteBackup(t, f, vmBackup)
 
-	backups := listBackups(t, f, vm, backupPrefix)
+	backups := listBackups(t, f, vm, backupNamespace)
 	assertEqualStringSlice(t, []string{vmBackup}, backups)
 
 	recoveredVMName := vm + "2"
@@ -96,19 +143,20 @@ func testVMBackup(
 		resources.subnet,
 		vmSize,
 		vmSKU,
+		vmCaching,
 		vmBackup,
 	)
 
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 
-	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupPrefix, backupSKU)
+	recoveredVMBackup := backupVM(t, f, recoveredVMName, backupNamespace, backupSKU)
 	assertResourceGroupExists(t, f, recoveredVMBackup)
 	defer deleteBackup(t, f, recoveredVMBackup)
 
-	recoveredVMBackups := listBackups(t, f, recoveredVMName, backupPrefix)
+	recoveredVMBackups := listBackups(t, f, recoveredVMName, backupNamespace)
 	assertEqualStringSlice(t, []string{recoveredVMBackup}, recoveredVMBackups)
 
-	allbackups := listAllBackups(t, f, backupPrefix)
+	allbackups := listAllBackups(t, f, backupNamespace)
 	assertEqualStringSlice(t, []string{vmBackup, recoveredVMBackup}, allbackups)
 }
 
@@ -143,6 +191,9 @@ func assertRecoveredVMDisks(t *testing.T, f fixture.F, vmName string, recoveredV
 	// WHY: Names cant be equal
 	if originalOSDisk.SizeGB != restoredOSDisk.SizeGB ||
 		originalOSDisk.OsType != restoredOSDisk.OsType {
+		// FIXME: Right now setting the caching on the recovered VM does
+		// not works, the az command fails =(, so we cant define the os disk caching.
+		// originalOSDisk.Caching != restoredOSDisk.Caching
 		t.Fatalf("os disk: %+v != %+v", originalOSDisk, restoredOSDisk)
 	}
 
@@ -166,6 +217,13 @@ func assertRecoveredVMDisks(t *testing.T, f fixture.F, vmName string, recoveredV
 				if recoveredDataDisk.SizeGB != dataDisk.SizeGB {
 					t.Fatalf(
 						"expected disks with same LUN to have same size, %+v != %+v",
+						dataDisk,
+						recoveredDataDisk,
+					)
+				}
+				if recoveredDataDisk.Caching != dataDisk.Caching {
+					t.Fatalf(
+						"expected disks with same LUN to have same caching, %+v != %+v",
 						dataDisk,
 						recoveredDataDisk,
 					)
@@ -246,6 +304,7 @@ func recoverVM(
 	subnet string,
 	vmSize string,
 	sku string,
+	caching string,
 	backupResgroup string,
 ) {
 	keyFile := "./testdata/key.pub"
@@ -262,6 +321,7 @@ func recoverVM(
 		keyFile,
 		ostype,
 		sku,
+		caching,
 		backupResgroup,
 	)
 }

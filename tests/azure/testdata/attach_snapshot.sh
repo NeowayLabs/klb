@@ -4,12 +4,13 @@ import klb/azure/login
 import klb/azure/vm
 import klb/azure/disk
 
-resgroup   = $ARGS[1]
-location   = $ARGS[2]
-vmname     = $ARGS[3]
-diskname   = $ARGS[4]
-disksku    = $ARGS[5]
-snapshotid = $ARGS[6]
+resgroup    = $ARGS[1]
+location    = $ARGS[2]
+vmname      = $ARGS[3]
+diskname    = $ARGS[4]
+disksku     = $ARGS[5]
+snapshotid  = $ARGS[6]
+diskcaching = "None"
 
 azure_login()
 
@@ -18,4 +19,4 @@ disk <= azure_disk_set_source($disk, $snapshotid)
 disk <= azure_disk_set_sku($disk, $disksku)
 
 azure_disk_create($disk)
-azure_vm_disk_attach($vmname, $resgroup, $diskname)
+azure_vm_disk_attach($vmname, $resgroup, $diskname, $diskcaching)

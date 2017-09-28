@@ -107,7 +107,7 @@ range     <= split($sequence, "\n")
 print("creating %q disks with size %q\n", $vm_disks_count, $vm_disks_size)
 
 for i in $range {
-	azure_vm_disk_attach_new($vm_name, $group, "disk" + $i, $vm_disks_size, "Premium_LRS")
+	azure_vm_disk_attach_new($vm_name, $group, "disk" + $i, $vm_disks_size, "Premium_LRS", "None")
 }
 
 echo "stopping VM"
@@ -151,6 +151,6 @@ backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
 backupvm <= azure_vm_set_ostype($backupvm, "linux")
 echo "restoring backup"
 
-azure_vm_backup_recover($backupvm, "Premium_LRS", $backups[0])
+azure_vm_backup_recover($backupvm, "Premium_LRS", "None", $backups[0])
 echo "finished with success"
 
