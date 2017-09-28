@@ -15,6 +15,7 @@ func TestVMBackup(t *testing.T) {
 	vmtesttimeout := 45 * time.Minute
 
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
+	fixture.Run(t, "VMBackupOneDataDisk", vmtesttimeout, location, testVMBackupOneDataDisk)
 	fixture.Run(t, "VMBackupStandardLRS", vmtesttimeout, location, testVMBackupStandardLRS)
 	fixture.Run(t, "VMBackupPremiumLRS", vmtesttimeout, location, testVMBackupPremiumLRS)
 	fixture.Run(t, "VMBackupReadCache", vmtesttimeout, location, testVMBackupReadCache)

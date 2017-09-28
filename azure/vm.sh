@@ -76,11 +76,12 @@ fn azure_vm_set_username(instance, username) {
 # `instance` is the name of the instance.
 # `password` is the password for the virtual machine.
 fn azure_vm_set_password(instance, password) {
-        instance <= append($instance, "--admin-password")
-        instance <= append($instance, $password)
+	instance <= append($instance, "--admin-password")
+	instance <= append($instance, $password)
 
-        return $instance
+	return $instance
 }
+
 # azure_vm_set_publickeyfile sets the SSH public key of "Virtual Machine".
 # `instance` is the name of the instance.
 # `publickeyfile` is the SSH public key or public key file path.
@@ -239,6 +240,7 @@ fn azure_vm_set_storagesku(instance, storagesku) {
 fn azure_vm_set_osdisk_caching(instance, caching) {
 	instance <= append($instance, "--os-disk-caching")
 	instance <= append($instance, $caching)
+
 	return $instance
 }
 
@@ -248,6 +250,7 @@ fn azure_vm_set_osdisk_caching(instance, caching) {
 fn azure_vm_set_datadisk_caching(instance, caching) {
 	instance <= append($instance, "--data-disk-caching")
 	instance <= append($instance, $caching)
+
 	return $instance
 }
 
@@ -392,11 +395,11 @@ fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
 		return $ids_luns
 	}
 
-	luns     <= split($luns_raw, "\n")
-	size     <= len($ids)
+	luns        <= split($luns_raw, "\n")
+	size        <= len($ids)
 	rangeend, _ <= expr $size - 1
-	sequence <= seq "0" $rangeend
-	range    <= split($sequence, "\n")
+	sequence    <= seq "0" $rangeend
+	range       <= split($sequence, "\n")
 
 	for i in $range {
 		idlun = ($ids[$i] $luns[$i])
@@ -610,7 +613,7 @@ fn azure_vm_backup_list(vmname, namespace) {
 	filtered = ""
 
 	for resgroup in $resgroups {
-		hasnamespace, _ <= _azure_vm_resgroup_is_backup($resgroup, $namespace)
+		hasnamespace, _   <= _azure_vm_resgroup_is_backup($resgroup, $namespace)
 		hasvmname, status <= echo $hasnamespace | grep $vmname+"$"
 
 		if $status == "0" {
@@ -634,6 +637,7 @@ fn azure_vm_backup_list_all(namespace) {
 
 	for resgroup in $resgroups {
 		_, status <= _azure_vm_resgroup_is_backup($resgroup, $namespace)
+
 		if $status == "0" {
 			filtered = $filtered+$resgroup+"\n"
 		}
@@ -652,15 +656,17 @@ fn azure_vm_backup_delete(backup_resgroup) {
 	echo "backup delete: removing delete lock: "+$dellock
 
 	err <= azure_lock_delete($dellock, $backup_resgroup)
+
 	if $err != "" {
-		return "azure_vm_backup_delete: error deleting delete lock: " + $err
+		return "azure_vm_backup_delete: error deleting delete lock: "+$err
 	}
 
 	echo "backup delete: removing read lock: "+$readlock
 
 	err <= azure_lock_delete($readlock, $backup_resgroup)
+
 	if $err != "" {
-		return "azure_vm_backup_delete: error deleting read lock: " + $err
+		return "azure_vm_backup_delete: error deleting read lock: "+$err
 	}
 
 	echo "backup delete: locks removed, deleting resource group: "+$backup_resgroup
@@ -756,6 +762,7 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 	if $osdiskname != "" {
 		msg <= format("found os disk name %q on vm instance: ", $osdiskname)
+		
 		return $msg+"should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
 	}
 
@@ -763,6 +770,7 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 	if $sku != "" {
 		msg <= format("found storage-sku %q on vm instance: ", $sku)
+		
 		return $msg+"should not call azure_vm_set_storagesku on a vm that is being recovered from backup"
 	}
 
@@ -791,7 +799,9 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 			osdiskid = $id
 		} else {
 			lun <= _azure_vm_backup_datadisk_lun($name)
+			
 			idlun = ($id $lun)
+			
 			datadisks <= append($datadisks, $idlun)
 		}
 	}
@@ -815,11 +825,12 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 	instance <= azure_vm_set_osdisk_id($instance, $osdisk)
 	instance <= azure_vm_set_datadisk_caching($instance, $caching)
+
 	# if $caching != "None" {
-	        # OS disk do not support None caching
-	        # Right now setting os disk caching on attached os disk do not work
-		# instance <= azure_vm_set_osdisk_caching($instance, $caching)
-        # }
+	# OS disk do not support None caching
+	# Right now setting os disk caching on attached os disk do not work
+	# instance <= azure_vm_set_osdisk_caching($instance, $caching)
+	# }
 
 	log("creating VM")
 	azure_vm_create($instance)
@@ -838,14 +849,14 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 
 		diskname = $vmname+"-disk-"+$lun
 
-		d <= azure_disk_new($diskname, $resgroup, $location)
-		d <= azure_disk_set_source($d, $id)
-		d <= azure_disk_set_sku($d, $storagesku)
+		d      <= azure_disk_new($diskname, $resgroup, $location)
+		d      <= azure_disk_set_source($d, $id)
+		d      <= azure_disk_set_sku($d, $storagesku)
 		diskid <= azure_disk_create($d)
 
 		log("created disk id: "+$diskid)
 		log("attaching on VM")
-                azure_vm_disk_attach_with_lun($vmname, $resgroup, $diskid, $caching, $lun)
+		azure_vm_disk_attach_with_lun($vmname, $resgroup, $diskid, $caching, $lun)
 		log("attached")
 	}
 
@@ -856,7 +867,6 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 	return ""
 }
 
-
 # azure_vm_list_names will list all virtual machines available on
 # the given resource group. There are two return values,
 # the first one is a list of virtual machines names or
@@ -865,17 +875,18 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 # The second one is an error string, if it is "" it means success,
 # otherwise it contains the error message.
 fn azure_vm_list_names(resgroup) {
-        res, status <= az vm list --resource-group $resgroup --query "[].name" --output tsv
-        if $status != "0" {
-                return (), "error listing VM's: " + $res
-        }
+	res, status <= az vm list --resource-group $resgroup --query "[].name" --output tsv
 
-        if $res == "" {
-                return (), ""
-        }
+	if $status != "0" {
+		return (), "error listing VM's: "+$res
+	}
+	if $res == "" {
+		return (), ""
+	}
 
-        parsed <= split($res, "\n")
-        return $parsed, ""
+	parsed <= split($res, "\n")
+
+	return $parsed, ""
 }
 
 fn _azure_vm_backup_get_nodelete_lock(bkp_resgroup) {
@@ -925,12 +936,12 @@ fn _azure_vm_backup_datadisk_lun(name) {
 fn _azure_vm_get(instance, cfgname) {
 	cfgname = "--"+$cfgname
 
-	size      <= len($instance)
-	rangeend, _  <= expr $size "-" "2"
-	sequence  <= seq "0" $rangeend
-	range     <= split($sequence, "\n")
+	size        <= len($instance)
+	rangeend, _ <= expr $size "-" "2"
+	sequence    <= seq "0" $rangeend
+	range       <= split($sequence, "\n")
 
-	ids_names = ()
+	ids_names   = ()
 
 	for i in $range {
 		cfgval_index, _ <= expr $i "+" "1"
@@ -946,6 +957,7 @@ fn _azure_vm_get(instance, cfgname) {
 }
 
 fn _azure_vm_resgroup_is_backup(resgroup, namespace) {
-        out, status <= echo $resgroup | grep "^"+$namespace+"-bkp"
-        return $out, $status
+	out, status <= echo $resgroup | grep "^"+$namespace+"-bkp"
+
+	return $out, $status
 }
