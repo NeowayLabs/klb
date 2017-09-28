@@ -54,17 +54,15 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 }
 
 func testVMBackupOneDataDisk(t *testing.T, f fixture.F) {
+	vmSize := "Standard_DS4_v2"
+	vmSKU := "Premium_LRS"
+	vmCaching := "ReadOnly"
+	backupSKU := "Premium_LRS"
 	disks := []VMDisk{
 		{Name: genUniqName(), Size: 50, Sku: vmSKU, Caching: vmCaching},
 	}
 
-	testVMBackupDataDisks(t,
-		f,
-		"Standard_DS4_v2",
-		"Premium_LRS",
-		"ReadOnly",
-		"Premium_LRS",
-		disks)
+	testVMBackupDataDisks(t, f, vmSize, vmSKU, vmCaching, backupSKU, disks)
 }
 
 func testVMBackupReadCache(t *testing.T, f fixture.F) {
