@@ -394,7 +394,7 @@ fn azure_vm_get_datadisks_ids_lun(name, resgroup) {
 
 	luns     <= split($luns_raw, "\n")
 	size     <= len($ids)
-	rangeend <= expr $size - 1
+	rangeend, _ <= expr $size - 1
 	sequence <= seq "0" $rangeend
 	range    <= split($sequence, "\n")
 
@@ -926,14 +926,14 @@ fn _azure_vm_get(instance, cfgname) {
 	cfgname = "--"+$cfgname
 
 	size      <= len($instance)
-	rangeend  <= expr $size "-" "2"
+	rangeend, _  <= expr $size "-" "2"
 	sequence  <= seq "0" $rangeend
 	range     <= split($sequence, "\n")
 
 	ids_names = ()
 
 	for i in $range {
-		cfgval_index <= expr $i "+" "1"
+		cfgval_index, _ <= expr $i "+" "1"
 
 		name = $instance[$i]
 

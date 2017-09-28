@@ -52,6 +52,21 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	assertRecoveredVMDisks(t, f, vm, recoveredVMName)
 }
 
+func testVMBackupOneDataDisk(
+	t *testing.T,
+	f fixture.F,
+	vmSize string,
+	vmSKU string,
+	vmCaching string,
+	backupSKU string,
+) {
+	disks := []VMDisk{
+		{Name: genUniqName(), Size: 50, Sku: vmSKU, Caching: vmCaching},
+	}
+
+	testVMBackupDataDisks(t, f, vmSize, vmSKU, vmCaching, backupSKU, disks)
+}
+
 func testVMBackupReadCache(t *testing.T, f fixture.F) {
 	testVMBackup(
 		t,
@@ -115,16 +130,29 @@ func testVMBackup(
 	vmCaching string,
 	backupSKU string,
 ) {
-
-	backupNamespace := "klb"
-	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, vmCaching)
-
 	disks := []VMDisk{
 		// Different sizes is important to validate behavior
 		{Name: genUniqName(), Size: 50, Sku: vmSKU, Caching: vmCaching},
 		{Name: genUniqName(), Size: 100, Sku: vmSKU, Caching: vmCaching},
 	}
+
+	testVMBackupDataDisks(t, f, vmSize, vmSKU, vmCaching, backupSKU, disks)
+}
+
+func testVMBackupDataDisks(
+	t *testing.T,
+	f fixture.F,
+	vmSize string,
+	vmSKU string,
+	vmCaching string,
+	backupSKU string,
+	disks []VMDisk,
+) {
+
+	backupNamespace := "klb"
+	resources := createVMResources(t, f)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, vmCaching)
+
 	attachDisks(t, f, vm, disks)
 
 	vmBackup := backupVM(t, f, vm, backupNamespace, backupSKU)
