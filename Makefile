@@ -26,6 +26,11 @@ credentials: image guard-sh guard-subscription guard-service-principal guard-ser
 		/credentials/tools/azure/getcredentials.sh \
 		$(sh) "$(subscription)" "$(service-principal)" "$(service-secret)"
 
+createsp: image guard-subscription-id guard-service-principal guard-service-secret
+	docker run -ti --rm -v `pwd`:/createsp -w /createsp neowaylabs/klb:$(version) \
+		/createsp/tools/azure/createsp.sh \
+		"$(subscription-id)" "$(service-principal)" "$(service-secret)"
+
 shell: image
 	./hack/run-tty.sh /usr/bin/nash
 
