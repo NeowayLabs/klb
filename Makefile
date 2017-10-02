@@ -21,6 +21,11 @@ image:
 	export TERMINFO=""
 	docker build . -t neowaylabs/klb:$(version)
 
+credentials: image guard-sh guard-subscription guard-service-principal guard-service-secret
+	docker run -ti --rm -v `pwd`:/credentials -w /credentials neowaylabs/klb:$(version) \
+		/credentials/tools/azure/getcredentials.sh \
+		$(sh) "$(subscription)" "$(service-principal)" "$(service-secret)"
+
 shell: image
 	./hack/run-tty.sh /usr/bin/nash
 
