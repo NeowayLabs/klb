@@ -22,6 +22,7 @@ AZURE_SUBSCRIPTION_NAME = $ARGS[2]
 SPNAME                  = $ARGS[3]
 SPSECRET                = $ARGS[4]
 
+azure telemetry --disable
 azure login
 azure account set $AZURE_SUBSCRIPTION_NAME
 

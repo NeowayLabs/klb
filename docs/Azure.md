@@ -55,14 +55,13 @@ You'll need the environment variables below:
 Basic usage:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh
-Usage:  ./tools/azure/getcredentials.sh <(sh|nash)> <subscription name> <service principal name> <service secret>
+make credentials sh=(sh|nash) subscription=(subscription) service-principal=(sp name) service-secret=(secret)
 ```
 
 For cool nash shells:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh nash subscription-name klb-sp-tests 123456
+make credentials "sh=nash" "subscription=subscription-name" "service-principal=klb-sp-tests" "service-secret=123456"
 setenv AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 setenv AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
 setenv AZURE_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
@@ -79,7 +78,7 @@ Copy the environment variables from the output to a file and import into your na
 For lame linux shell (like bash):
 
 ```sh
-λ> ./tools/azure/getcredentials.sh sh subscription-name klb-sp-tests 123456
+make credentials sh=sh subscription=subscription-name service-principal=klb-sp-tests service-secret=123456
 export AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 export AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
 export AZURE_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
