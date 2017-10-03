@@ -61,8 +61,7 @@ make credentials sh=(sh|nash) subscription=(subscription) service-principal=(sp 
 For cool nash shells:
 
 ```sh
-λ> ./tools/azure/getcredentials.sh nash subscription-name klb-sp-tests 123456
-make credentials sh=nash subscription=subscription-name service-principal=klb-sp-tests service-secret=123456
+make credentials "sh=nash" "subscription=subscription-name" "service-principal=klb-sp-tests" "service-secret=123456"
 setenv AZURE_SUBSCRIPTION_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXXXXX"
 setenv AZURE_SUBSCRIPTION_NAME="CLOUDFORMATION - QA"
 setenv AZURE_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXX"
