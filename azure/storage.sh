@@ -58,18 +58,17 @@ fn azure_storage_share_delete(name, storage, storagekey) {
 
 # azure_store_container_create creates a new `storage container`.
 # `name` is the storage file container name
-# `quota` is the storage file container quota (in GB)
 # `storage account name` is the storage account name
 # `storage account key` is the storage account key
-#
-# Ref: https://docs.microsoft.com/en-us/azure/storage/storage-how-to-use-files-linux
-fn azure_storage_container_create(name, quota, storage, storagekey) {
+fn azure_storage_container_create(name, storage, storagekey) {
 	(
-		azure storage container create --container $name --quota $quota --account-name $storage --account-key $storagekey
+		azure storage container create $name
+						--account-name $storage
+						--account-key $storagekey
 	)
 }
 
-# azure_store_container_delete deletes a exist `storage container`.
+# azure_store_container_delete deletes a `storage container`.
 # `name` is the storage file container name
 # `storage account name` is the storage account name
 # `storage account key` is the storage account key
