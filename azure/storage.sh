@@ -8,7 +8,7 @@
 # `kind` is the account kind (Storage/BlobStorage)
 # `tier` is the access tier (Hot/Cool)
 fn azure_storage_account_create(name, group, location, sku, kind, tier) {
-	azure storage account create --resource-group $group --location $location --sku-name $sku --kind $kind --access-tier $tier $storagename
+	azure storage account create --resource-group $group --location $location --sku-name $sku --kind $kind --access-tier $tier $name
 }
 
 # azure_store_account_delete deletes a exit `storage account`.
