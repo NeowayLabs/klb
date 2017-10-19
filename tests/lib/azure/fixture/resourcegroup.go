@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/arm/resources/resources"
 	"github.com/NeowayLabs/klb/tests/lib/retrier"
@@ -71,22 +72,32 @@ func (r *ResourceGroup) Delete(t *testing.T, name string) {
 
 	r.client.Delete(name, r.ctx.Done())
 
-	resgroup, err := r.client.Get(name)
-	if err != nil {
-		r.logger.Printf("ResourceGroup.Delete finished")
-		return
+	r.checkDeleted(t, name)
+}
+
+func (r *ResourceGroup) checkDeleted(t *testing.T, name string) {
+	deadline := time.Now().Add(30 * time.Second)
+
+	for time.Now().Before(deadline) {
+		resgroup, err := r.client.Get(name)
+		if err != nil {
+			r.logger.Printf("ResourceGroup.Delete finished")
+			return
+		}
+		r.logger.Printf("ResourceGroup.Delete: still exists, checking if deprovisioning")
+		if resgroup.Properties == nil {
+			t.Fatal("ResourceGroup.Delete: resgroup does not have properties")
+		}
+		if resgroup.Properties.ProvisioningState == nil {
+			t.Fatal("ResourceGroup.Delete: resgroup does not have ProvisioningState")
+		}
+		provisioningState := *resgroup.Properties.ProvisioningState
+		expectedState := "Deleting"
+		if provisioningState == expectedState {
+			r.logger.Printf("ResourceGroup.Delete: resgroup is deprovisioning, should be ok")
+			return
+		}
+		r.logger.Printf("ResourceGroup:Delete: resgroup not deleting or deleted yet")
+		time.Sleep(time.Second)
 	}
-	r.logger.Printf("ResourceGroup.Delete: still exists, checking if deprovisioning")
-	if resgroup.Properties == nil {
-		t.Fatal("ResourceGroup.Delete: resgroup does not have properties")
-	}
-	if resgroup.Properties.ProvisioningState == nil {
-		t.Fatal("ResourceGroup.Delete: resgroup does not have ProvisioningState")
-	}
-	provisioningState := *resgroup.Properties.ProvisioningState
-	expectedState := "Deleting"
-	if *resgroup.Properties.ProvisioningState != expectedState {
-		t.Fatalf("ResourceGroup.Delete: expected state[%s] got [%s]", expectedState, provisioningState)
-	}
-	r.logger.Printf("ResourceGroup.Delete: resgroup is deprovisioning, should be ok")
 }
