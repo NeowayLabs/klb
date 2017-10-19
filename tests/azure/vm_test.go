@@ -158,8 +158,8 @@ func testGetVMIPAddress(
 	expectedVM1IPs := vms.IPs(t, vm1)
 	expectedVM2IPs := vms.IPs(t, vm2)
 
-	gotVM1IP := getVMIP(t, f, vm1, 0, 0)
-	gotVM2IP := getVMIP(t, f, vm2, 0, 0)
+	gotVM1IPs := getVMIPs(t, f, vm1)
+	gotVM2IPs := getVMIPs(t, f, vm2)
 
 	assertOneIP := func(vm string, ips []string) {
 		if len(ips) == 0 {
@@ -179,22 +179,23 @@ func testGetVMIPAddress(
 	assertOneIP(vm1, expectedVM1IPs)
 	assertOneIP(vm2, expectedVM2IPs)
 
-	assertSameIP(vm1, expectedVM1IPs[0], gotVM1IP)
-	assertSameIP(vm2, expectedVM2IPs[0], gotVM2IP)
+	assertOneIP(vm1, gotVM1IPs)
+	assertOneIP(vm2, gotVM2IPs)
+
+	assertSameIP(vm1, expectedVM1IPs[0], gotVM1IPs[0])
+	assertSameIP(vm2, expectedVM2IPs[0], gotVM2IPs[0])
 }
 
-func getVMIP(t *testing.T, f fixture.F, vmname string, ipindex int, ifaceindex int) string {
-	ipaddr := execWithIPC(t, f, func(outfile string) {
+func getVMIPs(t *testing.T, f fixture.F, vmname string) []string {
+	rawIPs := execWithIPC(t, f, func(outfile string) {
 		f.Shell.Run(
-			"./testdata/get_vm_ip.sh",
+			"./testdata/get_vm_ips.sh",
 			f.ResGroupName,
 			vmname,
-			strconv.Itoa(ifaceindex),
-			strconv.Itoa(ipindex),
 			outfile,
 		)
 	})
-	return ipaddr
+	return strings.Split(rawIPs, " ")
 }
 
 type VMDisk struct {

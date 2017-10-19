@@ -5,12 +5,10 @@ import klb/azure/vm
 
 resgroup = $ARGS[1]
 vmname   = $ARGS[2]
-ifaceindex = $ARGS[3]
-ipindex  = $ARGS[4]
-output   = $ARGS[5]
+output   = $ARGS[3]
 
 azure_login()
 
-res <= azure_vm_get_ip_address($vmname, $resgroup, $ifaceindex, $ipindex)
+res <= azure_vm_get_private_ip_addrs($vmname, $resgroup)
 echo $res > $output
 echo "done"
