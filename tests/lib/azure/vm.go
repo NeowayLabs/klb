@@ -39,6 +39,48 @@ func NewVM(f fixture.F) *VM {
 	return as
 }
 
+func (vm *VM) IPs(t *testing.T, vmname string) []string {
+	abortonerr := func(err error) {
+		if err != nil {
+			t.Fatalf("error[%s] getting IP address for vm[%s]", err, vmname)
+		}
+	}
+
+	v, err := vm.client.Get(vm.f.ResGroupName, vmname, "")
+	abortonerr(err)
+
+	if v.VirtualMachineProperties == nil {
+		abortonerr(errors.New("no virtual machine properties found"))
+	}
+	properties := v.VirtualMachineProperties
+
+	if properties.NetworkProfile == nil {
+		abortonerr(errors.New("Field NetworkProfile is nil!"))
+	}
+	network := *properties.NetworkProfile.NetworkInterfaces
+	if len(network) == 0 {
+		abortonerr(errors.New("Field NetworkInterfaces is nil!"))
+	}
+
+	ips := []string{}
+	nic := NewNic(vm.f)
+
+	for _, net := range network {
+		if net.ID == nil {
+			abortonerr(errors.New("network interface ID is nil!"))
+		}
+
+		ipConfigs, err := nic.GetIPConfigsByID(t, *net.ID)
+		abortonerr(err)
+
+		for _, ipConfig := range ipConfigs {
+			ips = append(ips, ipConfig.PrivateIPAddress)
+		}
+	}
+
+	return ips
+}
+
 func (vm *VM) OsDisk(t *testing.T, vmname string) VMOsDisk {
 
 	var osdisk *VMOsDisk

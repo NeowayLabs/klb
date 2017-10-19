@@ -49,6 +49,11 @@ type NicIPConfig struct {
 	LBBackendAddrPoolsIDs []string
 }
 
+func (nic *Nic) GetIPConfigsByID(t *testing.T, ID string) ([]NicIPConfig, error) {
+	t.Fatalf("TODO: ID: [%s]", ID)
+	return nil, nil
+}
+
 func (nic *Nic) GetIPConfigs(t *testing.T, name string) ([]NicIPConfig, error) {
 
 	var ipconfigs []NicIPConfig
