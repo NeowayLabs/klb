@@ -268,13 +268,27 @@ fn azure_vm_delete(name, group) {
 	)
 }
 
-fn azure_vm_get_ip_address(name, group, iface_index, ip_index) {
-	info <= azure vm list-ip-address $group --json
+# azure_vm_get_names will return a list with all names of
+# VMs inside the given resource group. An empty list is
+# returned if there is no VM on the given group.
+#
+# returns an error string if something goes wrong, empty string otherwise.
+fn azure_vm_get_names(group) {
+	out, status <= az vm  list --resource-group klb-examples-vm | jq -r ".[].name"
+	if $status != "0" {
+		return (), format("error getting vms names for resgroup[%s], output: %s", $group, $out)
+	}
+	if $out == "" {
+		return (), ""
+	}
+	return split($out, "\n"), ""
+}
 
-	#echo $ips
-	ip <= echo $info | jq -r ".[0].networkProfile.networkInterfaces["+$iface_index+"].expanded.ipConfigurations["+$ip_index+"].privateIPAddress"
-
-	return $ip
+fn azure_vm_get_private_ip_addrs(name, group) {
+	info <= az vm  list-ip-addresses --name $name --resource-group $group
+	ipsraw <= echo $info | jq -r ".[0].virtualMachine.network.privateIpAddresses[]"
+	ips <= split($ipsraw, "\n")
+	return $ips
 }
 
 # azure_vm_availset_create creates a new instance of Availset.

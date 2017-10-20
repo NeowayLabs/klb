@@ -1,3 +1,13 @@
+# Release 0.9.1
+
+This release removes the broken function:
+
+* azure_vm_get_ip_address
+
+And adds the new/tested:
+
+* azure_vm_get_private_ip_addrs
+
 # Release 0.9.0
 
 This release breaks the API of the following functions:

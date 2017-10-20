@@ -12,7 +12,7 @@ import klb/azure/vnet
 import klb/azure/nsg
 import klb/azure/route
 import klb/azure/snapshot
-import klb/azure/public-ip
+import klb/azure/public_ip
 import config.sh
 
 

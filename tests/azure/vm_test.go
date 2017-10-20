@@ -28,6 +28,7 @@ func TestVM(t *testing.T) {
 	fixture.Run(t, "VMSnapshotPremium", vmtesttimeout, location, testVMSnapshotPremium)
 	fixture.Run(t, "VMPremiumDiskToStdSnapshot", vmtesttimeout, location, testVMPremiumDiskToStdSnapshot)
 	fixture.Run(t, "VMDuplicatedAvSet", vmtesttimeout, location, testDuplicatedAvailabilitySet)
+	fixture.Run(t, "VMGetIPAddress", vmtesttimeout, location, testGetVMIPAddress)
 }
 
 func genUniqName() string {
@@ -130,6 +131,73 @@ func testStandardDiskVM(t *testing.T, f fixture.F) {
 	testVMCreation(t, f, "Basic_A0", "Standard_LRS", "None")
 }
 
+func testGetVMIPAddress(
+	t *testing.T,
+	f fixture.F,
+) {
+	// Regression test for stupid mistake
+
+	resources := createVMResources(t, f)
+	create := func(nic string) string {
+		createVMNIC(f, nic, resources.vnet, resources.subnet)
+		return createVM(
+			t,
+			f,
+			resources.availSet,
+			nic,
+			"Basic_A0",
+			"Standard_LRS",
+			"ReadWrite",
+		)
+	}
+	vm1 := create("nic1")
+	vm2 := create("nic2")
+
+	vms := azure.NewVM(f)
+
+	expectedVM1IPs := vms.IPs(t, vm1)
+	expectedVM2IPs := vms.IPs(t, vm2)
+
+	gotVM1IPs := getVMIPs(t, f, vm1)
+	gotVM2IPs := getVMIPs(t, f, vm2)
+
+	assertOneIP := func(vm string, ips []string) {
+		if len(ips) == 0 {
+			t.Fatalf("vm[%s] has no IP", vm)
+		}
+		if len(ips) > 1 {
+			t.Fatalf("vm[%s] has more than one IPs[%s]", vm, ips)
+		}
+	}
+
+	assertSameIP := func(vm string, expectedIP string, gotIP string) {
+		if expectedIP != gotIP {
+			t.Fatalf("vm[%s] IPs do not match [%s] != [%s]", expectedIP, gotIP)
+		}
+	}
+
+	assertOneIP(vm1, expectedVM1IPs)
+	assertOneIP(vm2, expectedVM2IPs)
+
+	assertOneIP(vm1, gotVM1IPs)
+	assertOneIP(vm2, gotVM2IPs)
+
+	assertSameIP(vm1, expectedVM1IPs[0], gotVM1IPs[0])
+	assertSameIP(vm2, expectedVM2IPs[0], gotVM2IPs[0])
+}
+
+func getVMIPs(t *testing.T, f fixture.F, vmname string) []string {
+	rawIPs := execWithIPC(t, f, func(outfile string) {
+		f.Shell.Run(
+			"./testdata/get_vm_ips.sh",
+			f.ResGroupName,
+			vmname,
+			outfile,
+		)
+	})
+	return strings.Split(rawIPs, " ")
+}
+
 type VMDisk struct {
 	Name    string
 	Sku     string
@@ -184,7 +252,7 @@ func testVMSnapshot(
 	})
 
 	f.Logger.Println("created snapshots, retrieving ids")
-	ids := strings.Split(strings.Trim(string(idsraw), "\n"), "\n")
+	ids := strings.Split(idsraw, "\n")
 	f.Logger.Printf("parsed ids: %s", ids)
 
 	if len(ids) != len(disks) {
