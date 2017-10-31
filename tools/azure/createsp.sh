@@ -17,15 +17,15 @@ fn check_role(role) {
 
 defRole = "Owner"
 
-arglen  <= len($ARGS)
-_, cond <= test $arglen -lt 4
+arglen    <= len($ARGS)
+_, status <= test $arglen -lt 4
 
-if $cond == "0" {
-	echo "usage: "+$ARGS[0]+" <subscription_id> <service_principal> <password> [<role>]"
-	exit
+if $status == "0" {
+	print("Usage: %s <subscription_name> <service_principal> <password> [<role>]\n", $ARGS[0])
+	exit("1")
 }
 
-subscription_id   = $ARGS[1]
+subscription_name = $ARGS[1]
 service_principal = $ARGS[2]
 password          = $ARGS[3]
 role              = $defRole
@@ -34,44 +34,45 @@ if $arglen == "5" {
 	role = $ARGS[4]
 }
 if check_role($role) == "false" {
-	echo "Invalid role:"+$role+" - possible roles are: Owner or Reader"
-	
+	print("Invalid role:[%s] - possible roles are: Owner or Reader\n", $role)
 	exit("1")
 }
 
-subscription_name <= azure account show $subscription_id --json | jq -r ".[0].name"
+print("Setting Azure subscription: subscription_name[%s]\n", $subscription_name)
 
-echo "Setting azure subscription to: "+$subscription_name+" ["+$subscription_id+"]"
-azure account set $subscription_id >[1=]
-echo "Creating azure service principal: "+$service_principal
+out, status <= az account set --subscription $subscription_name >[2=1]
 
-service_principal_obj_id <= azure ad sp create -n $service_principal -p $password --json | jq -r ".objectId"
-
-fn loop(func, count) {
-	sequence <= seq 1 $count
-	range    <= split($sequence, "\n")
-
-	for i in $range {
-		$func()
-	}
+if $status != "0" {
+	print("Unable to setting Azure subscription, error[%s]\n", $out)
+	exit("1")
 }
 
-fn grant_access() {
-	echo "Granting access to "+$service_principal+" ["+$service_principal_obj_id+"] at: "+$subscription_name+" ["+$subscription_id+"]"
-	-azure role assignment create --objectId $service_principal_obj_id -o $role -c "/subscriptions/"+$subscription_id+"/" >[1=]
+print("Getting Azure subscription id: subscription_name[%s]\n", $subscription_name)
 
-	if $status == "0" {
-		echo "granted access with success with role: "+$role
-		
-		exit("0")
-	}
+out, status <= (
+	az account show
+		--subscription $subscription_name
+		--output=json | jq -r ".id" >[2=1]
+)
 
-	echo "unable to grant access, trying again with role: "+$role
-	sleep 1
+if $status != "0" {
+	print("Unable to getting Azure subscription id, error[%s]\n", $out)
+	exit("1")
+} else {
+	subscription_id = $out
 }
 
-loop($grant_access, "5")
+print("Creating Azure Active Directory: service principal[%s]\n", $service_principal)
 
-echo "unable to grant access, try again expired"
+out, status <= (
+	az ad sp create-for-rbac
+	    --name $service_principal
+	    --password $password
+	    --role $role
+	    --scope "/subscriptions/"+$subscription_id >[2=1]
+)
 
-exit("1")
+if $status != "0" {
+	print("Unable to create Azure Active Directory service principal, error[%s]\n", $out)
+	exit("1")
+}
