@@ -30,7 +30,7 @@ func testVMBackupOsDiskOnly(t *testing.T, f fixture.F) {
 	backupNamespace := "klb"
 
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku, caching)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, sku, caching, "test=VMBackupOSDiskOnly")
 
 	vmBackup := backupVM(t, f, vm, backupNamespace, sku)
 	assertResourceGroupExists(t, f, vmBackup)
@@ -149,7 +149,7 @@ func testVMBackupDataDisks(
 
 	backupNamespace := "klb"
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, vmCaching)
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, vmCaching, "test=VMBackupDataDisks")
 
 	attachDisks(t, f, vm, disks)
 

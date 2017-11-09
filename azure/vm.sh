@@ -254,6 +254,30 @@ fn azure_vm_set_datadisk_caching(instance, caching) {
 	return $instance
 }
 
+# azure_vm_set_tags sets tags to attach to the "Virtual Machine".
+# `instance` is the name of the instance.
+# `tags` Space separated tags in 'key[=value]' format.
+# Use '' to clear existing tags.
+fn azure_vm_set_tags(instance, tags) {
+	fn join(list, sep) {
+		out = ""
+
+		for l in $list {
+			out = $out+$l+$sep
+		}
+
+		out <= echo $out | sed "s/"+$sep+"$//g"
+
+		return $out
+	}
+
+	tags     <= join($tags, " ")
+	instance <= append($instance, "--tags")
+	instance <= append($instance, $tags)
+
+	return $instance
+}
+
 # azure_vm_create creates a "Virtual Machine".
 # `instance` is the name of the instance.
 fn azure_vm_create(instance) {

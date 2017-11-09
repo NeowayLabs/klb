@@ -15,6 +15,7 @@ imageurn = $ARGS[9]
 keyfile  = $ARGS[10]
 sku      = $ARGS[11]
 caching  = $ARGS[12]
+tags     = ($ARGS[13])
 
 azure_login()
 
@@ -27,6 +28,7 @@ vm <= azure_vm_set_osdiskname($vm, $osdisk)
 vm <= azure_vm_set_imageurn($vm, $imageurn)
 vm <= azure_vm_set_publickeyfile($vm, $keyfile)
 vm <= azure_vm_set_storagesku($vm, $sku)
+vm <= azure_vm_set_tags($vm, $tags)
 if $caching != "None" {
 	# OS disk do not support no caching =/
 	vm <= azure_vm_set_osdisk_caching($vm, $caching)
