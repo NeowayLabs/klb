@@ -15,6 +15,7 @@ type VMResources struct {
 	vnet     string
 	subnet   string
 	nic      string
+	tags     string
 }
 
 func TestVM(t *testing.T) {
@@ -35,6 +36,10 @@ func genUniqName() string {
 	return fixture.NewUniqueName("vm")
 }
 
+func genTags() string {
+	return fixture.NewUniqueName("tag") + "=" + fixture.NewUniqueName("value")
+}
+
 func createVM(
 	t *testing.T,
 	f fixture.F,
@@ -43,6 +48,7 @@ func createVM(
 	vmSize string,
 	sku string,
 	caching string,
+	tags string,
 ) string {
 	vm := genUniqName()
 	username := "core"
@@ -64,11 +70,12 @@ func createVM(
 		keyFile,
 		sku,
 		caching,
+		tags,
 	)
 
 	f.Logger.Println("creating VM")
 	vms := azure.NewVM(f)
-	vms.AssertExists(t, vm, availset, vmSize, nic)
+	vms.AssertExists(t, vm, availset, vmSize, nic, tags)
 	f.Logger.Println("created VM with success, attaching a disk")
 	return vm
 }
@@ -90,6 +97,7 @@ func testVMCreation(
 		vmSize,
 		sku,
 		caching,
+		resources.tags,
 	)
 
 	vms := azure.NewVM(f)
@@ -148,6 +156,7 @@ func testGetVMIPAddress(
 			"Basic_A0",
 			"Standard_LRS",
 			"ReadWrite",
+			"test=GetVMIPAddress",
 		)
 	}
 	vm1 := create("nic1")
@@ -235,7 +244,7 @@ func testVMSnapshot(
 	disks []VMDisk,
 ) {
 	resources := createVMResources(t, f)
-	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, "None")
+	vm := createVM(t, f, resources.availSet, resources.nic, vmSize, vmSKU, "None", "test=VMSnapshot")
 
 	vms := azure.NewVM(f)
 
@@ -261,7 +270,7 @@ func testVMSnapshot(
 
 	nic := genNicName()
 	createVMNIC(f, nic, resources.vnet, resources.subnet)
-	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, vmSKU, "None")
+	vmbackup := createVM(t, f, resources.availSet, nic, vmSize, vmSKU, "None", "test=VMBackup")
 
 	for _, id := range ids {
 		attachSnapshotOnVM(t, f, vmbackup, id, vmSKU)
@@ -374,6 +383,7 @@ func createVMResources(t *testing.T, f fixture.F) VMResources {
 	resources.vnet = genVnetName()
 	resources.subnet = genSubnetName()
 	resources.nic = genNicName()
+	resources.tags = genTags()
 
 	nsg := genNsgName()
 	vnetAddress := "10.116.0.0/16"

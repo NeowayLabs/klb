@@ -231,6 +231,7 @@ func (vm *VM) AssertExists(
 	expectedAvailSet string,
 	expectedVMSize string,
 	expectedNic string,
+	expectedTags string,
 ) {
 	vm.f.Retrier.Run(newID("VM", "AssertExists", name), func() error {
 		v, err := vm.client.Get(vm.f.ResGroupName, name, "")
@@ -279,6 +280,15 @@ func (vm *VM) AssertExists(
 		gotNic := string(*net.ID)
 		if !strings.Contains(gotNic, expectedNic) {
 			return errors.New("Nic expected is " + expectedNic + " but got " + gotNic)
+		}
+		tagSplit := strings.Split(expectedTags, "=")
+		value, ok := (*v.Tags)[tagSplit[0]]
+		if !ok {
+			return errors.New("Tag " + tagSplit[0] + " not found")
+		}
+		gotTag := string(*value)
+		if gotTag != tagSplit[1] {
+			return errors.New("Tag value expected is " + tagSplit[1] + " but got " + gotTag)
 		}
 		return nil
 	})
