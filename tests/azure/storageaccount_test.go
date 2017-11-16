@@ -3,7 +3,6 @@ package azure_test
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 
 	"github.com/NeowayLabs/klb/tests/lib/azure"
@@ -15,19 +14,24 @@ func genStorageAccountName() string {
 }
 
 func testStorageAccountCreate(t *testing.T, f fixture.F) {
-	// FIXME: Find a way to get the storage account name, env var not working anymore
 	t.Skip()
 
-	genstorage := genStorageAccountName()
-	f.Shell.Run(
-		"./testdata/create_storage_account.sh",
-		f.ResGroupName,
-		genstorage,
-		f.Location,
-	)
-	storage := os.Getenv("STORAGE_ACCOUNT_NAME")
-	storAccount := azure.NewStorageAccount(f)
-	storAccount.AssertExists(t, storage)
+	storagename := genStorageAccountName()
+	sku := "LRS"
+	kind := "BlobStorage"
+	tier := "Hot"
+
+	execWithIPC(t, f, func(outputfile string) {
+		f.Shell.Run(
+			"./testdata/create_storage_account.sh",
+			f.ResGroupName,
+			storagename,
+			f.Location,
+		)
+	})
+
+	acc := azure.NewStorageAccount(f)
+	acc.AssertExists(t, storagename)
 }
 
 func TestStorageAccount(t *testing.T) {
