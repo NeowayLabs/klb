@@ -44,6 +44,15 @@ func createStorageAccountBLOB(
 	)
 }
 
+func createStorageAccountContainer(f fixture.F, account string, container string) {
+	f.Shell.Run(
+		"./testdata/create_storage_container.sh",
+		f.ResGroupName,
+		account,
+		container,
+	)
+}
+
 func checkStorageAccount(
 	t *testing.T,
 	f fixture.F,
@@ -111,10 +120,12 @@ func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
 	//WHY: Because Azure is awesome
 	expectedTier := "Standard"
 	name := genStorageAccountName()
-	//container := "klb-test-container"
+	containerName := "klb-test-container"
 
 	createStorageAccountBLOB(f, name, sku, tier)
 	checkStorageAccount(t, f, name, sku, expectedTier, kind)
+
+	createStorageAccountContainer(f, name, containerName)
 }
 
 func TestStorageAccount(t *testing.T) {

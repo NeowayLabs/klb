@@ -89,12 +89,6 @@ fn azure_storage_account_get_keys(name, group) {
 	return $keys, ""
 }
 
-fn _azure_storage_account_parse_json_list(data, query) {
-	valsraw <= echo $data | jq -r $query
-	vals <= split($valsraw, "\n")
-	return $vals
-}
-
 # azure_store_share_create creates a new `storage share`.
 # `name` is the storage file share name
 # `quota` is the storage file share quota (in GB)
@@ -125,11 +119,58 @@ fn azure_storage_share_delete(name, storage, storagekey) {
 # `name` is the storage file container name
 # `storage account name` is the storage account name
 # `storage account key` is the storage account key
-fn azure_storage_container_create(name, storage, storagekey) {
-	(
-		azure storage container create $name
-						--account-name $storage
-						--account-key $storagekey
+#
+# Returns empty error string on success, non empty error message otherwise.
+fn azure_storage_container_create(name, accountname, accountkey) {
+	output, status <= (
+		az storage container create
+			--name $name
+			--account-name $accountname
+			--account-key $accountkey
+		>[2=1]
+	)
+
+	if $status != "0" {
+		return format(
+			"error[%s] creating container[%s] on account name[%s]",
+			$name,
+			$accountname,
+		)
+	}
+
+	return ""
+}
+
+# azure_storage_container_create_from_resgroup is similar to
+# azure_storage_container_create, the difference is that the account
+# key will be obtained automatically (the first one found with full
+# permissions), you only have to care with the account name and
+# resource group name (useful when dealing with default keys).
+#
+# `name` is the storage file container name
+# `accountname` is the storage account name
+# `resgroup` is the resource group name
+#
+# Returns empty error string on success, non empty error message otherwise.
+fn azure_storage_container_create_by_resgroup(name, accountname, resgroup) {
+
+	keys, err <= azure_storage_account_get_keys($accountname, $resgroup)
+	if $err != "" {
+		return $err
+	}
+
+	for key in $keys {
+		permissions = $key[2]
+		if $permissions == "Full" {
+			accountkey = $key[1]
+			return azure_storage_container_create($name, $accountname, $accountkey)
+		}
+	}
+
+	return format(
+		"unable to find account key with full permissions for account[%s] resgroup[%s]",
+		$accountname,
+		$resgroup,
 	)
 }
 
@@ -145,3 +186,10 @@ fn azure_storage_container_delete(name, storage, storagekey) {
 						--account-key $storagekey
 	)
 }
+
+fn _azure_storage_account_parse_json_list(data, query) {
+	valsraw <= echo $data | jq -r $query
+	vals <= split($valsraw, "\n")
+	return $vals
+}
+
