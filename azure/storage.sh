@@ -55,16 +55,44 @@ fn azure_storage_account_delete(name, group) {
 	azure storage account delete --quiet --resource-group $group $name
 }
 
-# azure_storage_account_get_keys gets `storage account` keys list.
+# azure_storage_account_get_keys gets all keys of the given storage account
 # `name` is the storage account name
 # `group` is the resource group name
 #
-# This function return a list with storage accout keys
+# This function return a list of triples and an error string.
+# Each triple is on the form: (keyname, keyvalue, permissions).
+# On error the second return value will be a non empty string.
 fn azure_storage_account_get_keys(name, group) {
-	keys <= azure storage account keys list --resource-group $group $name | grep "key[0-9]" | awk "{print $3}"
-	k    <= split($keys, "\n")
+	jsonkeys, status <= az storage account keys list -g $group -n $name --output json
+	if $status != "0" {
+		return (), format(
+			"error[%s] listing keys for account[%s] group[%s]",
+			$jsonkeys,
+			$name,
+			$group,
+		)
+	}
 
-	return $k
+	keys = ()
+	names <= _azure_storage_account_parse_json_list($jsonkeys, ".[].keyName")
+	values <= _azure_storage_account_parse_json_list($jsonkeys, ".[].value")
+	permissions <= _azure_storage_account_parse_json_list($jsonkeys, ".[].permissions")
+
+	i = "0"
+	# Lazy way to iterate
+	for _ in $names {
+		# WHY: could use name, prefer to initialize triple uniformly
+		keys <= append($keys, ($names[$i] $values[$i] $permissions[$i]))
+		i <= expr $i "+" "1"
+	}
+
+	return $keys, ""
+}
+
+fn _azure_storage_account_parse_json_list(data, query) {
+	valsraw <= echo $data | jq -r $query
+	vals <= split($valsraw, "\n")
+	return $vals
 }
 
 # azure_store_share_create creates a new `storage share`.

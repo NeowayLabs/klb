@@ -104,6 +104,19 @@ func testStorageAccountCreatePremiumLRS(t *testing.T, f fixture.F) {
 	checkStorageAccount(t, f, name, sku, "Premium", kind)
 }
 
+func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
+	sku := "Standard_LRS"
+	kind := "BlobStorage"
+	tier := "Cool"
+	//WHY: Because Azure is awesome
+	expectedTier := "Standard"
+	name := genStorageAccountName()
+	//container := "klb-test-container"
+
+	createStorageAccountBLOB(f, name, sku, tier)
+	checkStorageAccount(t, f, name, sku, expectedTier, kind)
+}
+
 func TestStorageAccount(t *testing.T) {
 	timeout := 5 * time.Minute
 	t.Parallel()
@@ -134,5 +147,12 @@ func TestStorageAccount(t *testing.T) {
 		timeout,
 		location,
 		testStorageAccountCreateBLOBCold,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountUploadFiles",
+		timeout,
+		location,
+		testStorageAccountUploadFiles,
 	)
 }

@@ -7,6 +7,10 @@ Removes:
 
 * azure_storage_account_create
 
+Breaking changes:
+
+* azure_storage_account_get_keys
+
 And adds the new/tested:
 
 * azure_storage_account_create_storage
