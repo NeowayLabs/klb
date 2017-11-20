@@ -1,14 +1,51 @@
 # Storage related functions
 
-# azure_store_account_create creates a new `storage account`.
+# azure_store_account_create_storage creates a new `storage account` of kind Storage.
 # `name` is the storage account name
 # `group` is the resource group name
 # `location` is the azure region
-# `sku` is the SKU name (LRS/ZRS/GRS/RAGRS/PLRS)
-# `kind` is the account kind (Storage/BlobStorage)
+# `sku` is the SKU name
+fn azure_storage_account_create_storage(name, group, location, sku) {
+	output, status <= (az storage account create
+		--name $name
+		--resource-group $group
+		--location $location
+		--sku $sku
+		--kind "Storage"
+		>[2=1]
+	)
+	if $status != "0" {
+		return format("error[%s]", $output)
+	}
+	return ""
+}
+
+# azure_store_account_create_blob creates a new `storage account` of kind BlobStorage.
+# `name` is the storage account name
+# `group` is the resource group name
+# `location` is the azure region
+# `sku` is the SKU name
 # `tier` is the access tier (Hot/Cool)
-fn azure_storage_account_create(name, group, location, sku, kind, tier) {
-	azure storage account create --resource-group $group --location $location --sku-name $sku --kind $kind --access-tier $tier $name
+fn azure_storage_account_create_blob(name, group, location, sku, tier) {
+	# WHY: we have two functions because:
+	# The access tier used for billing StandardBlob accounts.
+	# Cannot be set for StandardLRS, StandardGRS, StandardRAGRS, or
+	# PremiumLRS account types. It is required for StandardBlob
+        # accounts during creation.  Allowed values: Cool, Hot. 
+
+	output, status <= (az storage account create 
+		--name $name
+		--resource-group $group
+		--location $location
+		--sku $sku
+		--kind "BlobStorage"
+		--access-tier $tier
+		>[2=1]
+	)
+	if $status != "0" {
+		return format("error[%s]", $output)
+	}
+	return ""
 }
 
 # azure_store_account_delete deletes a exit `storage account`.

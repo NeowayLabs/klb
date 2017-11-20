@@ -1,40 +1,51 @@
 package azure_test
 
 import (
-	"fmt"
-	"math/rand"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/NeowayLabs/klb/tests/lib/assert"
 	"github.com/NeowayLabs/klb/tests/lib/azure"
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
 func genStorageAccountName() string {
-	return fmt.Sprintf("klbstortests%d", rand.Intn(1000))
+	return strings.Replace(fixture.NewUniqueName("st"), "-", "", -1)
+}
+
+func createStorageAccount(
+	f fixture.F,
+	name string,
+	sku string,
+) {
+	f.Shell.Run(
+		"./testdata/create_storage_account.sh",
+		f.ResGroupName,
+		name,
+		f.Location,
+		sku,
+	)
 }
 
 func testStorageAccountCreate(t *testing.T, f fixture.F) {
-	t.Skip()
+	name := genStorageAccountName()
+	sku := "Standard_LRS"
 
-	storagename := genStorageAccountName()
-	sku := "LRS"
-	kind := "BlobStorage"
-	tier := "Hot"
+	createStorageAccount(f, name, sku)
 
-	execWithIPC(t, f, func(outputfile string) {
-		f.Shell.Run(
-			"./testdata/create_storage_account.sh",
-			f.ResGroupName,
-			storagename,
-			f.Location,
-		)
-	})
+	accounts := azure.NewStorageAccounts(f)
+	account := accounts.Account(t, name)
 
-	acc := azure.NewStorageAccount(f)
-	acc.AssertExists(t, storagename)
+	assert.EqualStrings(t, name, account.Name, "checking name")
+	assert.EqualStrings(t, f.Location, account.Location, "checking location")
+	assert.EqualStrings(t, sku, account.Sku, "checking SKU")
+	assert.EqualStrings(t, "Storage", account.Kind, "checking kind")
+	assert.EqualStrings(t, "Standard", account.Tier, "checking tier")
 }
 
 func TestStorageAccount(t *testing.T) {
+	timeout := 5 * time.Minute
 	t.Parallel()
 	fixture.Run(t, "StorageAccountCreate", timeout, location, testStorageAccountCreate)
 }
