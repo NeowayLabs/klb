@@ -28,27 +28,80 @@ func createStorageAccount(
 	)
 }
 
-func testStorageAccountCreate(t *testing.T, f fixture.F, sku string, tier string) {
-	name := genStorageAccountName()
+func createStorageAccountBLOB(
+	f fixture.F,
+	name string,
+	sku string,
+	accessTier string,
+) {
+	f.Shell.Run(
+		"./testdata/create_storage_account_blob.sh",
+		f.ResGroupName,
+		name,
+		f.Location,
+		sku,
+		accessTier,
+	)
+}
 
-	createStorageAccount(f, name, sku)
-
+func checkStorageAccount(
+	t *testing.T,
+	f fixture.F,
+	name string,
+	sku string,
+	tier string,
+	kind string,
+) {
 	accounts := azure.NewStorageAccounts(f)
 	account := accounts.Account(t, name)
 
 	assert.EqualStrings(t, name, account.Name, "checking name")
 	assert.EqualStrings(t, f.Location, account.Location, "checking location")
 	assert.EqualStrings(t, sku, account.Sku, "checking SKU")
-	assert.EqualStrings(t, "Storage", account.Kind, "checking kind")
+	assert.EqualStrings(t, kind, account.Kind, "checking kind")
 	assert.EqualStrings(t, tier, account.Tier, "checking tier")
 }
 
+func testStorageAccountCreateBLOBHot(t *testing.T, f fixture.F) {
+	sku := "Standard_LRS"
+	tier := "Hot"
+	//WHY: Because Azure is awesome
+	expectedTier := "Standard"
+	kind := "BlobStorage"
+	name := genStorageAccountName()
+
+	createStorageAccountBLOB(f, name, sku, tier)
+	checkStorageAccount(t, f, name, sku, expectedTier, kind)
+}
+
+func testStorageAccountCreateBLOBCold(t *testing.T, f fixture.F) {
+	sku := "Standard_LRS"
+	tier := "Cool"
+	//WHY: Because Azure is awesome
+	expectedTier := "Standard"
+	kind := "BlobStorage"
+	name := genStorageAccountName()
+
+	createStorageAccountBLOB(f, name, sku, tier)
+	checkStorageAccount(t, f, name, sku, expectedTier, kind)
+}
+
 func testStorageAccountCreateStandardLRS(t *testing.T, f fixture.F) {
-	testStorageAccountCreate(t, f, "Standard_LRS", "Standard")
+	sku := "Standard_LRS"
+	kind := "Storage"
+	name := genStorageAccountName()
+
+	createStorageAccount(f, name, sku)
+	checkStorageAccount(t, f, name, sku, "Standard", kind)
 }
 
 func testStorageAccountCreatePremiumLRS(t *testing.T, f fixture.F) {
-	testStorageAccountCreate(t, f, "Premium_LRS", "Premium")
+	sku := "Premium_LRS"
+	kind := "Storage"
+	name := genStorageAccountName()
+
+	createStorageAccount(f, name, sku)
+	checkStorageAccount(t, f, name, sku, "Premium", kind)
 }
 
 func TestStorageAccount(t *testing.T) {
@@ -67,5 +120,19 @@ func TestStorageAccount(t *testing.T) {
 		timeout,
 		location,
 		testStorageAccountCreatePremiumLRS,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCreateBLOBHot",
+		timeout,
+		location,
+		testStorageAccountCreateBLOBHot,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCreateBLOBCold",
+		timeout,
+		location,
+		testStorageAccountCreateBLOBCold,
 	)
 }
