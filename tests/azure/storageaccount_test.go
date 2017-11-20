@@ -28,9 +28,8 @@ func createStorageAccount(
 	)
 }
 
-func testStorageAccountCreate(t *testing.T, f fixture.F) {
+func testStorageAccountCreate(t *testing.T, f fixture.F, sku string, tier string) {
 	name := genStorageAccountName()
-	sku := "Standard_LRS"
 
 	createStorageAccount(f, name, sku)
 
@@ -41,11 +40,32 @@ func testStorageAccountCreate(t *testing.T, f fixture.F) {
 	assert.EqualStrings(t, f.Location, account.Location, "checking location")
 	assert.EqualStrings(t, sku, account.Sku, "checking SKU")
 	assert.EqualStrings(t, "Storage", account.Kind, "checking kind")
-	assert.EqualStrings(t, "Standard", account.Tier, "checking tier")
+	assert.EqualStrings(t, tier, account.Tier, "checking tier")
+}
+
+func testStorageAccountCreateStandardLRS(t *testing.T, f fixture.F) {
+	testStorageAccountCreate(t, f, "Standard_LRS", "Standard")
+}
+
+func testStorageAccountCreatePremiumLRS(t *testing.T, f fixture.F) {
+	testStorageAccountCreate(t, f, "Premium_LRS", "Premium")
 }
 
 func TestStorageAccount(t *testing.T) {
 	timeout := 5 * time.Minute
 	t.Parallel()
-	fixture.Run(t, "StorageAccountCreate", timeout, location, testStorageAccountCreate)
+	fixture.Run(
+		t,
+		"StorageAccountCreateStandardLRS",
+		timeout,
+		location,
+		testStorageAccountCreateStandardLRS,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCreatePremiumLRS",
+		timeout,
+		location,
+		testStorageAccountCreatePremiumLRS,
+	)
 }
