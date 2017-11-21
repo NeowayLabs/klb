@@ -133,6 +133,7 @@ fn azure_storage_container_create(name, accountname, accountkey) {
 	if $status != "0" {
 		return format(
 			"error[%s] creating container[%s] on account name[%s]",
+			$output,
 			$name,
 			$accountname,
 		)
@@ -140,6 +141,7 @@ fn azure_storage_container_create(name, accountname, accountkey) {
 
 	return ""
 }
+
 
 # azure_storage_container_create_from_resgroup is similar to
 # azure_storage_container_create, the difference is that the account
@@ -174,6 +176,104 @@ fn azure_storage_container_create_by_resgroup(name, accountname, resgroup) {
 	)
 }
 
+fn azure_storage_container_blob_download(
+	containername,
+	accountname,
+	accountkey,
+	remotepath,
+	localpath
+) {
+	output, status <= (az storage blob download
+		-c $containername
+		--account-name $accountname
+		--account-key $accountkey
+		-n $remotepath
+		-f $localpath
+		>[2=1]
+	)
+
+	if $status != "0" {
+		return format(
+			"error[%s] downloading file[%s] to container[%s] on account name[%s]",
+			$output,
+			$localpath,
+			$containername,
+			$accountname,
+		)
+	}
+
+	return ""
+}
+
+fn azure_storage_container_blob_download_by_resgroup(
+	containername,
+	accountname,
+	resgroup,
+	remotepath,
+	localpath
+) {
+	accountkey, err <= _azure_storage_account_get_key_value($accountname, $resgroup)
+	if $err != "" {
+		return $err
+	}
+	return azure_storage_container_blob_download(
+		$containername,
+		$accountname,
+		$accountkey,
+		$remotepath,
+		$localpath
+	)
+}
+
+fn azure_storage_container_blob_upload(
+	containername,
+	accountname,
+	accountkey,
+	remotepath,
+	localpath
+) {
+	output, status <= (az storage blob upload
+		--account-name $accountname
+		--account-key $accountkey
+		-f $localpath
+		-c $containername
+		-n $remotepath
+		>[2=1]
+	)
+
+	if $status != "0" {
+		return format(
+			"error[%s] uploading file[%s] to container[%s] on account name[%s]",
+			$output,
+			$localpath,
+			$containername,
+			$accountname,
+		)
+	}
+
+	return ""
+}
+
+fn azure_storage_container_blob_upload_by_resgroup(
+	containername,
+	accountname,
+	resgroup,
+	remotepath,
+	localpath
+) {
+	accountkey, err <= _azure_storage_account_get_key_value($accountname, $resgroup)
+	if $err != "" {
+		return $err
+	}
+	return azure_storage_container_blob_upload(
+		$containername,
+		$accountname,
+		$accountkey,
+		$remotepath,
+		$localpath
+	)
+}
+
 # azure_store_container_delete deletes a `storage container`.
 # `name` is the storage file container name
 # `storage account name` is the storage account name
@@ -193,3 +293,23 @@ fn _azure_storage_account_parse_json_list(data, query) {
 	return $vals
 }
 
+fn _azure_storage_account_get_key_value(accountname, resgroup) {
+
+	keys, err <= azure_storage_account_get_keys($accountname, $resgroup)
+	if $err != "" {
+		return "", $err
+	}
+
+	for key in $keys {
+		permissions = $key[2]
+		if $permissions == "Full" {
+			return $key[1], ""
+		}
+	}
+
+	return "", format(
+		"unable to find account key with full permissions for account[%s] resgroup[%s]",
+		$accountname,
+		$resgroup,
+	)
+}
