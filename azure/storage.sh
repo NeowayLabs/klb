@@ -156,24 +156,12 @@ fn azure_storage_container_create(name, accountname, accountkey) {
 # Returns empty error string on success, non empty error message otherwise.
 fn azure_storage_container_create_by_resgroup(name, accountname, resgroup) {
 
-	keys, err <= azure_storage_account_get_keys($accountname, $resgroup)
+	accountkey, err <= _azure_storage_account_get_key_value($accountname, $resgroup)
 	if $err != "" {
 		return $err
 	}
 
-	for key in $keys {
-		permissions = $key[2]
-		if $permissions == "Full" {
-			accountkey = $key[1]
-			return azure_storage_container_create($name, $accountname, $accountkey)
-		}
-	}
-
-	return format(
-		"unable to find account key with full permissions for account[%s] resgroup[%s]",
-		$accountname,
-		$resgroup,
-	)
+	return azure_storage_container_create($name, $accountname, $accountkey)
 }
 
 fn azure_storage_container_blob_download(
