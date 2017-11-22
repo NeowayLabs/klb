@@ -22,7 +22,6 @@ fn azure_storage_account_create_storage(name, group, location, sku) {
 
 # azure_storage_account_exists checks if a storage account exists.
 # Returns "0" if it already exists (success), "1" otherwise.
-# (the error details) if it does not exists.
 fn azure_storage_account_exists(name, group) {
 	output, status <= (az storage account list
 		--resource-group $group |
@@ -184,6 +183,36 @@ fn azure_storage_container_create_by_resgroup(name, accountname, resgroup) {
 	}
 
 	return azure_storage_container_create($name, $accountname, $accountkey)
+}
+
+# azure_storage_container_exists checks if a container exists.
+# Returns "0" if it already exists (success), "1" otherwise.
+fn azure_storage_container_exists(name, accountname, accountkey) {
+	output, status <= (
+		az storage container exists
+			--name $name
+			--account-name $accountname
+			--account-key $accountkey
+			| jq -r ".exists"
+		>[2=1]
+	)
+	if $status != "0" {
+		return $status
+	}
+	if $output == "true" {
+		return "0"
+	}
+	return "1"
+}
+
+# azure_storage_container_exists_by_resgroup checks if a container exists.
+# Returns "0" if it already exists (success), "1" otherwise.
+fn azure_storage_container_exists_by_resgroup(containername, accountname, resgroup) {
+	accountkey, err <= _azure_storage_account_get_key_value($accountname, $resgroup)
+	if $err != "" {
+		return "1"
+	}
+	return azure_storage_container_exists($containername, $accountname, $accountkey)
 }
 
 fn azure_storage_container_blob_download(

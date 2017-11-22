@@ -135,7 +135,6 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	//WHY: Because Azure is awesome
 	expectedTier := "Standard"
 	accountname := genStorageAccountName()
-	//containerName := "klb-test-container-exists"
 
 	//WHY: Testing multiple things on one test is bad but
 	//     building the context to run tests is too expensive on the cloud
@@ -144,9 +143,11 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	checkStorageAccount(t, f, accountname, sku, expectedTier, kind)
 	testStorageAccountExists(t, f, accountname)
 
-	//testContainerDontExist(t, f, accountname, containerName)
-	//createStorageAccountContainer(f, accountname, containerName)
-	//testContainerExists(t, f, accountname, containerName)
+	containerName := "klb-test-container-exists"
+	testContainerDontExist(t, f, accountname, containerName)
+	createStorageAccountContainer(f, accountname, containerName)
+	createStorageAccountContainer(f, accountname, containerName)
+	testContainerExists(t, f, accountname, containerName)
 
 	//remotepath := "/test/exists"
 	//localfile, cleanup := setupTestFile(t, "whatever")
@@ -240,6 +241,43 @@ func testStorageAccountDontExist(t *testing.T, f fixture.F, account string) {
 	if err == nil {
 		t.Fatalf("expected account[%s] to not exist", account)
 	}
+}
+
+func testContainerExists(
+	t *testing.T,
+	f fixture.F,
+	account string,
+	container string,
+) {
+	err := containerExists(f, account, container)
+	if err != nil {
+		t.Fatalf("expected container[%s] to exist, error[%s]", container, err)
+	}
+}
+
+func testContainerDontExist(
+	t *testing.T,
+	f fixture.F,
+	account string,
+	container string,
+) {
+	err := containerExists(f, account, container)
+	if err == nil {
+		t.Fatalf("expected container[%s] to not exist", container)
+	}
+}
+
+func containerExists(
+	f fixture.F,
+	account string,
+	container string,
+) error {
+	return f.Shell.RunOnce(
+		"./testdata/storage_container_exists.sh",
+		f.ResGroupName,
+		account,
+		container,
+	)
 }
 
 func storageAccountExists(
