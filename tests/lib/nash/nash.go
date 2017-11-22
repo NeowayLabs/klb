@@ -86,7 +86,7 @@ func (s *Shell) RunOnce(
 	)
 	s.installKLB(env)
 	err = s.newcmd(env, scriptpath, args...).Run()
-	s.logger.Printf("%s result: %s", scriptpath, err)
+	s.logger.Printf("%s result: %+v", scriptpath, err)
 	return err
 }
 
