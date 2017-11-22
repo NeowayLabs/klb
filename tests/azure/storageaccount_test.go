@@ -14,8 +14,8 @@ import (
 	"github.com/NeowayLabs/klb/tests/lib/azure/fixture"
 )
 
-func TestStorageAccount(t *testing.T) {
-	timeout := 5 * time.Minute
+func TestStorage(t *testing.T) {
+	timeout := 15 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
@@ -51,6 +51,13 @@ func TestStorageAccount(t *testing.T) {
 		timeout,
 		location,
 		testStorageAccountUploadFiles,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCheckResourcesExistence",
+		timeout,
+		location,
+		testStorageAccountCheckResourcesExistence,
 	)
 }
 
@@ -121,6 +128,35 @@ func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
 	assert.EqualStrings(t, expectedContents, contents, "downloading BLOB")
 }
 
+func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
+	sku := "Standard_LRS"
+	kind := "BlobStorage"
+	tier := "Cool"
+	//WHY: Because Azure is awesome
+	expectedTier := "Standard"
+	accountname := genStorageAccountName()
+	//containerName := "klb-test-container-exists"
+
+	//WHY: Testing multiple things on one test is bad but
+	//     building the context to run tests is too expensive on the cloud
+	testStorageAccountDontExist(t, f, accountname)
+	createStorageAccountBLOB(f, accountname, sku, tier)
+	checkStorageAccount(t, f, accountname, sku, expectedTier, kind)
+	testStorageAccountExists(t, f, accountname)
+
+	//testContainerDontExist(t, f, accountname, containerName)
+	//createStorageAccountContainer(f, accountname, containerName)
+	//testContainerExists(t, f, accountname, containerName)
+
+	//remotepath := "/test/exists"
+	//localfile, cleanup := setupTestFile(t, "whatever")
+	//defer cleanup()
+
+	//testBlobDontExist(t, f, accountname, containerName, remotepath)
+	//uploadFileBLOB(t, f, accountname, containerName, remotepath, localfile)
+	//testBlobExists(t, f, accountname, containerName, remotepath)
+}
+
 func uploadFileBLOB(
 	t *testing.T,
 	f fixture.F,
@@ -189,6 +225,31 @@ func createStorageAccount(
 		name,
 		f.Location,
 		sku,
+	)
+}
+
+func testStorageAccountExists(t *testing.T, f fixture.F, account string) {
+	err := storageAccountExists(f, account)
+	if err != nil {
+		t.Fatalf("expected account[%s] to exist, error[%s]", account, err)
+	}
+}
+
+func testStorageAccountDontExist(t *testing.T, f fixture.F, account string) {
+	err := storageAccountExists(f, account)
+	if err == nil {
+		t.Fatalf("expected account[%s] to not exist", account)
+	}
+}
+
+func storageAccountExists(
+	f fixture.F,
+	account string,
+) error {
+	return f.Shell.RunOnce(
+		"./testdata/storage_account_exists.sh",
+		f.ResGroupName,
+		account,
 	)
 }
 

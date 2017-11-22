@@ -20,6 +20,28 @@ fn azure_storage_account_create_storage(name, group, location, sku) {
 	return ""
 }
 
+# azure_storage_account_exists checks if a storage account exists.
+# Returns "0" if it already exists (success), "1" otherwise.
+# (the error details) if it does not exists.
+fn azure_storage_account_exists(name, group) {
+	output, status <= (az storage account list
+		--resource-group $group |
+		jq -r ".[].name"
+	)
+	if $status != "0" {
+		return "1"
+	}
+
+	accounts <= split($output, "\n")
+	for account in $accounts {
+		if $account == $name {
+			return "0"
+		}
+	}
+
+	return "1"
+}
+
 # azure_store_account_create_blob creates a new `storage account` of kind BlobStorage.
 # `name` is the storage account name
 # `group` is the resource group name
