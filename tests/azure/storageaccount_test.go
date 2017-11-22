@@ -129,6 +129,8 @@ func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
 }
 
 func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
+	t.Skip("TODO")
+
 	sku := "Standard_LRS"
 	kind := "BlobStorage"
 	tier := "Cool"
@@ -146,16 +148,15 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	containerName := "klb-test-container-exists"
 	testContainerDontExist(t, f, accountname, containerName)
 	createStorageAccountContainer(f, accountname, containerName)
-	createStorageAccountContainer(f, accountname, containerName)
 	testContainerExists(t, f, accountname, containerName)
 
-	//remotepath := "/test/exists"
-	//localfile, cleanup := setupTestFile(t, "whatever")
-	//defer cleanup()
+	remotepath := "/test/exists"
+	localfile, cleanup := setupTestFile(t, "whatever")
+	defer cleanup()
 
-	//testBlobDontExist(t, f, accountname, containerName, remotepath)
-	//uploadFileBLOB(t, f, accountname, containerName, remotepath, localfile)
-	//testBlobExists(t, f, accountname, containerName, remotepath)
+	testBLOBDontExist(t, f, accountname, containerName, remotepath)
+	uploadFileBLOB(t, f, accountname, containerName, remotepath, localfile)
+	testBLOBExists(t, f, accountname, containerName, remotepath)
 }
 
 func uploadFileBLOB(
@@ -277,6 +278,47 @@ func containerExists(
 		f.ResGroupName,
 		account,
 		container,
+	)
+}
+
+func testBLOBExists(
+	t *testing.T,
+	f fixture.F,
+	account string,
+	container string,
+	remotepath string,
+) {
+	err := blobExists(f, account, container, remotepath)
+	if err != nil {
+		t.Fatalf("expected path[%s] to exist, error[%s]", remotepath, err)
+	}
+}
+
+func testBLOBDontExist(
+	t *testing.T,
+	f fixture.F,
+	account string,
+	container string,
+	remotepath string,
+) {
+	err := blobExists(f, account, container, remotepath)
+	if err == nil {
+		t.Fatalf("expected path[%s] to not exist", remotepath)
+	}
+}
+
+func blobExists(
+	f fixture.F,
+	account string,
+	container string,
+	remotepath string,
+) error {
+	return f.Shell.RunOnce(
+		"./testdata/storage_blob_exists.sh",
+		f.ResGroupName,
+		account,
+		container,
+		remotepath,
 	)
 }
 
