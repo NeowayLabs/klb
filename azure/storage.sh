@@ -218,6 +218,7 @@ fn azure_storage_container_exists_by_resgroup(containername, accountname, resgro
 # azure_storage_blob_exists checks if a blob exists.
 # Returns "0" if it already exists (success), "1" otherwise.
 fn azure_storage_blob_exists(containername, accountname, accountkey, blobpath) {
+
 	output, status <= (
 		az storage blob exists
 			--container-name $containername
@@ -227,12 +228,15 @@ fn azure_storage_blob_exists(containername, accountname, accountkey, blobpath) {
 			| jq -r ".exists"
 		>[2=1]
 	)
+
 	if $status != "0" {
 		return $status
 	}
+
 	if $output == "true" {
 		return "0"
 	}
+
 	return "1"
 }
 
@@ -243,10 +247,10 @@ fn azure_storage_blob_exists_by_resgroup(containername, accountname, resgroup, b
 	if $err != "" {
 		return "1"
 	}
-	return azure_storage_blob_exists_by_resgroup(
+	return azure_storage_blob_exists(
 		$containername,
 		$accountname,
-		$resgroup,
+		$accountkey,
 		$blobpath,
 	)
 }
