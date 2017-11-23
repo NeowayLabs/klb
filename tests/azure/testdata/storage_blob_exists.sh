@@ -10,4 +10,4 @@ remotepath    = $ARGS[4]
 
 azure_login()
 
-exit(azure_storage_container_blob_exists_by_resgroup($containername, $accountname, $resgroup, $remotepath))
+exit(azure_storage_blob_exists_by_resgroup($containername, $accountname, $resgroup, $remotepath))

@@ -12,7 +12,7 @@ localpath     = $ARGS[5]
 azure_login()
 
 echo "downloading file"
-err <= azure_storage_container_blob_download_by_resgroup($containername, $accountname, $resgroup, $remotepath, $localpath)
+err <= azure_storage_blob_download_by_resgroup($containername, $accountname, $resgroup, $remotepath, $localpath)
 
 if $err != "" {
 	echo "error uploading file: " + $err

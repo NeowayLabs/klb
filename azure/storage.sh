@@ -215,9 +215,9 @@ fn azure_storage_container_exists_by_resgroup(containername, accountname, resgro
 	return azure_storage_container_exists($containername, $accountname, $accountkey)
 }
 
-# azure_storage_container_blob_exists checks if a blob exists.
+# azure_storage_blob_exists checks if a blob exists.
 # Returns "0" if it already exists (success), "1" otherwise.
-fn azure_storage_container_blob_exists(containername, accountname, accountkey, blobpath) {
+fn azure_storage_blob_exists(containername, accountname, accountkey, blobpath) {
 	output, status <= (
 		az storage blob exists
 			--container-name $containername
@@ -236,14 +236,14 @@ fn azure_storage_container_blob_exists(containername, accountname, accountkey, b
 	return "1"
 }
 
-# azure_storage_container_blob_exists_by_resgroup checks if a blob exists.
+# azure_storage_blob_exists_by_resgroup checks if a blob exists.
 # Returns "0" if it already exists (success), "1" otherwise.
-fn azure_storage_container_blob_exists_by_resgroup(containername, accountname, resgroup, blobpath) {
+fn azure_storage_blob_exists_by_resgroup(containername, accountname, resgroup, blobpath) {
 	accountkey, err <= _azure_storage_account_get_key_value($accountname, $resgroup)
 	if $err != "" {
 		return "1"
 	}
-	return azure_storage_container_blob_exists_by_resgroup(
+	return azure_storage_blob_exists_by_resgroup(
 		$containername,
 		$accountname,
 		$resgroup,
@@ -251,7 +251,7 @@ fn azure_storage_container_blob_exists_by_resgroup(containername, accountname, r
 	)
 }
 
-fn azure_storage_container_blob_download(
+fn azure_storage_blob_download(
 	containername,
 	accountname,
 	accountkey,
@@ -280,7 +280,7 @@ fn azure_storage_container_blob_download(
 	return ""
 }
 
-fn azure_storage_container_blob_download_by_resgroup(
+fn azure_storage_blob_download_by_resgroup(
 	containername,
 	accountname,
 	resgroup,
@@ -291,7 +291,7 @@ fn azure_storage_container_blob_download_by_resgroup(
 	if $err != "" {
 		return $err
 	}
-	return azure_storage_container_blob_download(
+	return azure_storage_blob_download(
 		$containername,
 		$accountname,
 		$accountkey,
@@ -300,7 +300,7 @@ fn azure_storage_container_blob_download_by_resgroup(
 	)
 }
 
-fn azure_storage_container_blob_upload(
+fn azure_storage_blob_upload(
 	containername,
 	accountname,
 	accountkey,
@@ -329,7 +329,7 @@ fn azure_storage_container_blob_upload(
 	return ""
 }
 
-fn azure_storage_container_blob_upload_by_resgroup(
+fn azure_storage_blob_upload_by_resgroup(
 	containername,
 	accountname,
 	resgroup,
@@ -340,7 +340,7 @@ fn azure_storage_container_blob_upload_by_resgroup(
 	if $err != "" {
 		return $err
 	}
-	return azure_storage_container_blob_upload(
+	return azure_storage_blob_upload(
 		$containername,
 		$accountname,
 		$accountkey,

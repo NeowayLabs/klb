@@ -129,8 +129,7 @@ func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
 }
 
 func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
-	t.Skip("TODO")
-
+	t.Skip()
 	sku := "Standard_LRS"
 	kind := "BlobStorage"
 	tier := "Cool"
