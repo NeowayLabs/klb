@@ -55,9 +55,8 @@ integration_timeout=55m
 examples_timeout=90m
 all_timeout=90m
 logger=file
-parallel=20 #Explore I/O parallelization
-cpu=4
-gotest=go test -v ./tests/azure -parallel $(parallel) -cpu $(cpu)
+parallel=10 #Explore I/O parallelization
+gotest=go test -v ./tests/azure -parallel $(parallel)
 gotestargs=-args -logger $(logger)
 
 test: image
