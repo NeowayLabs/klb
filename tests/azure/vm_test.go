@@ -20,7 +20,7 @@ type VMResources struct {
 
 func TestVM(t *testing.T) {
 	t.Parallel()
-	vmtesttimeout := 50 * time.Minute
+	vmtesttimeout := 45 * time.Minute
 	fixture.Run(t, "VMStandardDisk", vmtesttimeout, location, testStandardDiskVM)
 	fixture.Run(t, "VMPremiumDisk", vmtesttimeout, location, testPremiumDiskVM)
 	fixture.Run(t, "VMPremiumDiskReadCache", vmtesttimeout, location, testVMPremiumDiskReadCache)
