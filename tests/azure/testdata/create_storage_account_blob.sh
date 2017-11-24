@@ -7,13 +7,12 @@ resgroup = $ARGS[1]
 name     = $ARGS[2]
 location = $ARGS[3]
 sku      = $ARGS[4]
+tier     = $ARGS[5]
 
 azure_login()
 
-echo "creating storage account: " + $name
-err <= azure_storage_account_create_storage($name, $resgroup, $location, $sku)
+err <= azure_storage_account_create_blob($name, $resgroup, $location, $sku, $tier)
 if $err != "" {
 	echo "error: " + $err
 	exit("1")
 }
-echo "success"

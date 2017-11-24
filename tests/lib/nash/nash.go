@@ -63,6 +63,7 @@ func (s *Shell) RunOnce(
 	scriptpath string,
 	args ...string,
 ) error {
+	s.logger.Printf("running: %s", scriptpath)
 	completeargs := []string{scriptpath}
 	completeargs = append(completeargs, args...)
 
@@ -84,7 +85,9 @@ func (s *Shell) RunOnce(
 		fmt.Sprintf("NASHPATH=%s", nashdir),
 	)
 	s.installKLB(env)
-	return s.newcmd(env, scriptpath, args...).Run()
+	err = s.newcmd(env, scriptpath, args...).Run()
+	s.logger.Printf("%s result: %+v", scriptpath, err)
+	return err
 }
 
 func (s *Shell) newcmd(env []string, name string, args ...string) *exec.Cmd {

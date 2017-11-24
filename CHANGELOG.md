@@ -1,3 +1,21 @@
+# Release 0.10.0
+
+This release breaks compatibility of the storage package to
+match it better with how Azure works.
+
+Removes:
+
+* azure_storage_account_create
+
+Breaking changes:
+
+* azure_storage_account_get_keys
+
+And adds the new/tested:
+
+* azure_storage_account_create_storage
+* azure_storage_account_create_blob
+
 # Release 0.9.1
 
 This release removes the broken function:
