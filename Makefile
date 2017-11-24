@@ -51,7 +51,7 @@ install: guard-NASHPATH
 	@cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	@cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-integration_timeout=50m
+integration_timeout=55m
 examples_timeout=90m
 all_timeout=90m
 logger=file
