@@ -15,6 +15,13 @@ And adds the new/tested:
 
 * azure_storage_account_create_storage
 * azure_storage_account_create_blob
+* azure_storage_blob_upload
+* azure_storage_blob_upload_by_resgroup
+* azure_storage_blob_download
+* azure_storage_blob_download_by_resgroup
+
+Now it is easier to create Azure Blob containers and
+upload/download files from it.
 
 It also updates nash to 0.6 and protects against
 invalid parameters when restoring a VM backup.
