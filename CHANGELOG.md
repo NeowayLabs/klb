@@ -1,3 +1,15 @@
+# Release 0.10.1
+
+This release updates nash to 0.6 and protects against
+invalid parameters when restoring a VM backup.
+
+The following functions should not be called anymore
+when recovering a VM backup:
+
+* azure_vm_set_username
+* azure_vm_set_publickeyfile
+* azure_vm_set_password
+
 # Release 0.10.0
 
 This release breaks compatibility of the storage package to
