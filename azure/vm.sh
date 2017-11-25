@@ -796,21 +796,21 @@ fn azure_vm_backup_recover(instance, storagesku, caching, backup_resgroup) {
 		return "unable to get the 'os-type' from the given vm instance"
 	}
 
-	osdiskname <= _azure_vm_get($instance, "os-disk-name")
+        # FIXME: we should model a backup VM instance instead of
+        # using the default VM instance that allows to set invalid parameters
+        # since VM creation and restoration have different parameters.
+        err <= _azure_vm_backup_check_invalid_params(
+            $instance,
+            "os-disk-name",
+            "storage-sku",
+            "admin-username",
+            "admin-password",
+            "ssh-key-value"
+        )
 
-	if $osdiskname != "" {
-		msg <= format("found os disk name %q on vm instance: ", $osdiskname)
-		
-		return $msg+"should not call azure_vm_set_osdiskname on a vm that is being recovered from backup"
-	}
-
-	sku <= _azure_vm_get($instance, "storage-sku")
-
-	if $sku != "" {
-		msg <= format("found storage-sku %q on vm instance: ", $sku)
-		
-		return $msg+"should not call azure_vm_set_storagesku on a vm that is being recovered from backup"
-	}
+        if $err != "" {
+            return $err
+        }
 
 	log("loading snapshots from backup: "+$backup_resgroup)
 
@@ -998,4 +998,17 @@ fn _azure_vm_resgroup_is_backup(resgroup, namespace) {
 	out, status <= echo $resgroup | grep "^"+$namespace+"-bkp"
 
 	return $out, $status
+}
+
+fn _azure_vm_backup_check_invalid_params(instance, params...) {
+        err = ""
+        for param in $params {
+                v <= _azure_vm_get($instance, $param)
+                if $v != "" {
+                        msg <= format("found invalid parameter %s = %s for a vm backup: ", $param, $v)
+                        err = $err + "\n" + $msg
+                }
+        }
+
+        return $err
 }

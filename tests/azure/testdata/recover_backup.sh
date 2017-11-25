@@ -10,11 +10,10 @@ location    = $ARGS[3]
 vmsize      = $ARGS[4]
 vnet        = $ARGS[5]
 subnet      = $ARGS[6]
-pubkey      = $ARGS[7]
-ostype      = $ARGS[8]
-storagesku  = $ARGS[9]
-caching     = $ARGS[10]
-bkpresgroup = $ARGS[11]
+ostype      = $ARGS[7]
+storagesku  = $ARGS[8]
+caching     = $ARGS[9]
+bkpresgroup = $ARGS[10]
 
 azure_login()
 
@@ -29,6 +28,8 @@ if $err != "" {
 nicname = $name+"-nic"
 
 # create nic
+# FIXME: create NIC outside this script, this impairs the capacity
+# of trying again this script if the backup recovery fails
 nic <= azure_nic_new($nicname, $resgroup, $location)
 nic <= azure_nic_set_vnet($nic, $vnet)
 nic <= azure_nic_set_subnet($nic, $subnet)
@@ -37,13 +38,10 @@ azure_nic_create($nic)
 
 vm   <= azure_vm_new($name, $resgroup, $location)
 vm   <= azure_vm_set_vmsize($vm, $vmsize)
-vm   <= azure_vm_set_username($vm, "core")
-vm   <= azure_vm_set_username($vm, "core")
 
 nics = ($nicname)
 
 vm   <= azure_vm_set_nics($vm, $nics)
-vm   <= azure_vm_set_publickeyfile($vm, $pubkey)
 vm   <= azure_vm_set_ostype($vm, $ostype)
 
 echo "creating vm from backup: "+$bkpresgroup

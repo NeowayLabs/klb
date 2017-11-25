@@ -333,7 +333,6 @@ func recoverVM(
 	caching string,
 	backupResgroup string,
 ) {
-	keyFile := "./testdata/key.pub"
 	ostype := "linux"
 
 	f.Shell.Run(
@@ -344,7 +343,6 @@ func recoverVM(
 		vmSize,
 		vnet,
 		subnet,
-		keyFile,
 		ostype,
 		sku,
 		caching,
