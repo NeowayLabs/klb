@@ -215,6 +215,62 @@ fn azure_storage_container_exists_by_resgroup(containername, accountname, resgro
 	return azure_storage_container_exists($containername, $accountname, $accountkey)
 }
 
+# azure_storage_blob_list lists all blobs in a container.
+# Returns a list and an empty error string on success, otherwise
+# it will return an empty list and a non empty error string.
+fn azure_storage_blob_list(
+	containername,
+	accountname,
+	accountkey,
+	numresults
+) {
+
+	output, status <= (
+		az storage blob list
+			--container-name $containername
+			--account-name $accountname
+			--account-key $accountkey
+			--num-results $numresults
+		>[2=1]
+	)
+
+	if $status != "0" {
+		return (), format("error[%s] listing blobs", $output)
+	}
+
+	namesraw, status <= echo $output | jq -r ".[].name" >[2=1]
+	if $status != "0" {
+		return (), format("error[%s] parsing[%s]", $namesraw, $output)
+	}
+
+	names <= split($namesraw, "\n")
+
+	return $names, ""
+}
+
+# azure_storage_blob_list_by_resgroup does the same azure_storage_blob_list
+# but using the first account key available.
+fn azure_storage_blob_list_by_resgroup(
+	containername,
+	accountname,
+	resgroup,
+	numresults
+) {
+	accountkey, err <= _azure_storage_account_get_key_value($accountname, $resgroup)
+	if $err != "" {
+		return (), $err
+	}
+
+	res, err <= azure_storage_blob_list(
+		$containername,
+		$accountname,
+		$accountkey,
+		$numresults
+	)
+
+	return $res, $err
+}
+
 # azure_storage_blob_exists checks if a blob exists.
 # Returns "0" if it already exists (success), "1" otherwise.
 fn azure_storage_blob_exists(containername, accountname, accountkey, blobpath) {
