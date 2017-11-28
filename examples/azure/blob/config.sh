@@ -1,0 +1,6 @@
+group = "klb-examples-blob"
+account = "klbexamplesblob"
+container = "klb-examples-blob-container"
+location = "eastus2"
+sku = "Standard_LRS"
+tier = "Cool"
