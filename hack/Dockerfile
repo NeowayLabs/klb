@@ -1,7 +1,7 @@
 FROM neowaylabs/klb
 
 ENV GO_VERSION="1.9"
-ENV GOROOT="/go"
+ENV GOROOT="/goroot"
 ENV PATH=${PATH}:${GOROOT}/bin
 
 RUN cd /tmp && \
