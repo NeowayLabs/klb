@@ -2,5 +2,8 @@ dist: trusty
 
 sudo: required
 
+before_script:
+  - travis_wait 60 make imagedev
+
 script:
   - travis_wait 60 make test-integration logger=stdout
