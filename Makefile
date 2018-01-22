@@ -21,13 +21,17 @@ image:
 	export TERMINFO=""
 	docker build . -t neowaylabs/klb:$(version)
 
+imagedev: image
+	export TERMINFO=""
+	docker build . -f ./hack/Dockerfile -t neowaylabs/klbdev:$(version)
+
 credentials: image guard-sh guard-subscription guard-service-principal guard-service-secret
-	docker run -ti --rm -v `pwd`:/credentials -w /credentials neowaylabs/klb:$(version) \
+	docker run -ti --rm -v `pwd`:/credentials -w /credentials neowaylabs/klbdev:$(version) \
 		/credentials/tools/azure/getcredentials.sh \
 		$(sh) "$(subscription)" "$(service-principal)" "$(service-secret)"
 
 createsp: image guard-subscription-id guard-service-principal guard-service-secret
-	docker run -ti --rm -v `pwd`:/createsp -w /createsp neowaylabs/klb:$(version) \
+	docker run -ti --rm -v `pwd`:/createsp -w /createsp neowaylabs/klbdev:$(version) \
 		/createsp/tools/azure/createsp.sh \
 		"$(subscription-id)" "$(service-principal)" "$(service-secret)"
 
@@ -60,20 +64,20 @@ cpu=10
 gotest=go test -v ./tests/azure -parallel $(parallel) -cpu $(cpu)
 gotestargs=-args -logger $(logger)
 
-test: image
+test: imagedev
 	./hack/run.sh nash ./azure/vm_test.sh
 
-test-integration: image
+test-integration: imagedev
 	./hack/run.sh $(gotest) -timeout $(integration_timeout) -run=$(run) ./... $(gotestargs)
 
-test-examples: image
+test-examples: imagedev
 	./hack/run.sh $(gotest) -timeout $(examples_timeout) -tags=examples -run=TestExamples $(gotestargs)
 
 # It is recommended to use this locally. It takes too much time for the CI
-test-all: test
+test-all: imagedev
 	./hack/run.sh $(gotest) -timeout $(all_timeout) -tags=examples $(gotestargs)
 
-cleanup: image
+cleanup: imagedev
 	./hack/run-tty.sh ./tools/azure/cleanup.sh
 
 testhost:
