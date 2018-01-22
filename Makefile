@@ -74,7 +74,7 @@ test-examples: imagedev
 	./hack/run.sh $(gotest) -timeout $(examples_timeout) -tags=examples -run=TestExamples $(gotestargs)
 
 # It is recommended to use this locally. It takes too much time for the CI
-test-all: testdev
+test-all: imagedev
 	./hack/run.sh $(gotest) -timeout $(all_timeout) -tags=examples $(gotestargs)
 
 cleanup: imagedev
