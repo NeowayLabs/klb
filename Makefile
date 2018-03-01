@@ -21,7 +21,7 @@ image:
 	export TERMINFO=""
 	docker build . -t neowaylabs/klb:$(version)
 
-imagedev: image
+imagedev:
 	export TERMINFO=""
 	docker build . -f ./hack/Dockerfile -t neowaylabs/klbdev:$(version)
 

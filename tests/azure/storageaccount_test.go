@@ -54,6 +54,13 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
+		"UploaderCreatesAccountAndContainerIfNonExistent",
+		timeout,
+		location,
+		testUploaderCreatesStorageAccAndContainer,
+	)
+	fixture.Run(
+		t,
 		"StorageAccountCheckResourcesExistence",
 		timeout,
 		location,
@@ -101,6 +108,35 @@ func testStorageAccountCreatePremiumLRS(t *testing.T, f fixture.F) {
 
 	createStorageAccount(f, name, sku)
 	checkStorageAccount(t, f, name, sku, "Premium", kind)
+}
+
+func testUploaderCreatesStorageAccAndContainer(t *testing.T, f fixture.F) {
+	sku := "Standard_LRS"
+	kind := "BlobStorage"
+	tier := "Cool"
+	expectedTier := "Standard"
+	accountname := genStorageAccountName()
+	containerName := "klb-test-uploader"
+
+	expectedContents := fixture.NewUniqueName("random-contents")
+	expectedPath := "/test/uploader/file"
+	localfile, cleanup := setupTestFile(t, expectedContents)
+	defer cleanup()
+
+	uploadFileWithUploader(
+		t,
+		f,
+		accountname,
+		sku,
+		tier,
+		containerName,
+		expectedPath,
+		localfile,
+	)
+	checkStorageAccount(t, f, accountname, sku, expectedTier, kind)
+	contents := downloadFileBLOB(t, f, accountname, containerName, expectedPath)
+
+	assert.EqualStrings(t, expectedContents, contents, "checking uploaded BLOB")
 }
 
 func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
@@ -155,6 +191,29 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	testBLOBDontExist(t, f, accountname, containerName, remotepath)
 	uploadFileBLOB(t, f, accountname, containerName, remotepath, localfile)
 	testBLOBExists(t, f, accountname, containerName, remotepath)
+}
+
+func uploadFileWithUploader(
+	t *testing.T,
+	f fixture.F,
+	account string,
+	sku string,
+	tier string,
+	container string,
+	remotepath string,
+	localpath string,
+) {
+	f.Shell.Run(
+		"./testdata/uploader.sh",
+		f.ResGroupName,
+		f.Location,
+		account,
+		sku,
+		tier,
+		container,
+		remotepath,
+		localpath,
+	)
 }
 
 func uploadFileBLOB(
