@@ -218,13 +218,17 @@ func testUploaderCreatesAccountAndContainerIfNonExistent(t *testing.T, f fixture
 			tier: "Cool",
 		},
 		TestCase{
+			sku:  "Standard_GRS",
+			tier: "Hot",
+		},
+		TestCase{
 			sku:  "Standard_RAGRS",
 			tier: "Cool",
 		},
-		//TestCase{
-		//sku:  "Standard_ZRS",
-		//tier: "Cool",
-		//},
+		TestCase{
+			sku:  "Standard_RAGRS",
+			tier: "Hot",
+		},
 	}
 
 	for _, tcase := range tcases {
