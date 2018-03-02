@@ -200,7 +200,10 @@ func testUploaderCreatesAccountAndContainerIfNonExistent(t *testing.T, f fixture
 		tier string
 	}
 
-	// TODO: add more cases
+	// WHY: lot of cases are not tested because they do not work on az cli
+	// like using Premium_LRS or Standard_ZRS as SKU.
+	// The docs are pretty confusing right now
+	// on how to use the SKU option when handling blob storage.
 	tcases := []TestCase{
 		TestCase{
 			sku:  "Standard_LRS",
@@ -210,6 +213,18 @@ func testUploaderCreatesAccountAndContainerIfNonExistent(t *testing.T, f fixture
 			sku:  "Standard_LRS",
 			tier: "Hot",
 		},
+		TestCase{
+			sku:  "Standard_GRS",
+			tier: "Cool",
+		},
+		TestCase{
+			sku:  "Standard_RAGRS",
+			tier: "Cool",
+		},
+		//TestCase{
+		//sku:  "Standard_ZRS",
+		//tier: "Cool",
+		//},
 	}
 
 	for _, tcase := range tcases {
