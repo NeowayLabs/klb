@@ -1,21 +1,29 @@
+import klb/azure/group
 import klb/azure/storage
 
 # Creates a new azure blob uploader
 # It will create resgroup/account/container as necessary if they do not exist
 fn azure_uploader_new(resgroup, location, accountname, sku, tier, containername) {
-	# TODO: add resgroup creation
-	# TODO: Test when acc already exists
-	# TODO: Test when container already exists
-        err <=  azure_storage_account_create_blob(
-            $accountname,
-            $resgroup,
-            $location,
-            $sku,
-            $tier
-        )
-        if $err != "" {
-		return (), $err
+	# WHY: for now creating a group that already exists is ok
+	# and the function does not return any value, it will abort =/
+	# changing it now may break other people.
+	azure_group_create($resgroup, $location)
+
+	status <= azure_storage_account_exists($accountname, $resgroup)
+	if $status != "0" {
+		err <=  azure_storage_account_create_blob(
+		    $accountname,
+		    $resgroup,
+		    $location,
+		    $sku,
+		    $tier
+		)
+		if $err != "" {
+			return (), $err
+		}
         }
+
+        # WHY: creating a container that already exists do not fail on az
         err <= azure_storage_container_create_by_resgroup(
                 $containername,
                 $accountname,

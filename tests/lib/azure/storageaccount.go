@@ -13,13 +13,13 @@ type StorageAccounts struct {
 }
 
 type StorageAccount struct {
-	ID       string
-	Name     string
-	Type     string
-	Location string
-	Sku      string
-	Tier     string
-	Kind     string
+	ID         string
+	Name       string
+	Type       string
+	Location   string
+	Sku        string
+	AccessTier string
+	Kind       string
 }
 
 func NewStorageAccounts(f fixture.F) *StorageAccounts {
@@ -53,13 +53,16 @@ func (s *StorageAccounts) Account(t *testing.T, name string) StorageAccount {
 	if acc.Sku == nil {
 		t.Fatalf("Account:account[%+v] Sku is nil", acc)
 	}
+	if acc.AccountProperties == nil {
+		t.Fatalf("Account:account[%+v] properties is nil", acc)
+	}
 	return StorageAccount{
-		ID:       *acc.ID,
-		Name:     *acc.Name,
-		Type:     *acc.Type,
-		Location: *acc.Location,
-		Sku:      string(acc.Sku.Name),
-		Tier:     string(acc.Sku.Tier),
-		Kind:     string(acc.Kind),
+		ID:         *acc.ID,
+		Name:       *acc.Name,
+		Type:       *acc.Type,
+		Location:   *acc.Location,
+		Sku:        string(acc.Sku.Name),
+		Kind:       string(acc.Kind),
+		AccessTier: string(acc.AccountProperties.AccessTier),
 	}
 }
