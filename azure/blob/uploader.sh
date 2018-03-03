@@ -3,7 +3,7 @@ import klb/azure/storage
 
 # Creates a new azure blob uploader
 # It will create resgroup/account/container as necessary if they do not exist
-fn azure_uploader_new(resgroup, location, accountname, sku, tier, containername) {
+fn azure_blob_uploader_new(resgroup, location, accountname, sku, tier, containername) {
 	# WHY: for now creating a group that already exists is ok
 	# and the function does not return any value, it will abort =/
 	# changing it now may break other people.
@@ -36,24 +36,24 @@ fn azure_uploader_new(resgroup, location, accountname, sku, tier, containername)
 }
 
 # Uploads the blob
-fn azure_uploader_upload(uploader, remotepath, localpath) {
+fn azure_blob_uploader_upload(uploader, remotepath, localpath) {
 	return azure_storage_blob_upload_by_resgroup(
-		azure_uploader_container($uploader),
-		azure_uploader_account($uploader),
-		azure_uploader_resgroup($uploader),
+		azure_blob_uploader_container($uploader),
+		azure_blob_uploader_account($uploader),
+		azure_blob_uploader_resgroup($uploader),
 		$remotepath,
 		$localpath
 	)
 }
 
-fn azure_uploader_container(uploader) {
+fn azure_blob_uploader_container(uploader) {
 	return $uploader[2]
 }
 
-fn azure_uploader_account(uploader) {
+fn azure_blob_uploader_account(uploader) {
 	return $uploader[1]
 }
 
-fn azure_uploader_resgroup(uploader) {
+fn azure_blob_uploader_resgroup(uploader) {
 	return $uploader[0]
 }

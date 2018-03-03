@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
 import klb/azure/login
-import klb/azure/uploader
+import klb/azure/blob/uploader
 
 resgroup      = $ARGS[1]
 location      = $ARGS[2]
@@ -15,7 +15,7 @@ localpath     = $ARGS[8]
 azure_login()
 
 echo "uploading file"
-uploader, err <= azure_uploader_new(
+uploader, err <= azure_blob_uploader_new(
 	$resgroup,
 	$location,
 	$accountname,
@@ -28,7 +28,7 @@ if $err != "" {
 	exit("1")
 }
 
-err <= azure_uploader_upload($uploader, $remotepath, $localpath)
+err <= azure_blob_uploader_upload($uploader, $remotepath, $localpath)
 if $err != "" {
 	echo "error creating uploader: " + $err
 	exit("1")
