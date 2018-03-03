@@ -235,7 +235,7 @@ func testUploaderCreatesAccountAndContainerIfNonExistent(
 
 	for _, tcase := range tcases {
 		tname := fmt.Sprintf(
-			"UploaderCreatesAccountAndContainerIfNonExistent/%s/%s",
+			"UploaderCreatesAccountAndContainerIfNonExistent%s%s",
 			tcase.sku,
 			tcase.tier,
 		)
