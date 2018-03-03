@@ -55,13 +55,6 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
-		"UploaderCreatesAccountAndContainerIfNonExistent",
-		timeout,
-		location,
-		testUploaderCreatesAccountAndContainerIfNonExistent,
-	)
-	fixture.Run(
-		t,
 		"UploaderUploadsWhenAccountAndContainerExists",
 		timeout,
 		location,
@@ -73,6 +66,11 @@ func TestStorage(t *testing.T) {
 		timeout,
 		location,
 		testStorageAccountCheckResourcesExistence,
+	)
+	testUploaderCreatesAccountAndContainerIfNonExistent(
+		t,
+		timeout,
+		location,
 	)
 }
 
@@ -194,7 +192,11 @@ func uploaderCreatesAccountAndContainerIfNonExistent(
 	assert.EqualStrings(t, sf.testfileContent, filecontent, "checking uploaded BLOB")
 }
 
-func testUploaderCreatesAccountAndContainerIfNonExistent(t *testing.T, f fixture.F) {
+func testUploaderCreatesAccountAndContainerIfNonExistent(
+	t *testing.T,
+	timeout time.Duration,
+	location string,
+) {
 	type TestCase struct {
 		sku  string
 		tier string
@@ -232,7 +234,12 @@ func testUploaderCreatesAccountAndContainerIfNonExistent(t *testing.T, f fixture
 	}
 
 	for _, tcase := range tcases {
-		t.Run(fmt.Sprintf("%s/%s", tcase.sku, tcase.tier), func(t *testing.T) {
+		tname := fmt.Sprintf(
+			"UploaderCreatesAccountAndContainerIfNonExistent/%s/%s",
+			tcase.sku,
+			tcase.tier,
+		)
+		fixture.Run(t, tname, timeout, location, func(t *testing.T, f fixture.F) {
 			uploaderCreatesAccountAndContainerIfNonExistent(t, f, tcase.sku, tcase.tier)
 		})
 	}
