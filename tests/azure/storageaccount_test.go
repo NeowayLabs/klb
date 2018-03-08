@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -55,17 +57,24 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
-		"UploaderUploadsWhenAccountAndContainerExists",
-		timeout,
-		location,
-		testUploaderUploadsWhenAccountAndContainerExists,
-	)
-	fixture.Run(
-		t,
 		"StorageAccountCheckResourcesExistence",
 		timeout,
 		location,
 		testStorageAccountCheckResourcesExistence,
+	)
+	fixture.Run(
+		t,
+		"UploaderUploadsDirectoryRecursively",
+		timeout,
+		location,
+		testUploaderUploadsDirectoryRecursively,
+	)
+	fixture.Run(
+		t,
+		"UploaderUploadsWhenAccountAndContainerExists",
+		timeout,
+		location,
+		testUploaderUploadsWhenAccountAndContainerExists,
 	)
 	testUploaderCreatesAccountAndContainerIfNonExistent(
 		t,
@@ -140,6 +149,49 @@ func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string)
 	}, cleanup
 }
 
+func testUploaderUploadsDirectoryRecursively(t *testing.T, f fixture.F) {
+	account := genStorageAccountName()
+	container := fixture.NewUniqueName("container")
+	tdir, err := ioutil.TempDir("", "uploader-recur-test")
+	assert.NoError(t, err)
+
+	type TestFile struct {
+		path    string
+		content string
+	}
+
+	filesCount := 10
+	files := []TestFile{}
+	defer func() {
+		assert.NoError(t, os.RemoveAll(tdir))
+	}()
+
+	for i := 0; i < filesCount; i++ {
+		localfile := filepath.Join(tdir, strconv.Itoa(i))
+		content := fixture.NewUniqueName("somecontent")
+		ioutil.WriteFile(localfile, []byte(content), 0644)
+		files = append(files, TestFile{
+			path:    localfile,
+			content: content,
+		})
+	}
+
+	sku := "Standard_LRS"
+	tier := "Cool"
+	kind := "BlobStorage"
+	remotePath := tdir
+
+	uploadWithUploader(t, f, account, sku, tier, container, remotePath, tdir)
+
+	checkStorageBlobAccount(t, f, account, sku, tier, kind)
+
+	for _, file := range files {
+		// WHY: Azure uploads only the base name of the local file, not the entire path
+		filecontent := downloadFileBLOB(t, f, account, container, filepath.Base(file.path))
+		assert.EqualStrings(t, file.content, filecontent, "checking uploaded BLOB")
+	}
+}
+
 func testUploaderUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
 	sf, cleanup := setupBlobStorageFixture(t, f, "Standard_LRS", "Cool")
 	defer cleanup()
@@ -149,7 +201,7 @@ func testUploaderUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F)
 	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier, sf.kind)
 	createStorageAccountContainer(f, sf.account, sf.container)
 
-	uploadFileWithUploader(
+	uploadWithUploader(
 		t,
 		f,
 		sf.account,
@@ -176,7 +228,7 @@ func uploaderCreatesAccountAndContainerIfNonExistent(
 
 	expectedPath := "/test/acc/container/nonexistent/file"
 
-	uploadFileWithUploader(
+	uploadWithUploader(
 		t,
 		f,
 		sf.account,
@@ -289,7 +341,7 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	testBLOBExists(t, f, accountname, containerName, remotepath)
 }
 
-func uploadFileWithUploader(
+func uploadWithUploader(
 	t *testing.T,
 	f fixture.F,
 	account string,

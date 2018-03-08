@@ -46,6 +46,16 @@ fn azure_blob_uploader_upload(uploader, remotepath, localpath) {
 	)
 }
 
+# Uploads a dir
+fn azure_blob_uploader_upload_dir(uploader, localpath) {
+	return azure_storage_blob_upload_dir_by_resgroup(
+		azure_blob_uploader_container($uploader),
+		azure_blob_uploader_account($uploader),
+		azure_blob_uploader_resgroup($uploader),
+		$localpath
+	)
+}
+
 fn azure_blob_uploader_container(uploader) {
 	return $uploader[2]
 }

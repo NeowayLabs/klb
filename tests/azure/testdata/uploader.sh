@@ -28,9 +28,18 @@ if $err != "" {
 	exit("1")
 }
 
-err <= azure_blob_uploader_upload($uploader, $remotepath, $localpath)
+_, status <= test -f $localpath
+if $status == "0" {
+	echo "uploading file"
+	err <= azure_blob_uploader_upload($uploader, $remotepath, $localpath)
+} else {
+	echo "uploading directory"
+	err <= azure_blob_uploader_upload_dir($uploader, $localpath)
+}
+
 if $err != "" {
-	echo "error creating uploader: " + $err
+	echo "error uploading file: " + $err
 	exit("1")
 }
+
 echo "success"

@@ -36,7 +36,7 @@ createsp: image guard-subscription-id guard-service-principal guard-service-secr
 		"$(subscription-id)" "$(service-principal)" "$(service-secret)"
 
 shell: image
-	./hack/run-tty.sh /usr/bin/nash
+	./hack/run-tty.sh nash
 
 example-%: image
 	./hack/run-tty.sh ./examples/azure/$*/build.sh

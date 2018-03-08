@@ -360,6 +360,51 @@ fn azure_storage_blob_download_by_resgroup(
 	)
 }
 
+fn azure_storage_blob_upload_dir(
+	containername,
+	accountname,
+	accountkey,
+	localpath
+) {
+	output, status <= (az storage blob upload-batch
+		--account-name $accountname
+		--account-key $accountkey
+		--source $localpath
+		--destination $containername
+		>[2=1]
+	)
+
+	if $status != "0" {
+		return format(
+			"error[%s] uploading directory[%s] to container[%s] on account name[%s]",
+			$output,
+			$localpath,
+			$containername,
+			$accountname,
+		)
+	}
+
+	return ""
+}
+
+fn azure_storage_blob_upload_dir_by_resgroup(
+	containername,
+	accountname,
+	resgroup,
+	localpath
+) {
+	accountkey, err <= _azure_storage_account_get_key_value($accountname, $resgroup)
+	if $err != "" {
+		return $err
+	}
+	return azure_storage_blob_upload_dir(
+		$containername,
+		$accountname,
+		$accountkey,
+		$localpath
+	)
+}
+
 fn azure_storage_blob_upload(
 	containername,
 	accountname,
