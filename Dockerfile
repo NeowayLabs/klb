@@ -1,4 +1,4 @@
-FROM neowaylabs/klbdeps:0.4
+FROM neowaylabs/klbdeps:0.5
 
 COPY ./tools/azure/createsp.sh ${NASHPATH}/bin/azure-createsp.sh
 COPY ./tools/azure/getcredentials.sh ${NASHPATH}/bin/azure-getcredentials.sh
