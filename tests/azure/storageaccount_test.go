@@ -18,7 +18,7 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	timeout := 25 * time.Minute
+	timeout := 15 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
@@ -64,19 +64,19 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
-		"UploaderUploadsDirectoryRecursively",
+		"BlobFSUploadsDirRecursively",
 		timeout,
 		location,
-		testUploaderUploadsDirectoryRecursively,
+		testBlobFSUploadsDirRecursively,
 	)
 	fixture.Run(
 		t,
-		"UploaderUploadsWhenAccountAndContainerExists",
+		"BlobFSUploadsWhenAccountAndContainerExists",
 		timeout,
 		location,
-		testUploaderUploadsWhenAccountAndContainerExists,
+		testBlobFSUploadsWhenAccountAndContainerExists,
 	)
-	testUploaderCreatesAccountAndContainerIfNonExistent(
+	testBlobFSCreatesAccountAndContainerIfNonExistent(
 		t,
 		timeout,
 		location,
@@ -149,7 +149,9 @@ func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string)
 	}, cleanup
 }
 
-func testUploaderUploadsDirectoryRecursively(t *testing.T, f fixture.F) {
+func testBlobFSUploadsDirRecursively(t *testing.T, f fixture.F) {
+	t.Skip("TODO")
+
 	account := genStorageAccountName()
 	container := fixture.NewUniqueName("container")
 	tdir, err := ioutil.TempDir("", "uploader-recur-test")
@@ -181,7 +183,7 @@ func testUploaderUploadsDirectoryRecursively(t *testing.T, f fixture.F) {
 	kind := "BlobStorage"
 	remotePath := tdir
 
-	uploadWithUploader(t, f, account, sku, tier, container, remotePath, tdir)
+	blobFSUpload(t, f, account, sku, tier, container, remotePath, tdir)
 
 	checkStorageBlobAccount(t, f, account, sku, tier, kind)
 
@@ -192,7 +194,7 @@ func testUploaderUploadsDirectoryRecursively(t *testing.T, f fixture.F) {
 	}
 }
 
-func testUploaderUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
+func testBlobFSUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
 	sf, cleanup := setupBlobStorageFixture(t, f, "Standard_LRS", "Cool")
 	defer cleanup()
 
@@ -201,7 +203,7 @@ func testUploaderUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F)
 	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier, sf.kind)
 	createStorageAccountContainer(f, sf.account, sf.container)
 
-	uploadWithUploader(
+	blobFSUpload(
 		t,
 		f,
 		sf.account,
@@ -228,7 +230,7 @@ func uploaderCreatesAccountAndContainerIfNonExistent(
 
 	expectedPath := "/test/acc/container/nonexistent/file"
 
-	uploadWithUploader(
+	blobFSUpload(
 		t,
 		f,
 		sf.account,
@@ -244,7 +246,7 @@ func uploaderCreatesAccountAndContainerIfNonExistent(
 	assert.EqualStrings(t, sf.testfileContent, filecontent, "checking uploaded BLOB")
 }
 
-func testUploaderCreatesAccountAndContainerIfNonExistent(
+func testBlobFSCreatesAccountAndContainerIfNonExistent(
 	t *testing.T,
 	timeout time.Duration,
 	location string,
@@ -341,7 +343,7 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	testBLOBExists(t, f, accountname, containerName, remotepath)
 }
 
-func uploadWithUploader(
+func blobFSUpload(
 	t *testing.T,
 	f fixture.F,
 	account string,

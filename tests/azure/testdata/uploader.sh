@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
 import klb/azure/login
-import klb/azure/blob/uploader
+import klb/azure/blob/fs
 
 resgroup      = $ARGS[1]
 location      = $ARGS[2]
@@ -15,7 +15,7 @@ localpath     = $ARGS[8]
 azure_login()
 
 echo "uploading file"
-uploader, err <= azure_blob_uploader_new(
+uploader, err <= azure_blob_fs_new(
 	$resgroup,
 	$location,
 	$accountname,
@@ -31,14 +31,14 @@ if $err != "" {
 _, status <= test -f $localpath
 if $status == "0" {
 	echo "uploading file"
-	err <= azure_blob_uploader_upload($uploader, $remotepath, $localpath)
+	err <= azure_blob_fs_upload($uploader, $remotepath, $localpath)
 } else {
 	echo "uploading directory"
-	err <= azure_blob_uploader_upload_dir($uploader, $localpath)
+	err <= azure_blob_fs_upload_dir($uploader, $localpath)
 }
 
 if $err != "" {
-	echo "error uploading file: " + $err
+	echo "error uploading: " + $err
 	exit("1")
 }
 
