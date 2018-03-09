@@ -66,29 +66,63 @@ fn azure_blob_fs_new(resgroup, location, accountname, sku, tier, containername) 
 }
 
 # Uploads a single file
-fn azure_blob_fs_upload(uploader, remotepath, localpath) {
+fn azure_blob_fs_upload(fs, remotepath, localpath) {
 	return azure_storage_blob_upload_by_resgroup(
-		azure_blob_fs_container($uploader),
-		azure_blob_fs_account($uploader),
-		azure_blob_fs_resgroup($uploader),
+		azure_blob_fs_container($fs),
+		azure_blob_fs_account($fs),
+		azure_blob_fs_resgroup($fs),
 		$remotepath,
 		$localpath
 	)
 }
 
-# Uploads a dir
-fn azure_blob_fs_upload_dir(uploader, localpath) {
-	# TODO
+# Uploads a local dir to a remote dir
+fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
+	# WHY: Make code handling results uniform (no relative path handling)
+	localdir <= realpath $localdir
+	out, status <= tree -if --noreport $localdir
+	if $status != "0" {
+		return format("error listing directory[%s], output: %s", $localpath, $out)
+	}
+	all <= split($out, "\n")
+	echo $all
+	files = ()
+	for a in $all {
+		_, status <= test -f $a
+		if $status == "0" {
+			files <= append($files, $a)
+		}
+	}
+
+	echo "========="
+	echo $files
+
+	filesprefix <= format("s:^%s::", $localdir)
+	for f in $files {
+		remotefilename <= echo $f | sed -e $filesprefix
+		remotepath = $remotedir + $remotefilename
+		echo
+		echo $f
+		echo "to"
+		echo $remotepath
+		echo
+		err <= azure_blob_fs_upload($fs, $remotepath, $f)
+		if $err != "" {
+			return $err
+		}
+	}
+
+	return ""
 }
 
-fn azure_blob_fs_container(uploader) {
-	return $uploader[2]
+fn azure_blob_fs_container(fs) {
+	return $fs[2]
 }
 
-fn azure_blob_fs_account(uploader) {
-	return $uploader[1]
+fn azure_blob_fs_account(fs) {
+	return $fs[1]
 }
 
-fn azure_blob_fs_resgroup(uploader) {
-	return $uploader[0]
+fn azure_blob_fs_resgroup(fs) {
+	return $fs[0]
 }

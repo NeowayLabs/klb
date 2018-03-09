@@ -1,4 +1,4 @@
-FROM neowaylabs/klbdeps:0.4
+FROM neowaylabs/klb
 
 ENV GO_VERSION="1.9"
 ENV GOROOT="/goroot"

@@ -18,7 +18,7 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	timeout := 15 * time.Minute
+	timeout := 10 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
@@ -150,46 +150,58 @@ func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string)
 }
 
 func testBlobFSUploadsDirRecursively(t *testing.T, f fixture.F) {
-	t.Skip("TODO")
-
 	account := genStorageAccountName()
 	container := fixture.NewUniqueName("container")
-	tdir, err := ioutil.TempDir("", "uploader-recur-test")
-	assert.NoError(t, err)
 
 	type TestFile struct {
 		path    string
 		content string
 	}
 
-	filesCount := 10
-	files := []TestFile{}
+	createFilesOnDir := func(dir string, filesCount int) []TestFile {
+		assert.NoError(t, os.MkdirAll(dir, 0644))
+		files := []TestFile{}
+		for i := 0; i < filesCount; i++ {
+			localfile := filepath.Join(dir, strconv.Itoa(i))
+			content := fixture.NewUniqueName("somecontent")
+			ioutil.WriteFile(localfile, []byte(content), 0644)
+			files = append(files, TestFile{
+				path:    localfile,
+				content: content,
+			})
+		}
+		return files
+	}
+
+	tdir, err := ioutil.TempDir("", "uploader-recur-test")
+	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, os.RemoveAll(tdir))
 	}()
 
-	for i := 0; i < filesCount; i++ {
-		localfile := filepath.Join(tdir, strconv.Itoa(i))
-		content := fixture.NewUniqueName("somecontent")
-		ioutil.WriteFile(localfile, []byte(content), 0644)
-		files = append(files, TestFile{
-			path:    localfile,
-			content: content,
-		})
-	}
+	expectedFiles := []TestFile{}
+	expectedFiles = append(expectedFiles, createFilesOnDir(
+		filepath.Join(tdir), 2)...)
+	expectedFiles = append(expectedFiles, createFilesOnDir(
+		filepath.Join(tdir, "level1"), 1)...)
+	expectedFiles = append(expectedFiles, createFilesOnDir(
+		filepath.Join(tdir, "level1", "level2"), 3)...)
 
 	sku := "Standard_LRS"
 	tier := "Cool"
 	kind := "BlobStorage"
-	remotePath := tdir
+	remotePath := "/remote/path"
 
 	blobFSUpload(t, f, account, sku, tier, container, remotePath, tdir)
 
 	checkStorageBlobAccount(t, f, account, sku, tier, kind)
 
-	for _, file := range files {
-		// WHY: Azure uploads only the base name of the local file, not the entire path
-		filecontent := downloadFileBLOB(t, f, account, container, filepath.Base(file.path))
+	for _, file := range expectedFiles {
+		downloadpath := filepath.Join(
+			remotePath,
+			strings.TrimPrefix(file.path, tdir))
+
+		filecontent := downloadFileBLOB(t, f, account, container, downloadpath)
 		assert.EqualStrings(t, file.content, filecontent, "checking uploaded BLOB")
 	}
 }
@@ -354,7 +366,7 @@ func blobFSUpload(
 	localpath string,
 ) {
 	f.Shell.Run(
-		"./testdata/uploader.sh",
+		"./testdata/blob-fs-upload.sh",
 		f.ResGroupName,
 		f.Location,
 		account,

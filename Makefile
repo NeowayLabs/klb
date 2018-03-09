@@ -21,10 +21,6 @@ image:
 	export TERMINFO=""
 	docker build . -t neowaylabs/klb:$(version)
 
-imagedev:
-	export TERMINFO=""
-	docker build . -f ./hack/Dockerfile -t neowaylabs/klbdev:$(version)
-
 credentials: image guard-sh guard-subscription guard-service-principal guard-service-secret
 	docker run -ti --rm -v `pwd`:/credentials -w /credentials neowaylabs/klbdev:$(version) \
 		/credentials/tools/azure/getcredentials.sh \
@@ -64,20 +60,20 @@ cpu=10
 gotest=go test -v ./tests/azure -parallel $(parallel) -cpu $(cpu)
 gotestargs=-args -logger $(logger)
 
-test: imagedev
+test: image
 	./hack/run.sh nash ./azure/vm_test.sh
 
-test-integration: imagedev
+test-integration: image
 	./hack/run.sh $(gotest) -timeout $(integration_timeout) -run=$(run) ./... $(gotestargs)
 
-test-examples: imagedev
+test-examples: image
 	./hack/run.sh $(gotest) -timeout $(examples_timeout) -tags=examples -run=TestExamples $(gotestargs)
 
 # It is recommended to use this locally. It takes too much time for the CI
-test-all: imagedev
+test-all: image
 	./hack/run.sh $(gotest) -timeout $(all_timeout) -tags=examples $(gotestargs)
 
-cleanup: imagedev
+cleanup: image
 	./hack/run-tty.sh ./tools/azure/cleanup.sh
 
 testhost:

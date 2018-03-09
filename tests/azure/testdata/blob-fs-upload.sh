@@ -34,7 +34,7 @@ if $status == "0" {
 	err <= azure_blob_fs_upload($uploader, $remotepath, $localpath)
 } else {
 	echo "uploading directory"
-	err <= azure_blob_fs_upload_dir($uploader, $localpath)
+	err <= azure_blob_fs_upload_dir($uploader, $remotepath, $localpath)
 }
 
 if $err != "" {
