@@ -85,7 +85,6 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 		return format("error listing directory[%s], output: %s", $localpath, $out)
 	}
 	all <= split($out, "\n")
-	echo $all
 	files = ()
 	for a in $all {
 		_, status <= test -f $a
@@ -94,18 +93,10 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 		}
 	}
 
-	echo "========="
-	echo $files
-
 	filesprefix <= format("s:^%s::", $localdir)
 	for f in $files {
 		remotefilename <= echo $f | sed -e $filesprefix
 		remotepath = $remotedir + $remotefilename
-		echo
-		echo $f
-		echo "to"
-		echo $remotepath
-		echo
 		err <= azure_blob_fs_upload($fs, $remotepath, $f)
 		if $err != "" {
 			return $err
