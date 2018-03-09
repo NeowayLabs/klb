@@ -192,7 +192,7 @@ func testBlobFSUploadsDirRecursively(t *testing.T, f fixture.F) {
 	kind := "BlobStorage"
 	remotePath := "/remote/path"
 
-	blobFSUpload(t, f, account, sku, tier, container, remotePath, tdir)
+	blobFSUploadDir(t, f, account, sku, tier, container, remotePath, tdir)
 
 	checkStorageBlobAccount(t, f, account, sku, tier, kind)
 
@@ -353,6 +353,29 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	testBLOBDontExist(t, f, accountname, containerName, remotepath)
 	uploadFileBLOB(t, f, accountname, containerName, remotepath, localfile)
 	testBLOBExists(t, f, accountname, containerName, remotepath)
+}
+
+func blobFSUploadDir(
+	t *testing.T,
+	f fixture.F,
+	account string,
+	sku string,
+	tier string,
+	container string,
+	remotedir string,
+	localdir string,
+) {
+	f.Shell.Run(
+		"./testdata/blob-fs-upload-dir.sh",
+		f.ResGroupName,
+		f.Location,
+		account,
+		sku,
+		tier,
+		container,
+		remotedir,
+		localdir,
+	)
 }
 
 func blobFSUpload(

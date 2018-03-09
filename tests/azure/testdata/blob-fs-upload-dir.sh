@@ -9,8 +9,8 @@ accountname   = $ARGS[3]
 sku           = $ARGS[4]
 tier          = $ARGS[5]
 containername = $ARGS[6]
-remotepath    = $ARGS[7]
-localpath     = $ARGS[8]
+remotedir    = $ARGS[7]
+localdir     = $ARGS[8]
 
 azure_login()
 
@@ -28,8 +28,8 @@ if $err != "" {
 	exit("1")
 }
 
-echo "uploading file"
-err <= azure_blob_fs_upload($uploader, $remotepath, $localpath)
+echo "uploading directory"
+err <= azure_blob_fs_upload_dir($uploader, $remotedir, $localdir)
 
 if $err != "" {
 	echo "error uploading: " + $err
