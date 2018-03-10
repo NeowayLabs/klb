@@ -227,22 +227,36 @@ func testBlobFSListDir(
 	remotedir string,
 	wantfiles []string,
 ) {
-	gotfiles := fs.List(t, f, remotedir)
-	if len(gotfiles) != len(wantfiles) {
-		t.Fatalf("want files[%s] got[%s]", wantfiles, gotfiles)
-	}
 
-	for _, wantfile := range wantfiles {
-		found := false
-		for _, gotfile := range gotfiles {
-			if wantfile == gotfile {
-				found = true
-				break
+	checkDir := func(remotedir string, wantfiles []string) {
+		gotfiles := fs.List(t, f, remotedir)
+		if len(gotfiles) != len(wantfiles) {
+			t.Fatalf("want files[%s] got[%s]", wantfiles, gotfiles)
+		}
+
+		for _, wantfile := range wantfiles {
+			found := false
+			for _, gotfile := range gotfiles {
+				if wantfile == gotfile {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Fatalf("unable to find wanted file[%s] on [%s]", wantfile, gotfiles)
 			}
 		}
-		if !found {
-			t.Fatalf("unable to find wanted file[%s] on [%s]", wantfile, gotfiles)
-		}
+	}
+
+	dirToFiles := map[string][]string{}
+	for _, file := range wantfiles {
+		dir := filepath.Dir(file)
+		f := dirToFiles[dir]
+		dirToFiles[dir] = append(f, file)
+	}
+
+	for dir, files := range dirToFiles {
+		checkDir(dir, files)
 	}
 }
 
