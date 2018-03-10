@@ -84,7 +84,21 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 	)
 }
 
-# Uploads a local dir to a remote dir
+# Uploads a local dir to a remote dir.
+# It will not create the local dir on the remote dir, only its
+# contents (including other dirs, recursively).
+#
+# For example, copying the local dir /klb to the remote dir /test
+# will copy all contents of /klb to /test, like /test/file1 and /test/dir1/file1
+# but it will not create a "klb" directory inside the remote dir.
+#
+# This is the behavior of Plan9 dircp (http://man.cat-v.org/plan_9/1/tar)
+# and it seems more intuitive than the cp -r behavior of creating only the
+# base dir of the source path at the target path if it does not exists
+# and to copy only the contents you need the hack of regex expansion:
+# cp -r /srcdir/* /targetdir.
+#
+# This function returns an error string if it fails and "" if it succeeds.
 fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 	# WHY: Make code handling results uniform (no relative path handling)
 	localdir <= realpath $localdir
