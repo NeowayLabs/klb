@@ -2,6 +2,7 @@ import klb/azure/group
 import klb/azure/storage
 
 # Creates a new azure blob filesystem
+#
 # What do we mean with BLOB file system ?
 # Well, BLOB storage has no concept of directories and hierarchy.
 # Each container is just a flat namespace.
@@ -30,10 +31,11 @@ import klb/azure/storage
 #
 # Making it pretty easy to work, but the function may return an error if it is
 # unable to create any of the resources.
+# This is specially useful on read/write scenarios.
 #
 # If it succeeds you can use the returned instance to list/send/get files from
 # Azure BLOB storage.
-fn azure_blob_fs_new(resgroup, location, accountname, sku, tier, containername) {
+fn azure_blob_fs_create(resgroup, location, accountname, sku, tier, containername) {
 	# WHY: for now creating a group that already exists is ok
 	# and the function does not return any value, it will abort =/
 	# changing it now may break other people.
@@ -62,7 +64,13 @@ fn azure_blob_fs_new(resgroup, location, accountname, sku, tier, containername) 
         if $err != "" {
 		return (), $err
         }
-	return ($resgroup $accountname $containername), ""
+	return azure_blob_fs_new($resgroup, $accountname, $containername), ""
+}
+
+# Creates a new blob fs instance, just like azure_blob_fs_create but
+# it will not attempt to create any resource. Useful for reading operations.
+fn azure_blob_fs_new(resgroup, accountname, containername) {
+	return ($resgroup $accountname $containername)
 }
 
 # Uploads a single file
@@ -104,6 +112,20 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 	}
 
 	return ""
+}
+
+# List all files on the given dir (as far as Azure has dirs on BLOB storage =P)
+fn azure_blob_fs_list(fs, remotedir) {
+	# WHY: if you take a look at: az storage blob list --help
+	# you will see that there is no way to list all files of a blob,
+	# only a maximum of 5000 files (there is no kind of start/cursor/index.
+	# Azure is definitely the apex of cloud computing =)
+	res, err <= azure_storage_blob_list_by_resgroup(
+		azure_blob_fs_container($fs),
+		azure_blob_fs_account($fs),
+		azure_blob_fs_resgroup($fs),
+		"5000")
+	return $res, $err
 }
 
 fn azure_blob_fs_container(fs) {

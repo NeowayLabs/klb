@@ -225,9 +225,25 @@ func testBlobFSListDir(
 	f fixture.F,
 	fs blobFS,
 	remotedir string,
-	expectedFiles []string,
+	wantfiles []string,
 ) {
-	// TODO
+	gotfiles := fs.List(t, f, remotedir)
+	if len(gotfiles) != len(wantfiles) {
+		t.Fatalf("want files[%s] got[%s]", wantfiles, gotfiles)
+	}
+
+	for _, wantfile := range wantfiles {
+		found := false
+		for _, gotfile := range gotfiles {
+			if wantfile == gotfile {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("unable to find wanted file[%s] on [%s]", wantfile, gotfiles)
+		}
+	}
 }
 
 func testBlobFSUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
@@ -401,16 +417,17 @@ func newBlobFS(
 }
 
 func (fs *blobFS) List(t *testing.T, f fixture.F, remotedir string) []string {
-	res := execWithIPC(t, f, func(localpath string) {
+	res := execWithIPC(t, f, func(outputpath string) {
 		f.Shell.Run(
 			"./testdata/blob_fs_list.sh",
 			f.ResGroupName,
 			fs.account,
 			fs.container,
 			remotedir,
+			outputpath,
 		)
 	})
-	return strings.Split(res, "\n")
+	return strings.Split(res, " ")
 }
 
 func (fs *blobFS) UploadDir(

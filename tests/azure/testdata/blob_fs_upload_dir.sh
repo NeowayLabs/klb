@@ -15,7 +15,7 @@ localdir     = $ARGS[8]
 azure_login()
 
 echo "uploading file"
-uploader, err <= azure_blob_fs_new(
+fs, err <= azure_blob_fs_create(
 	$resgroup,
 	$location,
 	$accountname,
@@ -24,12 +24,12 @@ uploader, err <= azure_blob_fs_new(
 	$containername
 )
 if $err != "" {
-	echo "error creating uploader: " + $err
+	echo "error creating fs: " + $err
 	exit("1")
 }
 
 echo "uploading directory"
-err <= azure_blob_fs_upload_dir($uploader, $remotedir, $localdir)
+err <= azure_blob_fs_upload_dir($fs, $remotedir, $localdir)
 
 if $err != "" {
 	echo "error uploading: " + $err

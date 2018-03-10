@@ -15,7 +15,7 @@ localpath     = $ARGS[8]
 azure_login()
 
 echo "uploading file"
-uploader, err <= azure_blob_fs_new(
+fs, err <= azure_blob_fs_create(
 	$resgroup,
 	$location,
 	$accountname,
@@ -24,12 +24,12 @@ uploader, err <= azure_blob_fs_new(
 	$containername
 )
 if $err != "" {
-	echo "error creating uploader: " + $err
+	echo "error creating fs: " + $err
 	exit("1")
 }
 
 echo "uploading file"
-err <= azure_blob_fs_upload($uploader, $remotepath, $localpath)
+err <= azure_blob_fs_upload($fs, $remotepath, $localpath)
 
 if $err != "" {
 	echo "error uploading: " + $err
