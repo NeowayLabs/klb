@@ -129,17 +129,25 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 }
 
 # List all files on the given dir (as far as Azure has dirs on BLOB storage =P)
+# It will return a list only with the files located inside of the given dir.
+#
+# Other dirs inside will not be listed (no interesting way to differentiate dirs
+# from files on the returned list).
+# To list dirs use azure_blob_fs_listdir instead.
 fn azure_blob_fs_list(fs, remotedir) {
-	# WHY: if you take a look at: az storage blob list --help
-	# you will see that there is no way to list all files of a blob,
-	# only a maximum of 5000 files (there is no kind of start/cursor/index.
-	# Azure is definitely the apex of cloud computing =)
-	res, err <= azure_storage_blob_list_by_resgroup(
-		azure_blob_fs_container($fs),
-		azure_blob_fs_account($fs),
-		azure_blob_fs_resgroup($fs),
-		"5000")
-	return $res, $err
+	res, err <= _azure_blob_fs_list_prefix($fs, $remotedir)
+	if $err != "" {
+		return (), $err
+	}
+
+	files = ()
+	for path in $res {
+		dir <= dirname $path
+		if $dir == $remotedir {
+			files <= append($files, $path)
+		}
+	}
+	return $files, ""
 }
 
 fn azure_blob_fs_container(fs) {
@@ -152,4 +160,43 @@ fn azure_blob_fs_account(fs) {
 
 fn azure_blob_fs_resgroup(fs) {
 	return $fs[0]
+}
+
+fn _azure_blob_fs_list_prefix(fs, prefix) {
+	# WHY: if you take a look at: az storage blob list --help
+	# you will see that there is no way to list all files of a blob,
+	# only a maximum of 5000 files (there is no kind of start/cursor/index.
+	# Azure is definitely the apex of cloud computing =)
+	resgroup <= azure_blob_fs_resgroup($fs)
+	account <= azure_blob_fs_account($fs)
+	accountkey, err <= _azure_storage_account_get_key_value($account, $resgroup)
+	if $err != "" {
+		return (), $err
+	}
+
+	container <= azure_blob_fs_container($fs)
+	numresults = "5000"
+
+	output, status <= (
+		az storage blob list
+			--container-name $container
+			--account-name $account
+			--account-key $accountkey
+			--num-results $numresults
+			--prefix $prefix
+		>[2=1]
+	)
+
+	if $status != "0" {
+		return (), format("error[%s] listing blobs", $output)
+	}
+
+	namesraw, status <= echo $output | jq -r ".[].name" >[2=1]
+	if $status != "0" {
+		return (), format("error[%s] parsing[%s]", $namesraw, $output)
+	}
+
+	files <= split($namesraw, "\n")
+
+	return $files, ""
 }
