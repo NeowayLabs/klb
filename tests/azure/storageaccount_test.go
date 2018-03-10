@@ -64,10 +64,10 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
-		"BlobFSUploadsDirRecursively",
+		"BlobFSDirOperations",
 		timeout,
 		location,
-		testBlobFSUploadsDirRecursively,
+		testBlobFSUploadsDirOperations,
 	)
 	fixture.Run(
 		t,
@@ -149,7 +149,7 @@ func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string)
 	}, cleanup
 }
 
-func testBlobFSUploadsDirRecursively(t *testing.T, f fixture.F) {
+func testBlobFSUploadsDirOperations(t *testing.T, f fixture.F) {
 	account := genStorageAccountName()
 	container := fixture.NewUniqueName("container")
 
@@ -179,31 +179,55 @@ func testBlobFSUploadsDirRecursively(t *testing.T, f fixture.F) {
 		assert.NoError(t, os.RemoveAll(tdir))
 	}()
 
-	expectedFiles := []TestFile{}
-	expectedFiles = append(expectedFiles, createFilesOnDir(
+	localfiles := []TestFile{}
+	localfiles = append(localfiles, createFilesOnDir(
 		filepath.Join(tdir), 2)...)
-	expectedFiles = append(expectedFiles, createFilesOnDir(
+	localfiles = append(localfiles, createFilesOnDir(
 		filepath.Join(tdir, "level1"), 1)...)
-	expectedFiles = append(expectedFiles, createFilesOnDir(
+	localfiles = append(localfiles, createFilesOnDir(
 		filepath.Join(tdir, "level1", "level2"), 3)...)
 
 	sku := "Standard_LRS"
 	tier := "Cool"
 	kind := "BlobStorage"
-	remotePath := "/remote/path"
+	remotedir := "/remote/path"
 
-	blobFSUploadDir(t, f, account, sku, tier, container, remotePath, tdir)
+	fs := newBlobFS(account, sku, tier, container)
+	fs.UploadDir(t, f, remotedir, tdir)
 
 	checkStorageBlobAccount(t, f, account, sku, tier, kind)
 
-	for _, file := range expectedFiles {
-		downloadpath := filepath.Join(
-			remotePath,
-			strings.TrimPrefix(file.path, tdir))
+	expectedRemoteFiles := []string{}
+	remoteToLocalFile := map[string]TestFile{}
 
-		filecontent := downloadFileBLOB(t, f, account, container, downloadpath)
-		assert.EqualStrings(t, file.content, filecontent, "checking uploaded BLOB")
+	for _, file := range localfiles {
+		remotepath := filepath.Join(
+			remotedir,
+			strings.TrimPrefix(file.path, tdir))
+		remoteToLocalFile[remotepath] = file
+		expectedRemoteFiles = append(expectedRemoteFiles, remotepath)
 	}
+
+	testBlobFSListDir(t, f, fs, remotedir, expectedRemoteFiles)
+
+	for remotepath, file := range remoteToLocalFile {
+		filecontent := downloadFileBLOB(t, f, account, container, remotepath)
+		assert.EqualStrings(
+			t,
+			file.content,
+			filecontent,
+			"checking uploaded BLOB individually")
+	}
+}
+
+func testBlobFSListDir(
+	t *testing.T,
+	f fixture.F,
+	fs blobFS,
+	remotedir string,
+	expectedFiles []string,
+) {
+	// TODO
 }
 
 func testBlobFSUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
@@ -355,24 +379,54 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	testBLOBExists(t, f, accountname, containerName, remotepath)
 }
 
-func blobFSUploadDir(
-	t *testing.T,
-	f fixture.F,
+type blobFS struct {
+	account   string
+	sku       string
+	tier      string
+	container string
+}
+
+func newBlobFS(
 	account string,
 	sku string,
 	tier string,
 	container string,
+) blobFS {
+	return blobFS{
+		account:   account,
+		sku:       sku,
+		tier:      tier,
+		container: container,
+	}
+}
+
+func (fs *blobFS) List(t *testing.T, f fixture.F, remotedir string) []string {
+	res := execWithIPC(t, f, func(localpath string) {
+		f.Shell.Run(
+			"./testdata/blob_fs_list.sh",
+			f.ResGroupName,
+			fs.account,
+			fs.container,
+			remotedir,
+		)
+	})
+	return strings.Split(res, "\n")
+}
+
+func (fs *blobFS) UploadDir(
+	t *testing.T,
+	f fixture.F,
 	remotedir string,
 	localdir string,
 ) {
 	f.Shell.Run(
-		"./testdata/blob-fs-upload-dir.sh",
+		"./testdata/blob_fs_upload_dir.sh",
 		f.ResGroupName,
 		f.Location,
-		account,
-		sku,
-		tier,
-		container,
+		fs.account,
+		fs.sku,
+		fs.tier,
+		fs.container,
 		remotedir,
 		localdir,
 	)
@@ -389,7 +443,7 @@ func blobFSUpload(
 	localpath string,
 ) {
 	f.Shell.Run(
-		"./testdata/blob-fs-upload.sh",
+		"./testdata/blob_fs_upload.sh",
 		f.ResGroupName,
 		f.Location,
 		account,
