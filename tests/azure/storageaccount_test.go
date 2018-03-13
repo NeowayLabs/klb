@@ -18,7 +18,7 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	timeout := 10 * time.Minute
+	timeout := 15 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
@@ -71,10 +71,10 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
-		"BlobFSListDir",
+		"BlobFSListDirs",
 		timeout,
 		location,
-		testBlobFSListDir,
+		testBlobFSListDirs,
 	)
 	fixture.Run(
 		t,
@@ -83,6 +83,7 @@ func TestStorage(t *testing.T) {
 		location,
 		testBlobFSUploadsWhenAccountAndContainerExists,
 	)
+	testBlobFSListFiles(t, timeout, location)
 	testBlobFSCreatesAccountAndContainerIfNonExistent(
 		t,
 		timeout,
@@ -225,8 +226,18 @@ func testBlobFSUploadDir(t *testing.T, f fixture.F) {
 	}
 }
 
-func testBlobFSListDir(t *testing.T, f fixture.F) {
-	checkDir := func(t *testing.T, fs blobFS, remotedir string, wantfiles []string) {
+func testBlobFSListDirs(t *testing.T, f fixture.F) {
+}
+
+func testBlobFSListFiles(t *testing.T, timeout time.Duration, location string) {
+
+	checkDir := func(
+		t *testing.T,
+		f fixture.F,
+		fs blobFS,
+		remotedir string,
+		wantfiles []string,
+	) {
 		gotfiles := fs.List(t, f, remotedir)
 		if len(gotfiles) != len(wantfiles) {
 			t.Fatalf("want files[%s] got[%s]", wantfiles, gotfiles)
@@ -267,12 +278,105 @@ func testBlobFSListDir(t *testing.T, f fixture.F) {
 				},
 			},
 		},
+		{
+			name: "MultipleFiles",
+			remotefiles: []string{
+				"/test/file1",
+				"/test/file2",
+				"/test/file3",
+			},
+			ops: []ListOperation{
+				{
+					dir: "/test",
+					expectedFiles: []string{
+						"/test/file1",
+						"/test/file2",
+						"/test/file3",
+					},
+				},
+			},
+		},
+		{
+			// WHY: The alternative is to implemented a full hierarchical FS
+			// on top of azure blob, seems excessive.
+			name: "PathCanBeFileAndDir",
+			remotefiles: []string{
+				"/test/dir",
+				"/test/dir/file",
+			},
+			ops: []ListOperation{
+				{
+					dir:           "/test",
+					expectedFiles: []string{"/test/dir"},
+				},
+				{
+					dir:           "/test/dir",
+					expectedFiles: []string{"/test/dir/file"},
+				},
+			},
+		},
+		{
+			name:        "EmptyDir",
+			remotefiles: []string{"/test/dir"},
+			ops: []ListOperation{
+				{
+					dir:           "/test/dir",
+					expectedFiles: []string{},
+				},
+			},
+		},
+		{
+			name:        "WrongDir",
+			remotefiles: []string{},
+			ops: []ListOperation{
+				{
+					dir:           "/",
+					expectedFiles: []string{},
+				},
+				{
+					dir:           "/test",
+					expectedFiles: []string{},
+				},
+			},
+		},
+		{
+			name: "NestedDirs",
+			remotefiles: []string{
+				"/test/file",
+				"/test/dir1/file",
+				"/test/dir2/file",
+				"/test/dir2/dir3/file1",
+				"/test/dir2/dir3/file2",
+			},
+			ops: []ListOperation{
+				{
+					dir:           "/test",
+					expectedFiles: []string{"/test/file"},
+				},
+				{
+					dir:           "/test/dir1",
+					expectedFiles: []string{"/test/dir1/file"},
+				},
+				{
+					dir:           "/test/dir2",
+					expectedFiles: []string{"/test/dir2/file"},
+				},
+				{
+					dir: "/test/dir2/dir3",
+					expectedFiles: []string{
+						"/test/dir2/dir3/file1",
+						"/test/dir2/dir3/file2",
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+		tname := "BlobFSListFiles" + test.name
+		fixture.Run(t, tname, timeout, location, func(t *testing.T, f fixture.F) {
 			account := genStorageAccountName()
-			container := fixture.NewUniqueName("listdir")
+			container := fixture.NewUniqueName("list")
 			sku := "Standard_LRS"
 			tier := "Cool"
 
@@ -281,12 +385,15 @@ func testBlobFSListDir(t *testing.T, f fixture.F) {
 
 			fs := newBlobFS(account, sku, tier, container)
 
+			createStorageAccountBLOB(f, fs.account, fs.sku, fs.tier)
+			createStorageAccountContainer(f, fs.account, fs.container)
+
 			for _, remotefile := range test.remotefiles {
 				fs.Upload(t, f, remotefile, localfile)
 			}
 
 			for _, listoperation := range test.ops {
-				checkDir(t, fs, listoperation.dir, listoperation.expectedFiles)
+				checkDir(t, f, fs, listoperation.dir, listoperation.expectedFiles)
 			}
 		})
 	}

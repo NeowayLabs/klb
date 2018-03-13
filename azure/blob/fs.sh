@@ -115,9 +115,9 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 		}
 	}
 
-	filesprefix <= format("s:^%s::", $localdir)
+	prefixregex <= format("s:^%s::", $localdir)
 	for f in $files {
-		remotefilename <= echo $f | sed -e $filesprefix
+		remotefilename <= echo $f | sed -e $prefixregex
 		remotepath = $remotedir + $remotefilename
 		err <= azure_blob_fs_upload($fs, $remotepath, $f)
 		if $err != "" {
@@ -133,6 +133,7 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 #
 # Other dirs inside will not be listed (no interesting way to differentiate dirs
 # from files on the returned list).
+#
 # To list dirs use azure_blob_fs_listdir instead.
 fn azure_blob_fs_list(fs, remotedir) {
 	res, err <= _azure_blob_fs_list_prefix($fs, $remotedir)
@@ -163,10 +164,6 @@ fn azure_blob_fs_resgroup(fs) {
 }
 
 fn _azure_blob_fs_list_prefix(fs, prefix) {
-	# WHY: if you take a look at: az storage blob list --help
-	# you will see that there is no way to list all files of a blob,
-	# only a maximum of 5000 files (there is no kind of start/cursor/index.
-	# Azure is definitely the apex of cloud computing =)
 	resgroup <= azure_blob_fs_resgroup($fs)
 	account <= azure_blob_fs_account($fs)
 	accountkey, err <= _azure_storage_account_get_key_value($account, $resgroup)
@@ -175,6 +172,10 @@ fn _azure_blob_fs_list_prefix(fs, prefix) {
 	}
 
 	container <= azure_blob_fs_container($fs)
+	# WHY: if you take a look at: az storage blob list --help
+	# you will see that there is no way to list all files of a blob,
+	# only a maximum of 5000 files (there is no kind of start/cursor/index.
+	# Azure is definitely the apex of cloud computing =)
 	numresults = "5000"
 
 	output, status <= (
