@@ -181,7 +181,7 @@ func testGetVMIPAddress(
 
 	assertSameIP := func(vm string, expectedIP string, gotIP string) {
 		if expectedIP != gotIP {
-			t.Fatalf("vm[%s] IPs do not match [%s] != [%s]", expectedIP, gotIP)
+			t.Fatalf("vm[%s] IPs do not match [%s] != [%s]", vm, expectedIP, gotIP)
 		}
 	}
 

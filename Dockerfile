@@ -28,7 +28,7 @@ RUN curl https://raw.githubusercontent.com/NeowayLabs/nash/master/hack/install/l
 # Dockerfiles introduced space for bugs involving differences
 # between the dev and final prod images. So we decided it was not
 # worth to maintain two images.
-ENV GO_VERSION="1.9"
+ENV GO_VERSION="1.10"
 ENV GOROOT="/goroot"
 ENV PATH=${PATH}:${GOROOT}/bin
 
