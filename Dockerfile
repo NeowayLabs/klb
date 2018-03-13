@@ -10,7 +10,7 @@ RUN apt-get install -y nodejs python3 python3-pip libffi-dev openssh-server
 RUN rm -f /usr/bin/python &&\
     ln -s /usr/bin/python3 /usr/bin/python
 
-RUN apt-get install -y libffi-dev libssl-dev wget jq tree
+RUN apt-get install -y libffi-dev libssl-dev wget jq
 
 RUN pip3 install -U pip
 

@@ -102,7 +102,7 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 	# WHY: Make code handling results uniform (no relative path handling)
 	localdir <= realpath $localdir
-	out, status <= tree -if --noreport $localdir
+	out, status <= find $localdir
 	if $status != "0" {
 		return format("error listing directory[%s], output: %s", $localpath, $out)
 	}
