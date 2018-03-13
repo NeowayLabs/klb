@@ -64,10 +64,17 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
-		"BlobFSDirOperations",
+		"BlobFSUploadDir",
 		timeout,
 		location,
-		testBlobFSUploadsDirOperations,
+		testBlobFSUploadDir,
+	)
+	fixture.Run(
+		t,
+		"BlobFSListDir",
+		timeout,
+		location,
+		testBlobFSListDir,
 	)
 	fixture.Run(
 		t,
@@ -149,9 +156,9 @@ func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string)
 	}, cleanup
 }
 
-func testBlobFSUploadsDirOperations(t *testing.T, f fixture.F) {
+func testBlobFSUploadDir(t *testing.T, f fixture.F) {
 	account := genStorageAccountName()
-	container := fixture.NewUniqueName("container")
+	container := fixture.NewUniqueName("uploadir")
 
 	type TestFile struct {
 		path    string
@@ -208,8 +215,6 @@ func testBlobFSUploadsDirOperations(t *testing.T, f fixture.F) {
 		expectedRemoteFiles = append(expectedRemoteFiles, remotepath)
 	}
 
-	testBlobFSListDir(t, f, fs, remotedir, expectedRemoteFiles)
-
 	for remotepath, file := range remoteToLocalFile {
 		filecontent := downloadFileBLOB(t, f, account, container, remotepath)
 		assert.EqualStrings(
@@ -220,15 +225,8 @@ func testBlobFSUploadsDirOperations(t *testing.T, f fixture.F) {
 	}
 }
 
-func testBlobFSListDir(
-	t *testing.T,
-	f fixture.F,
-	fs blobFS,
-	remotedir string,
-	wantfiles []string,
-) {
-
-	checkDir := func(remotedir string, wantfiles []string) {
+func testBlobFSListDir(t *testing.T, f fixture.F) {
+	checkDir := func(t *testing.T, fs blobFS, remotedir string, wantfiles []string) {
 		gotfiles := fs.List(t, f, remotedir)
 		if len(gotfiles) != len(wantfiles) {
 			t.Fatalf("want files[%s] got[%s]", wantfiles, gotfiles)
@@ -248,15 +246,49 @@ func testBlobFSListDir(
 		}
 	}
 
-	dirToFiles := map[string][]string{}
-	for _, file := range wantfiles {
-		dir := filepath.Dir(file)
-		f := dirToFiles[dir]
-		dirToFiles[dir] = append(f, file)
+	type ListOperation struct {
+		dir           string
+		expectedFiles []string
+	}
+	type TestCase struct {
+		name        string
+		remotefiles []string
+		ops         []ListOperation
 	}
 
-	for dir, files := range dirToFiles {
-		checkDir(dir, files)
+	tests := []TestCase{
+		{
+			name:        "OneFile",
+			remotefiles: []string{"/test/file"},
+			ops: []ListOperation{
+				{
+					dir:           "/test",
+					expectedFiles: []string{"/test/file"},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			account := genStorageAccountName()
+			container := fixture.NewUniqueName("listdir")
+			sku := "Standard_LRS"
+			tier := "Cool"
+
+			localfile, cleanup := setupTestFile(t, "whatever")
+			defer cleanup()
+
+			fs := newBlobFS(account, sku, tier, container)
+
+			for _, remotefile := range test.remotefiles {
+				fs.Upload(t, f, remotefile, localfile)
+			}
+
+			for _, listoperation := range test.ops {
+				checkDir(t, fs, listoperation.dir, listoperation.expectedFiles)
+			}
+		})
 	}
 }
 
@@ -460,6 +492,24 @@ func (fs *blobFS) UploadDir(
 		fs.container,
 		remotedir,
 		localdir,
+	)
+}
+
+func (fs *blobFS) Upload(
+	t *testing.T,
+	f fixture.F,
+	remotefile string,
+	localfile string,
+) {
+	blobFSUpload(
+		t,
+		f,
+		fs.account,
+		fs.sku,
+		fs.tier,
+		fs.container,
+		remotefile,
+		localfile,
 	)
 }
 
