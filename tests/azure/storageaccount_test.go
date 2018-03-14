@@ -64,26 +64,14 @@ func TestStorage(t *testing.T) {
 	)
 	fixture.Run(
 		t,
-		"BlobFSUploadDir",
-		timeout,
-		location,
-		testBlobFSUploadDir,
-	)
-	fixture.Run(
-		t,
-		"BlobFSListDirs",
-		timeout,
-		location,
-		testBlobFSListDirs,
-	)
-	fixture.Run(
-		t,
 		"BlobFSUploadsWhenAccountAndContainerExists",
 		timeout,
 		location,
 		testBlobFSUploadsWhenAccountAndContainerExists,
 	)
+	testBlobFSUploadDir(t, timeout, location)
 	testBlobFSListFiles(t, timeout, location)
+	testBlobFSListDirs(t, timeout, location)
 	testBlobFSCreatesAccountAndContainerIfNonExistent(
 		t,
 		timeout,
@@ -94,21 +82,19 @@ func TestStorage(t *testing.T) {
 func testStorageAccountCreateBLOBHot(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	tier := "Hot"
-	kind := "BlobStorage"
 	name := genStorageAccountName()
 
 	createStorageAccountBLOB(f, name, sku, tier)
-	checkStorageBlobAccount(t, f, name, sku, tier, kind)
+	checkStorageBlobAccount(t, f, name, sku, tier)
 }
 
 func testStorageAccountCreateBLOBCold(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	tier := "Cool"
-	kind := "BlobStorage"
 	name := genStorageAccountName()
 
 	createStorageAccountBLOB(f, name, sku, tier)
-	checkStorageBlobAccount(t, f, name, sku, tier, kind)
+	checkStorageBlobAccount(t, f, name, sku, tier)
 }
 
 func testStorageAccountCreateStandardLRS(t *testing.T, f fixture.F) {
@@ -131,7 +117,6 @@ func testStorageAccountCreatePremiumLRS(t *testing.T, f fixture.F) {
 
 type BlobStorageFixture struct {
 	sku             string
-	kind            string
 	tier            string
 	account         string
 	container       string
@@ -148,7 +133,6 @@ func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string)
 	account := genStorageAccountName()
 	return BlobStorageFixture{
 		sku:             sku,
-		kind:            "BlobStorage",
 		tier:            tier,
 		account:         account,
 		container:       container,
@@ -157,7 +141,7 @@ func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string)
 	}, cleanup
 }
 
-func testBlobFSUploadDir(t *testing.T, f fixture.F) {
+func checkBlobFSUploadDir(t *testing.T, f fixture.F, remotedir string) {
 	account := genStorageAccountName()
 	container := fixture.NewUniqueName("uploadir")
 
@@ -181,7 +165,7 @@ func testBlobFSUploadDir(t *testing.T, f fixture.F) {
 		return files
 	}
 
-	tdir, err := ioutil.TempDir("", "uploader-recur-test")
+	tdir, err := ioutil.TempDir("", "uploader-test")
 	assert.NoError(t, err)
 	defer func() {
 		assert.NoError(t, os.RemoveAll(tdir))
@@ -197,13 +181,11 @@ func testBlobFSUploadDir(t *testing.T, f fixture.F) {
 
 	sku := "Standard_LRS"
 	tier := "Cool"
-	kind := "BlobStorage"
-	remotedir := "/remote/path"
 
 	fs := newBlobFS(account, sku, tier, container)
 	fs.UploadDir(t, f, remotedir, tdir)
 
-	checkStorageBlobAccount(t, f, account, sku, tier, kind)
+	checkStorageBlobAccount(t, f, account, sku, tier)
 
 	expectedRemoteFiles := []string{}
 	remoteToLocalFile := map[string]TestFile{}
@@ -226,154 +208,88 @@ func testBlobFSUploadDir(t *testing.T, f fixture.F) {
 	}
 }
 
-func testBlobFSListDirs(t *testing.T, f fixture.F) {
+func testBlobFSUploadDir(
+	t *testing.T,
+	timeout time.Duration,
+	location string,
+) {
+	type TestCase struct {
+		name      string
+		remotedir string
+	}
+
+	tests := []TestCase{
+		//TODO: make it pass
+		//{name: "Root", remotedir: "/"},
+		{name: "OneLevel", remotedir: "/remote1"},
+		{name: "TwoLevels", remotedir: "/remote1/remote2"},
+	}
+
+	for _, test := range tests {
+		name := "BlobFSUploadDir" + test.name
+		remotedir := test.remotedir
+		fixture.Run(t, name, timeout, location, func(t *testing.T, f fixture.F) {
+			checkBlobFSUploadDir(t, f, remotedir)
+		})
+	}
+
 }
 
-func testBlobFSListFiles(t *testing.T, timeout time.Duration, location string) {
+type listTestOperation struct {
+	dir           string
+	expectedPaths []string
+}
+
+type listTestCase struct {
+	name        string
+	remotefiles []string
+	ops         []listTestOperation
+}
+
+func testBlobFSList(
+	t *testing.T,
+	testprefix string,
+	timeout time.Duration,
+	location string,
+	list func(*testing.T, fixture.F, blobFS, string) []string,
+	tests []listTestCase,
+) {
 
 	checkDir := func(
 		t *testing.T,
 		f fixture.F,
 		fs blobFS,
 		remotedir string,
-		wantfiles []string,
+		wantpaths []string,
 	) {
-		gotfiles := fs.List(t, f, remotedir)
-		if len(gotfiles) != len(wantfiles) {
-			t.Fatalf("want files[%s] got[%s]", wantfiles, gotfiles)
+		gotpaths := list(t, f, fs, remotedir)
+		if len(gotpaths) != len(wantpaths) {
+			t.Fatalf(
+				"want files[%s] size[%d] got[%s] size[%d]",
+				wantpaths,
+				len(wantpaths),
+				gotpaths,
+				len(gotpaths),
+			)
 		}
 
-		for _, wantfile := range wantfiles {
+		for _, wantpath := range wantpaths {
 			found := false
-			for _, gotfile := range gotfiles {
-				if wantfile == gotfile {
+			for _, gotfile := range gotpaths {
+				if wantpath == gotfile {
 					found = true
 					break
 				}
 			}
 			if !found {
-				t.Fatalf("unable to find wanted file[%s] on [%s]", wantfile, gotfiles)
+				t.Fatalf("unable to find [%s] on [%s]", wantpath, gotpaths)
 			}
 		}
 	}
 
-	type ListOperation struct {
-		dir           string
-		expectedFiles []string
-	}
-	type TestCase struct {
-		name        string
-		remotefiles []string
-		ops         []ListOperation
-	}
-
-	tests := []TestCase{
-		{
-			name:        "OneFile",
-			remotefiles: []string{"/test/file"},
-			ops: []ListOperation{
-				{
-					dir:           "/test",
-					expectedFiles: []string{"/test/file"},
-				},
-			},
-		},
-		{
-			name: "MultipleFiles",
-			remotefiles: []string{
-				"/test/file1",
-				"/test/file2",
-				"/test/file3",
-			},
-			ops: []ListOperation{
-				{
-					dir: "/test",
-					expectedFiles: []string{
-						"/test/file1",
-						"/test/file2",
-						"/test/file3",
-					},
-				},
-			},
-		},
-		{
-			// WHY: The alternative is to implemented a full hierarchical FS
-			// on top of azure blob, seems excessive.
-			name: "PathCanBeFileAndDir",
-			remotefiles: []string{
-				"/test/dir",
-				"/test/dir/file",
-			},
-			ops: []ListOperation{
-				{
-					dir:           "/test",
-					expectedFiles: []string{"/test/dir"},
-				},
-				{
-					dir:           "/test/dir",
-					expectedFiles: []string{"/test/dir/file"},
-				},
-			},
-		},
-		{
-			name:        "EmptyDir",
-			remotefiles: []string{"/test/dir"},
-			ops: []ListOperation{
-				{
-					dir:           "/test/dir",
-					expectedFiles: []string{},
-				},
-			},
-		},
-		{
-			name:        "WrongDir",
-			remotefiles: []string{},
-			ops: []ListOperation{
-				{
-					dir:           "/",
-					expectedFiles: []string{},
-				},
-				{
-					dir:           "/test",
-					expectedFiles: []string{},
-				},
-			},
-		},
-		{
-			name: "NestedDirs",
-			remotefiles: []string{
-				"/test/file",
-				"/test/dir1/file",
-				"/test/dir2/file",
-				"/test/dir2/dir3/file1",
-				"/test/dir2/dir3/file2",
-			},
-			ops: []ListOperation{
-				{
-					dir:           "/test",
-					expectedFiles: []string{"/test/file"},
-				},
-				{
-					dir:           "/test/dir1",
-					expectedFiles: []string{"/test/dir1/file"},
-				},
-				{
-					dir:           "/test/dir2",
-					expectedFiles: []string{"/test/dir2/file"},
-				},
-				{
-					dir: "/test/dir2/dir3",
-					expectedFiles: []string{
-						"/test/dir2/dir3/file1",
-						"/test/dir2/dir3/file2",
-					},
-				},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		tname := "BlobFSListFiles" + test.name
+	for _, _t := range tests {
+		test := _t
+		tname := "BlobFS" + testprefix + test.name
 		fixture.Run(t, tname, timeout, location, func(t *testing.T, f fixture.F) {
 			account := genStorageAccountName()
 			container := fixture.NewUniqueName("list")
@@ -386,6 +302,7 @@ func testBlobFSListFiles(t *testing.T, timeout time.Duration, location string) {
 			fs := newBlobFS(account, sku, tier, container)
 
 			createStorageAccountBLOB(f, fs.account, fs.sku, fs.tier)
+			checkStorageBlobAccount(t, f, fs.account, fs.sku, fs.tier)
 			createStorageAccountContainer(f, fs.account, fs.container)
 
 			for _, remotefile := range test.remotefiles {
@@ -393,10 +310,260 @@ func testBlobFSListFiles(t *testing.T, timeout time.Duration, location string) {
 			}
 
 			for _, listoperation := range test.ops {
-				checkDir(t, f, fs, listoperation.dir, listoperation.expectedFiles)
+				checkDir(t, f, fs, listoperation.dir, listoperation.expectedPaths)
 			}
 		})
 	}
+}
+
+func testBlobFSListDirs(t *testing.T, timeout time.Duration, location string) {
+	testBlobFSList(
+		t,
+		"ListDirs",
+		timeout,
+		location,
+		func(t *testing.T, f fixture.F, fs blobFS, remotepath string) []string {
+			return fs.ListDir(t, f, remotepath)
+		},
+		[]listTestCase{
+			{
+				name:        "OneDir",
+				remotefiles: []string{"/test/file"},
+				ops: []listTestOperation{
+					{
+						dir:           "/",
+						expectedPaths: []string{"/test"},
+					},
+				},
+			},
+			{
+				name: "MultipleFiles",
+				remotefiles: []string{
+					"/test/file1",
+					"/test/file2",
+					"/test/file3",
+				},
+				ops: []listTestOperation{
+					{
+						dir: "/",
+						expectedPaths: []string{
+							"/test",
+						},
+					},
+				},
+			},
+			{
+				name: "MultipleDirs",
+				remotefiles: []string{
+					"/test1/file1",
+					"/test2/file2",
+					"/test3/file3",
+				},
+				ops: []listTestOperation{
+					{
+						dir: "/",
+						expectedPaths: []string{
+							"/test1",
+							"/test2",
+							"/test3",
+						},
+					},
+				},
+			},
+			{
+				// WHY: The alternative is to implemented a full hierarchical FS
+				// on top of azure blob, seems excessive.
+				name: "PathCanBeFileAndDir",
+				remotefiles: []string{
+					"/test/dir",
+					"/test/dir/file",
+				},
+				ops: []listTestOperation{
+					{
+						dir:           "/test",
+						expectedPaths: []string{"/test/dir"},
+					},
+				},
+			},
+			{
+				name:        "EmptyDir",
+				remotefiles: []string{"/test"},
+				ops: []listTestOperation{
+					{
+						dir:           "/",
+						expectedPaths: []string{},
+					},
+				},
+			},
+			{
+				name:        "WrongDir",
+				remotefiles: []string{},
+				ops: []listTestOperation{
+					{
+						dir:           "/",
+						expectedPaths: []string{},
+					},
+					{
+						dir:           "/test",
+						expectedPaths: []string{},
+					},
+				},
+			},
+			{
+				name: "NestedDirs",
+				remotefiles: []string{
+					"/test/file",
+					"/test/dir1/file",
+					"/test/dir2/file",
+					"/test/dir2/dir3/file1",
+					"/test/dir2/dir3/file2",
+					"/test/dir2/dir3/dir4/file1",
+				},
+				ops: []listTestOperation{
+					{
+						dir: "/test",
+						expectedPaths: []string{
+							"/test/dir1",
+							"/test/dir2",
+						},
+					},
+					{
+						dir:           "/test/dir2",
+						expectedPaths: []string{"/test/dir2/dir3"},
+					},
+					{
+						dir:           "/test/dir2/dir3",
+						expectedPaths: []string{"/test/dir2/dir3/dir4"},
+					},
+				},
+			},
+		})
+}
+
+func testBlobFSListFiles(t *testing.T, timeout time.Duration, location string) {
+
+	testBlobFSList(
+		t,
+		"ListFiles",
+		timeout,
+		location,
+		func(t *testing.T, f fixture.F, fs blobFS, remotepath string) []string {
+			return fs.List(t, f, remotepath)
+		},
+		[]listTestCase{
+			{
+				name:        "OneFileOnRoot",
+				remotefiles: []string{"/file"},
+				ops: []listTestOperation{
+					{
+						dir:           "/",
+						expectedPaths: []string{"/file"},
+					},
+				},
+			},
+			{
+				name:        "OneFile",
+				remotefiles: []string{"/test/file"},
+				ops: []listTestOperation{
+					{
+						dir:           "/test",
+						expectedPaths: []string{"/test/file"},
+					},
+				},
+			},
+			{
+				name: "MultipleFiles",
+				remotefiles: []string{
+					"/test/file1",
+					"/test/file2",
+					"/test/file3",
+				},
+				ops: []listTestOperation{
+					{
+						dir: "/test",
+						expectedPaths: []string{
+							"/test/file1",
+							"/test/file2",
+							"/test/file3",
+						},
+					},
+				},
+			},
+			{
+				// WHY: The alternative is to implemented a full hierarchical FS
+				// on top of azure blob, seems excessive.
+				name: "PathCanBeFileAndDir",
+				remotefiles: []string{
+					"/test/dir",
+					"/test/dir/file",
+				},
+				ops: []listTestOperation{
+					{
+						dir:           "/test",
+						expectedPaths: []string{"/test/dir"},
+					},
+					{
+						dir:           "/test/dir",
+						expectedPaths: []string{"/test/dir/file"},
+					},
+				},
+			},
+			{
+				name:        "EmptyDir",
+				remotefiles: []string{"/test/dir"},
+				ops: []listTestOperation{
+					{
+						dir:           "/test/dir",
+						expectedPaths: []string{},
+					},
+				},
+			},
+			{
+				name:        "WrongDir",
+				remotefiles: []string{},
+				ops: []listTestOperation{
+					{
+						dir:           "/",
+						expectedPaths: []string{},
+					},
+					{
+						dir:           "/test",
+						expectedPaths: []string{},
+					},
+				},
+			},
+			{
+				name: "NestedDirs",
+				remotefiles: []string{
+					"/test/file",
+					"/test/dir1/file",
+					"/test/dir2/file",
+					"/test/dir2/dir3/file1",
+					"/test/dir2/dir3/file2",
+				},
+				ops: []listTestOperation{
+					{
+						dir:           "/test",
+						expectedPaths: []string{"/test/file"},
+					},
+					{
+						dir:           "/test/dir1",
+						expectedPaths: []string{"/test/dir1/file"},
+					},
+					{
+						dir:           "/test/dir2",
+						expectedPaths: []string{"/test/dir2/file"},
+					},
+					{
+						dir: "/test/dir2/dir3",
+						expectedPaths: []string{
+							"/test/dir2/dir3/file1",
+							"/test/dir2/dir3/file2",
+						},
+					},
+				},
+			},
+		})
 }
 
 func testBlobFSUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
@@ -405,7 +572,7 @@ func testBlobFSUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
 
 	expectedPath := "/test/acc/container/existent/file"
 	createStorageAccountBLOB(f, sf.account, sf.sku, sf.tier)
-	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier, sf.kind)
+	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier)
 	createStorageAccountContainer(f, sf.account, sf.container)
 
 	blobFSUpload(
@@ -419,7 +586,7 @@ func testBlobFSUploadsWhenAccountAndContainerExists(t *testing.T, f fixture.F) {
 		sf.testfile,
 	)
 
-	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier, sf.kind)
+	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier)
 	filecontent := downloadFileBLOB(t, f, sf.account, sf.container, expectedPath)
 	assert.EqualStrings(t, sf.testfileContent, filecontent, "checking uploaded BLOB")
 }
@@ -445,7 +612,7 @@ func uploaderCreatesAccountAndContainerIfNonExistent(
 		expectedPath,
 		sf.testfile,
 	)
-	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier, sf.kind)
+	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier)
 	filecontent := downloadFileBLOB(t, f, sf.account, sf.container, expectedPath)
 
 	assert.EqualStrings(t, sf.testfileContent, filecontent, "checking uploaded BLOB")
@@ -510,7 +677,7 @@ func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
 	defer cleanup()
 
 	createStorageAccountBLOB(f, sf.account, sf.sku, sf.tier)
-	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier, sf.kind)
+	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier)
 
 	createStorageAccountContainer(f, sf.account, sf.container)
 
@@ -523,7 +690,6 @@ func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
 
 func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
-	kind := "BlobStorage"
 	tier := "Cool"
 	accountname := genStorageAccountName()
 
@@ -531,7 +697,7 @@ func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	//     building the context to run tests is too expensive on the cloud
 	testStorageAccountDontExist(t, f, accountname)
 	createStorageAccountBLOB(f, accountname, sku, tier)
-	checkStorageBlobAccount(t, f, accountname, sku, tier, kind)
+	checkStorageBlobAccount(t, f, accountname, sku, tier)
 	testStorageAccountExists(t, f, accountname)
 
 	containerName := "klb-test-container-exists"
@@ -569,6 +735,23 @@ func newBlobFS(
 	}
 }
 
+func (fs *blobFS) ListDir(t *testing.T, f fixture.F, remotedir string) []string {
+	res := execWithIPC(t, f, func(outputpath string) {
+		f.Shell.Run(
+			"./testdata/blob_fs_listdir.sh",
+			f.ResGroupName,
+			fs.account,
+			fs.container,
+			remotedir,
+			outputpath,
+		)
+	})
+	if res == "" {
+		return []string{}
+	}
+	return strings.Split(res, " ")
+}
+
 func (fs *blobFS) List(t *testing.T, f fixture.F, remotedir string) []string {
 	res := execWithIPC(t, f, func(outputpath string) {
 		f.Shell.Run(
@@ -580,6 +763,9 @@ func (fs *blobFS) List(t *testing.T, f fixture.F, remotedir string) []string {
 			outputpath,
 		)
 	})
+	if res == "" {
+		return []string{}
+	}
 	return strings.Split(res, " ")
 }
 
@@ -864,14 +1050,13 @@ func checkStorageBlobAccount(
 	name string,
 	sku string,
 	tier string,
-	kind string,
 ) {
 	accounts := azure.NewStorageAccounts(f)
 	account := accounts.Account(t, name)
 
 	assert.EqualStrings(t, name, account.Name, "checking name")
 	assert.EqualStrings(t, f.Location, account.Location, "checking location")
-	assert.EqualStrings(t, kind, account.Kind, "checking kind")
-	assert.EqualStrings(t, sku, account.Sku, "checking kind")
+	assert.EqualStrings(t, "BlobStorage", account.Kind, "checking kind")
+	assert.EqualStrings(t, sku, account.Sku, "checking SKU")
 	assert.EqualStrings(t, tier, account.AccessTier, "checking tier")
 }

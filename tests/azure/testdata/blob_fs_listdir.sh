@@ -13,18 +13,17 @@ azure_login()
 
 fs <= azure_blob_fs_new($resgroup, $accountname, $containername)
 
-files, err <= azure_blob_fs_list($fs, $remotepath)
+dirs, err <= azure_blob_fs_listdir($fs, $remotepath)
 if $err != "" {
 	echo $err
 	exit("1")
 }
 
-if len($files) == "0" {
-	echo "no files found, exiting"
+if len($dirs) == "0" {
+	echo "no dir found, exiting"
 	exit("0")
 }
 
-echo "got files: "
-echo $files
+print("got dirs[%s]\n",$dirs)
 echo "writing on output"
-echo $files > $output
+echo $dirs > $output

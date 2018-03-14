@@ -136,6 +136,10 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 #
 # To list dirs use azure_blob_fs_listdir instead.
 fn azure_blob_fs_list(fs, remotedir) {
+	if $remotedir == "" {
+		return (), "azure_blob_fs_list: error: remote dir MUST not be empty"
+	}
+
 	res, err <= _azure_blob_fs_list_prefix($fs, $remotedir)
 	if $err != "" {
 		return (), $err
@@ -149,6 +153,59 @@ fn azure_blob_fs_list(fs, remotedir) {
 		}
 	}
 	return $files, ""
+}
+
+# List all dirs on the given dir (as far as Azure has dirs on BLOB storage =P)
+# It will return a list only with the dirs located inside of the given dir.
+#
+# Files will not be listed (no interesting way to differentiate dirs
+# from files on the returned list).
+#
+# To list files use azure_blob_fs_list instead.
+fn azure_blob_fs_listdir(fs, remotedir) {
+	res, err <= _azure_blob_fs_list_prefix($fs, $remotedir)
+	if $err != "" {
+		return (), $err
+	}
+
+	dirs = ()
+
+	fn repeated_dir(otherdir) {
+		for dir in $dirs {
+			if $dir == $otherdir {
+				return "0"
+			}
+		}
+		return "1"
+	}
+
+	fn add_dir(gotdir) {
+		if $gotdir == $remotedir {
+			return "1"
+		}
+		parentdir <= dirname $gotdir
+		if $parentdir != $remotedir {
+			return "1"
+		}
+
+		if repeated_dir($gotdir) == "0" {
+			return "1"
+		}
+
+		return "0"
+	}
+
+	# OMG this code is O(n^2) =D
+	# Don't u miss hashmaps ? =P
+	# Lucky for us nothing is slower than Azure itself (exponential moderfocker)
+	for path in $res {
+		gotdir <= dirname $path
+		if add_dir($gotdir) == "0" {
+			dirs <= append($dirs, $gotdir)
+		}
+	}
+
+	return $dirs, ""
 }
 
 fn azure_blob_fs_container(fs) {
@@ -195,6 +252,10 @@ fn _azure_blob_fs_list_prefix(fs, prefix) {
 	namesraw, status <= echo $output | jq -r ".[].name" >[2=1]
 	if $status != "0" {
 		return (), format("error[%s] parsing[%s]", $namesraw, $output)
+	}
+
+	if $namesraw == "" {
+		return (), ""
 	}
 
 	files <= split($namesraw, "\n")
