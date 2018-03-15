@@ -83,6 +83,44 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 		$localpath
 	)
 }
+# Downloads a remote dir to a local dir.
+# It will not create the remote dir on the local dir, only its
+# contents (including other dirs, recursively).
+#
+# For example, downloading the remote dir /klb to the local dir /test
+# will copy all contents of /klb to /test, like /test/file1 and /test/dir1/file1
+# but it will not create a "klb" directory inside the local dir.
+#
+# This is the behavior of Plan9 dircp (http://man.cat-v.org/plan_9/1/tar)
+# and it seems more intuitive than the cp -r behavior of creating only the
+# base dir of the source path at the target path if it does not exists
+# and to copy only the contents you need the hack of regex expansion:
+# cp -r /srcdir/* /targetdir.
+#
+# This function returns an error string if it fails and "" if it succeeds.
+fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
+	resgroup <= azure_blob_fs_resgroup($fs)
+	account <= azure_blob_fs_account($fs)
+	accountkey, err <= _azure_storage_account_get_key_value($account, $resgroup)
+	if $err != "" {
+		return (), $err
+	}
+
+	container <= azure_blob_fs_container($fs)
+	pattern = $remotedir + "*"
+	out, status <= (
+		az storage blob download-batch
+			--destination $localdir
+			--source $container
+			--account-name $account
+			--account-key $accountkey
+	)
+	if $status != "0" {
+		return format("error[%s] downloading dir[%s] to[%s]", $out, $remotedir, $localdir)
+	}
+	return ""
+}
+
 
 # Uploads a local dir to a remote dir.
 # It will not create the local dir on the remote dir, only its

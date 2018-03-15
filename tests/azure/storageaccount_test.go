@@ -69,6 +69,7 @@ func TestStorage(t *testing.T) {
 		location,
 		testBlobFSUploadsWhenAccountAndContainerExists,
 	)
+	testBlobFSDownloadDir(t, timeout, location)
 	testBlobFSUploadDir(t, timeout, location)
 	testBlobFSListFiles(t, timeout, location)
 	testBlobFSListDirs(t, timeout, location)
@@ -208,6 +209,105 @@ func checkBlobFSUploadDir(t *testing.T, f fixture.F, remotedir string) {
 	}
 }
 
+func testBlobFSDownloadDir(
+	t *testing.T,
+	timeout time.Duration,
+	location string,
+) {
+	type TestCase struct {
+		name        string
+		remoteFiles []string
+		wantedFiles []string
+		downloadDir string
+	}
+
+	// TODO: add more scenarios
+	tests := []TestCase{
+		{
+			name: "Root",
+			remoteFiles: []string{
+				"/test1",
+				"/test2",
+				"/test3",
+			},
+			downloadDir: "/",
+			wantedFiles: []string{
+				"/test1",
+				"/test2",
+				"/test3",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		name := "BlobFSDownloadDir" + test.name
+		remoteFiles := test.remoteFiles
+		wantedFiles := test.wantedFiles
+		downloadDir := test.downloadDir
+
+		fixture.Run(t, name, timeout, location, func(t *testing.T, f fixture.F) {
+			fs := setupFS()
+
+			createStorageAccountBLOB(f, fs.account, fs.sku, fs.tier)
+			checkStorageBlobAccount(t, f, fs.account, fs.sku, fs.tier)
+			createStorageAccountContainer(f, fs.account, fs.container)
+
+			uploadedFiles := map[string]string{}
+
+			for _, remoteFile := range remoteFiles {
+				expectedContent := fixture.NewUniqueName("random-content")
+				localFile, cleanup := setupTestFile(t, expectedContent)
+				fs.Upload(t, f, remoteFile, localFile)
+				cleanup()
+
+				if filepath.Base(remoteFile) == downloadDir {
+					uploadedFiles[remoteFile] = expectedContent
+				}
+			}
+
+			tmpdir, err := ioutil.TempDir("", "az-download-dir")
+			assert.NoError(t, err)
+			defer func() {
+				assert.NoError(t, os.RemoveAll(tmpdir))
+			}()
+
+			fs.DownloadDir(t, f, tmpdir, downloadDir)
+
+			gotFiles := []string{}
+
+			err = filepath.Walk(tmpdir, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					t.Fatalf("fatal error[%s] walking download dir [%s]", err, tmpdir)
+				}
+				if info.IsDir() {
+					return nil
+				}
+				gotFiles = append(gotFiles, strings.TrimPrefix(path, tmpdir))
+				return nil
+			})
+			assert.NoError(t, err)
+
+			if len(wantedFiles) != len(gotFiles) {
+				t.Fatalf("wanted files[%s] got[%s]", wantedFiles, gotFiles)
+			}
+
+			for _, wantedFile := range wantedFiles {
+				got := false
+				for _, gotFile := range gotFiles {
+					if gotFile == wantedFile {
+						got = true
+					}
+				}
+				if !got {
+					t.Fatalf("wanted files[%s] got[%s]", wantedFiles, gotFiles)
+				}
+				// TODO: Validate file contents too
+			}
+		})
+	}
+
+}
+
 func testBlobFSUploadDir(
 	t *testing.T,
 	timeout time.Duration,
@@ -243,6 +343,14 @@ type listTestCase struct {
 	name        string
 	remotefiles []string
 	ops         []listTestOperation
+}
+
+func setupFS() blobFS {
+	account := genStorageAccountName()
+	container := fixture.NewUniqueName("list")
+	sku := "Standard_LRS"
+	tier := "Cool"
+	return newBlobFS(account, sku, tier, container)
 }
 
 func testBlobFSList(
@@ -290,15 +398,11 @@ func testBlobFSList(
 		test := _t
 		tname := "BlobFS" + testprefix + test.name
 		fixture.Run(t, tname, timeout, location, func(t *testing.T, f fixture.F) {
-			account := genStorageAccountName()
-			container := fixture.NewUniqueName("list")
-			sku := "Standard_LRS"
-			tier := "Cool"
+
+			fs := setupFS()
 
 			localfile, cleanup := setupTestFile(t, "whatever")
 			defer cleanup()
-
-			fs := newBlobFS(account, sku, tier, container)
 
 			createStorageAccountBLOB(f, fs.account, fs.sku, fs.tier)
 			checkStorageBlobAccount(t, f, fs.account, fs.sku, fs.tier)
@@ -766,6 +870,22 @@ func (fs *blobFS) List(t *testing.T, f fixture.F, remotedir string) []string {
 		return []string{}
 	}
 	return strings.Split(res, " ")
+}
+
+func (fs *blobFS) DownloadDir(
+	t *testing.T,
+	f fixture.F,
+	localdir string,
+	remotedir string,
+) {
+	f.Shell.Run(
+		"./testdata/blob_fs_download_dir.sh",
+		f.ResGroupName,
+		fs.account,
+		fs.container,
+		localdir,
+		remotedir,
+	)
 }
 
 func (fs *blobFS) UploadDir(
