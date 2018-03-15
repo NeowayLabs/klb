@@ -219,8 +219,7 @@ func testBlobFSUploadDir(
 	}
 
 	tests := []TestCase{
-		//TODO: make it pass
-		//{name: "Root", remotedir: "/"},
+		{name: "Root", remotedir: "/"},
 		{name: "OneLevel", remotedir: "/remote1"},
 		{name: "TwoLevels", remotedir: "/remote1/remote2"},
 	}

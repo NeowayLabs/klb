@@ -119,6 +119,7 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 	for f in $files {
 		remotefilename <= echo $f | sed -e $prefixregex
 		remotepath = $remotedir + $remotefilename
+		remotepath <= realpath -m $remotepath
 		err <= azure_blob_fs_upload($fs, $remotepath, $f)
 		if $err != "" {
 			return $err
