@@ -3,7 +3,7 @@ dist: trusty
 sudo: required
 
 before_script:
-  - travis_wait 120 make imagedev
+  - travis_wait 60 make image
 
 # TODO: Run all tests not only storage
 script:
