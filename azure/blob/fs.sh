@@ -267,19 +267,11 @@ fn _azure_blob_fs_list_prefix(fs, prefix) {
 		return (), $err
 	}
 
-	container <= azure_blob_fs_container($fs)
-	# WHY: if you take a look at: az storage blob list --help
-	# you will see that there is no way to list all files of a blob,
-	# only a maximum of 5000 files (there is no kind of start/cursor/index.
-	# Azure is definitely the apex of cloud computing =)
-	numresults = "5000"
-
 	output, status <= (
 		az storage blob list
 			--container-name $container
 			--account-name $account
 			--account-key $accountkey
-			--num-results $numresults
 			--prefix $prefix
 		>[2=1]
 	)
