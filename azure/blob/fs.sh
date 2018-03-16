@@ -267,6 +267,7 @@ fn _azure_blob_fs_list_prefix(fs, prefix) {
 		return (), $err
 	}
 
+	container <= azure_blob_fs_container($fs)
 	output, status <= (
 		az storage blob list
 			--container-name $container

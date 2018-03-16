@@ -69,7 +69,8 @@ func TestStorage(t *testing.T) {
 		location,
 		testBlobFSUploadsWhenAccountAndContainerExists,
 	)
-	testBlobFSDownloadDir(t, timeout, location)
+	// TODO
+	// testBlobFSDownloadDir(t, timeout, location)
 	testBlobFSUploadDir(t, timeout, location)
 	testBlobFSListFiles(t, timeout, location)
 	testBlobFSListDirs(t, timeout, location)
