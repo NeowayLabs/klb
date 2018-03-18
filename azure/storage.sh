@@ -329,11 +329,11 @@ fn azure_storage_blob_download(
 
 	if $status != "0" {
 		return format(
-			"error[%s] downloading file[%s] to container[%s] on account name[%s]",
-			$output,
+			"error downloading file[%s] from container[%s] account[%s]: %s",
 			$localpath,
 			$containername,
 			$accountname,
+			$output,
 		)
 	}
 
