@@ -15,7 +15,7 @@ import (
 )
 
 func TestBlobFS(t *testing.T) {
-	timeout := 25 * time.Minute
+	timeout := 5 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
@@ -25,7 +25,7 @@ func TestBlobFS(t *testing.T) {
 		testBlobFSUploadsWhenAccountAndContainerExists,
 	)
 
-	//testBlobFSDownloadDir(t, timeout, location)
+	testBlobFSDownloadDir(t, timeout, location)
 	testBlobFSUploadDir(t, timeout, location)
 	testBlobFSListFiles(t, timeout, location)
 	testBlobFSListDirs(t, timeout, location)
@@ -707,7 +707,6 @@ func testBlobFSDownloadDir(
 		downloadDir string
 	}
 
-	// TODO: add more scenarios
 	tests := []TestCase{
 		{
 			name: "Root",
@@ -723,10 +722,40 @@ func testBlobFSDownloadDir(
 				"/test3",
 			},
 		},
+		{
+			name: "Level1",
+			remoteFiles: []string{
+				"/test1",
+				"/test2",
+				"/dir/test1",
+				"/dir/test2",
+			},
+			downloadDir: "/dir",
+			wantedFiles: []string{
+				"/dir/test1",
+				"/dir/test2",
+			},
+		},
+		{
+			name: "Level2",
+			remoteFiles: []string{
+				"/test1",
+				"/test2",
+				"/dir/test1",
+				"/dir/test2",
+				"/dir/dir2/test1",
+				"/dir/dir2/test2",
+			},
+			downloadDir: "/dir/dir2",
+			wantedFiles: []string{
+				"/dir/dir2/test1",
+				"/dir/dir2/test2",
+			},
+		},
 	}
 
 	for _, test := range tests {
-		name := "BlobFSDownloadDir" + test.name
+		name := "DownloadDir" + test.name
 		remoteFiles := test.remoteFiles
 		wantedFiles := test.wantedFiles
 		downloadDir := test.downloadDir
@@ -774,7 +803,7 @@ func testBlobFSDownloadDir(
 			assert.NoError(t, err)
 
 			if len(wantedFiles) != len(gotFiles) {
-				t.Fatalf("wanted files[%s] got[%s]", wantedFiles, gotFiles)
+				t.Fatalf("want files[%s] got[%s]", wantedFiles, gotFiles)
 			}
 
 			for _, wantedFile := range wantedFiles {

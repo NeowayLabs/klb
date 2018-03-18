@@ -7,4 +7,4 @@ before_script:
 
 # TODO: Run all tests not only storage
 script:
-  - travis_wait 120 make test-integration logger=stdout run=TestStorage
+  - travis_wait 120 make test-integration logger=stdout run=TestBlobFS

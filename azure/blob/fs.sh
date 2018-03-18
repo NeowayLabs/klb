@@ -97,7 +97,6 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 
 # Downloads a single file
 fn azure_blob_fs_download(fs, localpath, remotepath) {
-	# TODO: Handle root /
 	remotepath <= _azure_storage_fix_remote_path($remotepath)
 	return azure_storage_blob_download_by_resgroup(
 		azure_blob_fs_container($fs),
@@ -124,7 +123,6 @@ fn azure_blob_fs_download(fs, localpath, remotepath) {
 #
 # This function returns an error string if it fails and "" if it succeeds.
 fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
-	# TODO: handle root /
 	remotedir <= _azure_storage_fix_remote_path($remotedir)
 	resgroup <= azure_blob_fs_resgroup($fs)
 	account <= azure_blob_fs_account($fs)
@@ -133,14 +131,15 @@ fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
 		return (), $err
 	}
 
+	remotedir = $remotedir + "*"
 	container <= azure_blob_fs_container($fs)
-	pattern = $remotedir + "*"
 	out, status <= (
 		az storage blob download-batch
 			--destination $localdir
 			--source $container
 			--account-name $account
 			--account-key $accountkey
+			--pattern $remotedir
 	)
 	if $status != "0" {
 		return format("error[%s] downloading dir[%s] to[%s]", $out, $remotedir, $localdir)
