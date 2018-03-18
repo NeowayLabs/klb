@@ -15,7 +15,7 @@ import (
 )
 
 func TestBlobFS(t *testing.T) {
-	timeout := 5 * time.Minute
+	timeout := 25 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
