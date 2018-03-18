@@ -84,7 +84,10 @@ fn azure_blob_fs_new(resgroup, accountname, containername) {
 
 # Uploads a single file
 fn azure_blob_fs_upload(fs, remotepath, localpath) {
-	# TODO: Handle root /
+	if $remotepath == "/" {
+		return "error: remotepath can't be '/'"
+	}
+
 	remotepath <= _azure_storage_fix_remote_path($remotepath)
 	return azure_storage_blob_upload_by_resgroup(
 		azure_blob_fs_container($fs),
