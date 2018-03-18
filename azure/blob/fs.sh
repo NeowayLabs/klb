@@ -33,6 +33,15 @@ import klb/azure/storage
 # unable to create any of the resources.
 # This is specially useful on read/write scenarios.
 #
+# Also all functions on this module will manipulate paths beginning with "/"
+# to make it work properly (Azure does not handle paths that start with "/"
+# very nicely). Here operations involving the root path "/" will work
+# through manipulation of the path and other crap. Basically it will strive
+# to provide what you would get for free on aws s3 cli.
+#
+# When listing files they will also start with a "/", so usage across the entire
+# fs module is consistent/uniform.
+#
 # If it succeeds you can use the returned instance to list/send/get files from
 # Azure BLOB storage.
 fn azure_blob_fs_create(resgroup, location, accountname, sku, tier, containername) {
@@ -75,6 +84,8 @@ fn azure_blob_fs_new(resgroup, accountname, containername) {
 
 # Uploads a single file
 fn azure_blob_fs_upload(fs, remotepath, localpath) {
+	# TODO: Handle root /
+	remotepath <= _azure_storage_fix_remote_path($remotepath)
 	return azure_storage_blob_upload_by_resgroup(
 		azure_blob_fs_container($fs),
 		azure_blob_fs_account($fs),
@@ -83,6 +94,20 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 		$localpath
 	)
 }
+
+# Downloads a single file
+fn azure_blob_fs_download(fs, localpath, remotepath) {
+	# TODO: Handle root /
+	remotepath <= _azure_storage_fix_remote_path($remotepath)
+	return azure_storage_blob_download_by_resgroup(
+		azure_blob_fs_container($fs),
+		azure_blob_fs_account($fs),
+		azure_blob_fs_resgroup($fs),
+		$remotepath,
+		$localpath
+	)
+}
+
 # Downloads a remote dir to a local dir.
 # It will not create the remote dir on the local dir, only its
 # contents (including other dirs, recursively).
@@ -99,6 +124,8 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 #
 # This function returns an error string if it fails and "" if it succeeds.
 fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
+	# TODO: handle root /
+	remotedir <= _azure_storage_fix_remote_path($remotedir)
 	resgroup <= azure_blob_fs_resgroup($fs)
 	account <= azure_blob_fs_account($fs)
 	accountkey, err <= _azure_storage_account_get_key_value($account, $resgroup)
@@ -140,28 +167,29 @@ fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
 fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 	# WHY: Make code handling results uniform (no relative path handling)
 	localdir <= realpath $localdir
-	out, status <= find $localdir
-	if $status != "0" {
-		return format("error listing directory[%s], output: %s", $localpath, $out)
-	}
-	all <= split($out, "\n")
-	files = ()
-	for a in $all {
-		_, status <= test -f $a
-		if $status == "0" {
-			files <= append($files, $a)
-		}
-	}
+	# TODO: handle root /
+	remotedir <= _azure_storage_fix_remote_path($remotedir)
 
-	prefixregex <= format("s:^%s::", $localdir)
-	for f in $files {
-		remotefilename <= echo $f | sed -e $prefixregex
-		remotepath = $remotedir + $remotefilename
-		remotepath <= realpath -m $remotepath
-		err <= azure_blob_fs_upload($fs, $remotepath, $f)
-		if $err != "" {
-			return $err
-		}
+	resgroup <= azure_blob_fs_resgroup($fs)
+	account <= azure_blob_fs_account($fs)
+	accountkey, err <= _azure_storage_account_get_key_value($account, $resgroup)
+	if $err != "" {
+		return (), $err
+	}
+	container <= azure_blob_fs_container($fs)
+	out, status <= (
+		az storage blob upload-batch
+		--type "block"
+		--destination-path $remotedir
+		--destination $container
+		--source $localdir
+		--account-name $account
+		--account-key $accountkey
+		>[2=1]
+	)
+
+	if $status != "0" {
+		return format("error[%s] uploading dir", $out)
 	}
 
 	return ""
@@ -178,7 +206,6 @@ fn azure_blob_fs_list(fs, remotedir) {
 	if $remotedir == "" {
 		return (), "azure_blob_fs_list: error: remote dir MUST not be empty"
 	}
-
 	res, err <= _azure_blob_fs_list_prefix($fs, $remotedir)
 	if $err != "" {
 		return (), $err
@@ -268,29 +295,67 @@ fn _azure_blob_fs_list_prefix(fs, prefix) {
 	}
 
 	container <= azure_blob_fs_container($fs)
-	output, status <= (
-		az storage blob list
-			--container-name $container
-			--account-name $account
-			--account-key $accountkey
-			--prefix $prefix
-		>[2=1]
-	)
+	# WHY: echo has limits on the size of the input arg...
+	outputfile <= mktemp
+
+	# FIXME duplication calling blob list. Using * as prefix does not work =(
+	prefix <= _azure_storage_fix_remote_path($prefix)
+	if $prefix != "" {
+		_, status <= (
+			az storage blob list
+				--container-name $container
+				--account-name $account
+				--account-key $accountkey
+				--prefix $prefix
+			> $outputfile
+		)
+	} else {
+		_, status <= (
+			az storage blob list
+				--container-name $container
+				--account-name $account
+				--account-key $accountkey
+			> $outputfile
+		)
+	}
 
 	if $status != "0" {
+		rm -rf $outputfile
 		return (), format("error[%s] listing blobs", $output)
 	}
 
-	namesraw, status <= echo $output | jq -r ".[].name" >[2=1]
+	namesraw, status <= cat $outputfile | jq -r ".[].name"
 	if $status != "0" {
+		rm -rf $outputfile
 		return (), format("error[%s] parsing[%s]", $namesraw, $output)
 	}
+
+	rm -rf $outputfile
 
 	if $namesraw == "" {
 		return (), ""
 	}
 
-	files <= split($namesraw, "\n")
+	original <= split($namesraw, "\n")
+	files = ()
+	for f in $original {
+		files <= append($files, "/" + $f)
+	}
 
 	return $files, ""
+}
+
+fn _azure_storage_fix_remote_path(remotepath) {
+	# WHY: On azure blob a root filepath is nothing.
+	# you read right, root equals NOTHING.
+	# So uploading to the dir "/test/la" results on "test/la"
+	# and a lot of crap goes wrong downloading dirs, etc.
+	# So we need to guarantee that remote paths never start with "/"
+
+	pathstart = $remotepath[0]
+	if $pathstart == "/" {
+		fixed <= echo $remotepath | sed "s:/::"
+		return $fixed
+	}
+	return $remotepath
 }

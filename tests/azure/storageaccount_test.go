@@ -18,67 +18,67 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	timeout := 25 * time.Minute
+	timeout := 10 * time.Minute
 	t.Parallel()
-	fixture.Run(
-		t,
-		"StorageAccountCreateStandardLRS",
-		timeout,
-		location,
-		testStorageAccountCreateStandardLRS,
-	)
-	fixture.Run(
-		t,
-		"StorageAccountCreatePremiumLRS",
-		timeout,
-		location,
-		testStorageAccountCreatePremiumLRS,
-	)
-	fixture.Run(
-		t,
-		"StorageAccountCreateBLOBHot",
-		timeout,
-		location,
-		testStorageAccountCreateBLOBHot,
-	)
-	fixture.Run(
-		t,
-		"StorageAccountCreateBLOBCold",
-		timeout,
-		location,
-		testStorageAccountCreateBLOBCold,
-	)
-	fixture.Run(
-		t,
-		"StorageAccountUploadFiles",
-		timeout,
-		location,
-		testStorageAccountUploadFiles,
-	)
-	fixture.Run(
-		t,
-		"StorageAccountCheckResourcesExistence",
-		timeout,
-		location,
-		testStorageAccountCheckResourcesExistence,
-	)
-	fixture.Run(
-		t,
-		"BlobFSUploadsWhenAccountAndContainerExists",
-		timeout,
-		location,
-		testBlobFSUploadsWhenAccountAndContainerExists,
-	)
-	// TODO
-	// testBlobFSDownloadDir(t, timeout, location)
+	//fixture.Run(
+	//t,
+	//"StorageAccountCreateStandardLRS",
+	//timeout,
+	//location,
+	//testStorageAccountCreateStandardLRS,
+	//)
+	//fixture.Run(
+	//t,
+	//"StorageAccountCreatePremiumLRS",
+	//timeout,
+	//location,
+	//testStorageAccountCreatePremiumLRS,
+	//)
+	//fixture.Run(
+	//t,
+	//"StorageAccountCreateBLOBHot",
+	//timeout,
+	//location,
+	//testStorageAccountCreateBLOBHot,
+	//)
+	//fixture.Run(
+	//t,
+	//"StorageAccountCreateBLOBCold",
+	//timeout,
+	//location,
+	//testStorageAccountCreateBLOBCold,
+	//)
+	//fixture.Run(
+	//t,
+	//"StorageAccountUploadFiles",
+	//timeout,
+	//location,
+	//testStorageAccountUploadFiles,
+	//)
+	//fixture.Run(
+	//t,
+	//"StorageAccountCheckResourcesExistence",
+	//timeout,
+	//location,
+	//testStorageAccountCheckResourcesExistence,
+	//)
+	//fixture.Run(
+	//t,
+	//"BlobFSUploadsWhenAccountAndContainerExists",
+	//timeout,
+	//location,
+	//testBlobFSUploadsWhenAccountAndContainerExists,
+	//)
+
+	//testBlobFSDownloadDir(t, timeout, location)
 	testBlobFSUploadDir(t, timeout, location)
 	testBlobFSListFiles(t, timeout, location)
-	testBlobFSListDirs(t, timeout, location)
-	testBlobFSCreatesAccountAndContainerIfNonExistent(
-		t,
-		timeout,
-		location,
-	)
+	//testBlobFSListDirs(t, timeout, location)
+	//testBlobFSCreatesAccountAndContainerIfNonExistent(
+	//t,
+	//timeout,
+	//location,
+	//)
 }
 
 func testStorageAccountCreateBLOBHot(t *testing.T, f fixture.F) {
@@ -174,8 +174,7 @@ func checkBlobFSUploadDir(t *testing.T, f fixture.F, remotedir string) {
 	}()
 
 	localfiles := []TestFile{}
-	localfiles = append(localfiles, createFilesOnDir(
-		filepath.Join(tdir), 2)...)
+	localfiles = append(localfiles, createFilesOnDir(tdir, 2)...)
 	localfiles = append(localfiles, createFilesOnDir(
 		filepath.Join(tdir, "level1"), 1)...)
 	localfiles = append(localfiles, createFilesOnDir(
@@ -186,8 +185,6 @@ func checkBlobFSUploadDir(t *testing.T, f fixture.F, remotedir string) {
 
 	fs := newBlobFS(account, sku, tier, container)
 	fs.UploadDir(t, f, remotedir, tdir)
-
-	checkStorageBlobAccount(t, f, account, sku, tier)
 
 	expectedRemoteFiles := []string{}
 	remoteToLocalFile := map[string]TestFile{}
@@ -201,7 +198,7 @@ func checkBlobFSUploadDir(t *testing.T, f fixture.F, remotedir string) {
 	}
 
 	for remotepath, file := range remoteToLocalFile {
-		filecontent := downloadFileBLOB(t, f, account, container, remotepath)
+		filecontent := fs.Download(t, f, remotepath)
 		assert.EqualStrings(
 			t,
 			file.content,
@@ -871,6 +868,23 @@ func (fs *blobFS) List(t *testing.T, f fixture.F, remotedir string) []string {
 		return []string{}
 	}
 	return strings.Split(res, " ")
+}
+
+func (fs *blobFS) Download(
+	t *testing.T,
+	f fixture.F,
+	remotefile string,
+) string {
+	return execWithIPC(t, f, func(outputpath string) {
+		f.Shell.Run(
+			"./testdata/blob_fs_download.sh",
+			f.ResGroupName,
+			fs.account,
+			fs.container,
+			remotefile,
+			outputpath,
+		)
+	})
 }
 
 func (fs *blobFS) DownloadDir(
