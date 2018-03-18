@@ -20,65 +20,65 @@ import (
 func TestStorage(t *testing.T) {
 	timeout := 10 * time.Minute
 	t.Parallel()
-	//fixture.Run(
-	//t,
-	//"StorageAccountCreateStandardLRS",
-	//timeout,
-	//location,
-	//testStorageAccountCreateStandardLRS,
-	//)
-	//fixture.Run(
-	//t,
-	//"StorageAccountCreatePremiumLRS",
-	//timeout,
-	//location,
-	//testStorageAccountCreatePremiumLRS,
-	//)
-	//fixture.Run(
-	//t,
-	//"StorageAccountCreateBLOBHot",
-	//timeout,
-	//location,
-	//testStorageAccountCreateBLOBHot,
-	//)
-	//fixture.Run(
-	//t,
-	//"StorageAccountCreateBLOBCold",
-	//timeout,
-	//location,
-	//testStorageAccountCreateBLOBCold,
-	//)
-	//fixture.Run(
-	//t,
-	//"StorageAccountUploadFiles",
-	//timeout,
-	//location,
-	//testStorageAccountUploadFiles,
-	//)
-	//fixture.Run(
-	//t,
-	//"StorageAccountCheckResourcesExistence",
-	//timeout,
-	//location,
-	//testStorageAccountCheckResourcesExistence,
-	//)
-	//fixture.Run(
-	//t,
-	//"BlobFSUploadsWhenAccountAndContainerExists",
-	//timeout,
-	//location,
-	//testBlobFSUploadsWhenAccountAndContainerExists,
-	//)
+	fixture.Run(
+		t,
+		"StorageAccountCreateStandardLRS",
+		timeout,
+		location,
+		testStorageAccountCreateStandardLRS,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCreatePremiumLRS",
+		timeout,
+		location,
+		testStorageAccountCreatePremiumLRS,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCreateBLOBHot",
+		timeout,
+		location,
+		testStorageAccountCreateBLOBHot,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCreateBLOBCold",
+		timeout,
+		location,
+		testStorageAccountCreateBLOBCold,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountUploadFiles",
+		timeout,
+		location,
+		testStorageAccountUploadFiles,
+	)
+	fixture.Run(
+		t,
+		"StorageAccountCheckResourcesExistence",
+		timeout,
+		location,
+		testStorageAccountCheckResourcesExistence,
+	)
+	fixture.Run(
+		t,
+		"BlobFSUploadsWhenAccountAndContainerExists",
+		timeout,
+		location,
+		testBlobFSUploadsWhenAccountAndContainerExists,
+	)
 
 	//testBlobFSDownloadDir(t, timeout, location)
 	testBlobFSUploadDir(t, timeout, location)
 	testBlobFSListFiles(t, timeout, location)
-	//testBlobFSListDirs(t, timeout, location)
-	//testBlobFSCreatesAccountAndContainerIfNonExistent(
-	//t,
-	//timeout,
-	//location,
-	//)
+	testBlobFSListDirs(t, timeout, location)
+	testBlobFSCreatesAccountAndContainerIfNonExistent(
+		t,
+		timeout,
+		location,
+	)
 }
 
 func testStorageAccountCreateBLOBHot(t *testing.T, f fixture.F) {
