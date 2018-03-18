@@ -33,9 +33,9 @@ for i in $range {
 }
 
 io_println("uploading %s files", $filescount)
-# err <= azure_blob_fs_upload_dir($fs, "/test", $upload_dir)
+err <= azure_blob_fs_upload_dir($fs, "/test", $upload_dir)
 rm -rf $upload_dir
-# aborterr($err, "uploading dir")
+aborterr($err, "uploading dir")
 
 
 files, err <= azure_blob_fs_list($fs, "/test")
