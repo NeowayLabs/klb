@@ -295,29 +295,20 @@ fn _azure_blob_fs_list_prefix(fs, prefix) {
 	}
 
 	container <= azure_blob_fs_container($fs)
-	# WHY: echo has limits on the size of the input arg...
-	outputfile <= mktemp
-
-	# FIXME duplication calling blob list. Using * as prefix does not work =(
 	prefix <= _azure_storage_fix_remote_path($prefix)
+	options = (
+		--container-name $container
+		--account-name $account
+		--account-key $accountkey
+	)
 	if $prefix != "" {
-		_, status <= (
-			az storage blob list
-				--container-name $container
-				--account-name $account
-				--account-key $accountkey
-				--prefix $prefix
-			> $outputfile
-		)
-	} else {
-		_, status <= (
-			az storage blob list
-				--container-name $container
-				--account-name $account
-				--account-key $accountkey
-			> $outputfile
-		)
+		options <= append($options, "--prefix")
+		options <= append($options, $prefix)
 	}
+
+	# WHY: echo has limits on the size of the input args
+	outputfile <= mktemp
+	_, status <= az storage blob list $options > $outputfile
 
 	if $status != "0" {
 		rm -rf $outputfile
