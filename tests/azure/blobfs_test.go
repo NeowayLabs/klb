@@ -767,7 +767,7 @@ func testBlobFSDownloadDir(
 			checkStorageBlobAccount(t, f, fs.account, fs.sku, fs.tier)
 			createStorageAccountContainer(f, fs.account, fs.container)
 
-			uploadedFiles := map[string]string{}
+			wantedFilesContents := map[string]string{}
 
 			for _, remoteFile := range remoteFiles {
 				expectedContent := fixture.NewUniqueName("random-content")
@@ -775,8 +775,29 @@ func testBlobFSDownloadDir(
 				fs.Upload(t, f, remoteFile, localFile)
 				cleanup()
 
-				if filepath.Base(remoteFile) == downloadDir {
-					uploadedFiles[remoteFile] = expectedContent
+				for _, wantedFile := range wantedFiles {
+					if wantedFile == remoteFile {
+						wantedFilesContents[wantedFile] = expectedContent
+					}
+				}
+			}
+
+			if len(wantedFilesContents) != len(wantedFiles) {
+				t.Fatalf(
+					"wanted files [%s] is not a subset of remote files [%s]",
+					wantedFiles,
+					remoteFiles,
+				)
+			}
+
+			for _, wantedFile := range wantedFiles {
+				if _, ok := wantedFilesContents[wantedFile]; !ok {
+					t.Errorf("wanted file [%s] was not uploaded", wantedFile)
+					t.Fatalf(
+						"wanted files [%s] is not a subset of remote files [%s]",
+						wantedFiles,
+						remoteFiles,
+					)
 				}
 			}
 
@@ -797,7 +818,7 @@ func testBlobFSDownloadDir(
 				if info.IsDir() {
 					return nil
 				}
-				gotFiles = append(gotFiles, strings.TrimPrefix(path, tmpdir))
+				gotFiles = append(gotFiles, path)
 				return nil
 			})
 			assert.NoError(t, err)
@@ -806,17 +827,30 @@ func testBlobFSDownloadDir(
 				t.Fatalf("want files[%s] got[%s]", wantedFiles, gotFiles)
 			}
 
-			for _, wantedFile := range wantedFiles {
+			for wantedFile, wantedFileContents := range wantedFilesContents {
+
 				got := false
 				for _, gotFile := range gotFiles {
-					if gotFile == wantedFile {
+
+					gotFileRelative := strings.TrimPrefix(gotFile, tmpdir)
+					if gotFileRelative == wantedFile {
 						got = true
+						gotContentRaw, err := ioutil.ReadFile(gotFile)
+						assert.NoError(t, err)
+						gotContent := string(gotContentRaw)
+						if wantedFileContents != gotContent {
+							t.Fatalf(
+								"found wanted file[%s] but expected content[%s] != [%s]",
+								wantedFile,
+								wantedFileContents,
+								gotContent,
+							)
+						}
 					}
 				}
 				if !got {
 					t.Fatalf("wanted files[%s] got[%s]", wantedFiles, gotFiles)
 				}
-				// TODO: Validate file contents too
 			}
 		})
 	}

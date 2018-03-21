@@ -169,7 +169,6 @@ fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
 fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 	# WHY: Make code handling results uniform (no relative path handling)
 	localdir <= realpath $localdir
-	# TODO: handle root /
 	remotedir <= _azure_storage_fix_remote_path($remotedir)
 
 	resgroup <= azure_blob_fs_resgroup($fs)
