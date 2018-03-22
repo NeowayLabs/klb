@@ -42,9 +42,13 @@ import klb/azure/storage
 # When listing files they will also start with a "/", so usage across the entire
 # fs module is consistent/uniform.
 #
+# The timeout parameter will be used as the timeout in seconds
+# on all blob fs operations (where possible, azure does not provide timeouts on all
+# operations).
+#
 # If it succeeds you can use the returned instance to list/send/get files from
 # Azure BLOB storage.
-fn azure_blob_fs_create(resgroup, location, accountname, sku, tier, containername) {
+fn azure_blob_fs_create(resgroup, location, accountname, sku, tier, containername, timeout) {
 	# WHY: for now creating a group that already exists is ok
 	# and the function does not return any value, it will abort =/
 	# changing it now may break other people.
@@ -73,13 +77,13 @@ fn azure_blob_fs_create(resgroup, location, accountname, sku, tier, containernam
         if $err != "" {
 		return (), $err
         }
-	return azure_blob_fs_new($resgroup, $accountname, $containername), ""
+	return azure_blob_fs_new($resgroup, $accountname, $containername, $timeout), ""
 }
 
 # Creates a new blob fs instance, just like azure_blob_fs_create but
 # it will not attempt to create any resource. Useful for reading operations.
-fn azure_blob_fs_new(resgroup, accountname, containername) {
-	return ($resgroup $accountname $containername)
+fn azure_blob_fs_new(resgroup, accountname, containername, timeout) {
+	return ($resgroup $accountname $containername $timeout)
 }
 
 # Uploads a single file
@@ -89,6 +93,7 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 	}
 
 	remotepath <= _azure_storage_fix_remote_path($remotepath)
+	# TODO: use timeout here
 	return azure_storage_blob_upload_by_resgroup(
 		azure_blob_fs_container($fs),
 		azure_blob_fs_account($fs),
@@ -101,6 +106,7 @@ fn azure_blob_fs_upload(fs, remotepath, localpath) {
 # Downloads a single file
 fn azure_blob_fs_download(fs, localpath, remotepath) {
 	remotepath <= _azure_storage_fix_remote_path($remotepath)
+	# TODO: use timeout here
 	return azure_storage_blob_download_by_resgroup(
 		azure_blob_fs_container($fs),
 		azure_blob_fs_account($fs),
@@ -134,6 +140,7 @@ fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
 		return (), $err
 	}
 
+	# TODO: use timeout, right now az cli does not provide timeout for download-batch
 	remotedir = $remotedir + "*"
 	container <= azure_blob_fs_container($fs)
 	out, status <= (
@@ -173,6 +180,7 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 
 	resgroup <= azure_blob_fs_resgroup($fs)
 	account <= azure_blob_fs_account($fs)
+	timeout <= azure_blob_fs_timeout($fs)
 	accountkey, err <= _azure_storage_account_get_key_value($account, $resgroup)
 	if $err != "" {
 		return (), $err
@@ -185,6 +193,7 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 		--source $localdir
 		--account-name $account
 		--account-key $accountkey
+		--timeout $timeout
 		>[2=1]
 	)
 
@@ -274,16 +283,20 @@ fn azure_blob_fs_listdir(fs, remotedir) {
 	return $dirs, ""
 }
 
-fn azure_blob_fs_container(fs) {
-	return $fs[2]
+fn azure_blob_fs_resgroup(fs) {
+	return $fs[0]
 }
 
 fn azure_blob_fs_account(fs) {
 	return $fs[1]
 }
 
-fn azure_blob_fs_resgroup(fs) {
-	return $fs[0]
+fn azure_blob_fs_container(fs) {
+	return $fs[2]
+}
+
+fn azure_blob_fs_timeout(fs) {
+	return $fs[3]
 }
 
 fn _azure_blob_fs_list_prefix(fs, prefix) {

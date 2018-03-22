@@ -15,8 +15,8 @@ fn aborterr(err, details) {
                 exit("1")
         }
 }
-
-fs, err <= azure_blob_fs_create($group, $location, $account, $sku, $tier, $container)
+timeout = "60"
+fs, err <= azure_blob_fs_create($group, $location, $account, $sku, $tier, $container, $timeout)
 aborterr($err, "creating blob fs")
 
 upload_dir <= mktemp -d

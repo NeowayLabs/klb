@@ -11,6 +11,7 @@ tier          = $ARGS[5]
 containername = $ARGS[6]
 remotepath    = $ARGS[7]
 localpath     = $ARGS[8]
+timeout = "60"
 
 azure_login()
 
@@ -21,7 +22,8 @@ fs, err <= azure_blob_fs_create(
 	$accountname,
 	$sku,
 	$tier,
-	$containername
+	$containername,
+	$timeout
 )
 if $err != "" {
 	echo "error creating fs: " + $err

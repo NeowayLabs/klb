@@ -8,10 +8,11 @@ accountname   = $ARGS[2]
 containername = $ARGS[3]
 remotepath    = $ARGS[4]
 output        = $ARGS[5]
+timeout = "60"
 
 azure_login()
 
-fs <= azure_blob_fs_new($resgroup, $accountname, $containername)
+fs <= azure_blob_fs_new($resgroup, $accountname, $containername, $timeout)
 
 dirs, err <= azure_blob_fs_listdir($fs, $remotepath)
 if $err != "" {

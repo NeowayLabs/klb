@@ -8,10 +8,11 @@ accountname   = $ARGS[2]
 containername = $ARGS[3]
 remotepath    = $ARGS[4]
 outputpath     = $ARGS[5]
+timeout = "60"
 
 azure_login()
 
-fs <= azure_blob_fs_new($resgroup, $accountname, $containername)
+fs <= azure_blob_fs_new($resgroup, $accountname, $containername, $timeout)
 
 echo "downloading file"
 err <= azure_blob_fs_download($fs, $outputpath, $remotepath)
