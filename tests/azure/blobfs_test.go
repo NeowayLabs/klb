@@ -806,6 +806,18 @@ func testBlobFSUploadDir(
 
 	tests := []TestCase{
 		{
+			name: "RegressionFilesWithDotAndSlashes",
+			uploadDir: "/regression/slashes/dots",
+			localfiles: []string{
+				"/test/1",
+				"/test/model.ckpt.data-00000-of-00001",
+			},
+			wantedRemoteFiles: []string{
+				"/regression/slashes/dots/test/1",
+				"/regression/slashes/dots/test/model.ckpt.data-00000-of-00001",
+			},
+		},
+		{
 			name: "OneDirToRoot",
 			uploadDir: "/",
 			localfiles: []string{

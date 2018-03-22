@@ -180,7 +180,6 @@ fn azure_blob_fs_upload_dir(fs, remotedir, localdir) {
 	container <= azure_blob_fs_container($fs)
 	out, status <= (
 		az storage blob upload-batch
-		--type "block"
 		--destination-path $remotedir
 		--destination $container
 		--source $localdir
