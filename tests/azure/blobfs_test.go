@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -411,7 +410,7 @@ type listTestCase struct {
 
 func setupFS() blobFS {
 	account := genStorageAccountName()
-	container := fixture.NewUniqueName("list")
+	container := fixture.NewUniqueName("testcontainer")
 	sku := "Standard_LRS"
 	tier := "Cool"
 	return newBlobFS(account, sku, tier, container)
@@ -631,70 +630,6 @@ func blobFSUpload(
 	)
 }
 
-func checkBlobFSUploadDir(t *testing.T, f fixture.F, remotedir string) {
-	account := genStorageAccountName()
-	container := fixture.NewUniqueName("uploadir")
-
-	type TestFile struct {
-		path    string
-		content string
-	}
-
-	createFilesOnDir := func(dir string, filesCount int) []TestFile {
-		assert.NoError(t, os.MkdirAll(dir, 0644))
-		files := []TestFile{}
-		for i := 0; i < filesCount; i++ {
-			localfile := filepath.Join(dir, strconv.Itoa(i))
-			content := fixture.NewUniqueName("somecontent")
-			ioutil.WriteFile(localfile, []byte(content), 0644)
-			files = append(files, TestFile{
-				path:    localfile,
-				content: content,
-			})
-		}
-		return files
-	}
-
-	tdir, err := ioutil.TempDir("", "uploader-test")
-	assert.NoError(t, err)
-	defer func() {
-		assert.NoError(t, os.RemoveAll(tdir))
-	}()
-
-	localfiles := []TestFile{}
-	localfiles = append(localfiles, createFilesOnDir(tdir, 2)...)
-	localfiles = append(localfiles, createFilesOnDir(
-		filepath.Join(tdir, "level1"), 1)...)
-	localfiles = append(localfiles, createFilesOnDir(
-		filepath.Join(tdir, "level1", "level2"), 3)...)
-
-	sku := "Standard_LRS"
-	tier := "Cool"
-
-	fs := newBlobFS(account, sku, tier, container)
-	fs.UploadDir(t, f, remotedir, tdir)
-
-	expectedRemoteFiles := []string{}
-	remoteToLocalFile := map[string]TestFile{}
-
-	for _, file := range localfiles {
-		remotepath := filepath.Join(
-			remotedir,
-			strings.TrimPrefix(file.path, tdir))
-		remoteToLocalFile[remotepath] = file
-		expectedRemoteFiles = append(expectedRemoteFiles, remotepath)
-	}
-
-	for remotepath, file := range remoteToLocalFile {
-		filecontent := fs.Download(t, f, remotepath)
-		assert.EqualStrings(
-			t,
-			file.content,
-			filecontent,
-			"checking uploaded BLOB individually")
-	}
-}
-
 func testBlobFSDownloadDir(
 	t *testing.T,
 	timeout time.Duration,
@@ -864,20 +799,111 @@ func testBlobFSUploadDir(
 ) {
 	type TestCase struct {
 		name      string
-		remotedir string
+		localfiles []string
+		uploadDir string
+		wantedRemoteFiles []string
 	}
 
 	tests := []TestCase{
-		{name: "Root", remotedir: "/"},
-		{name: "OneLevel", remotedir: "/remote1"},
-		{name: "TwoLevels", remotedir: "/remote1/remote2"},
+		{
+			name: "OneDirToRoot",
+			uploadDir: "/",
+			localfiles: []string{
+				"/test/1",
+				"/test/2",
+			},
+			wantedRemoteFiles: []string{
+				"/test/1",
+				"/test/2",
+			},
+		},
+		{
+			name: "MultiplesDirsToRoot",
+			uploadDir: "/",
+			localfiles: []string{
+				"/test/1",
+				"/test/2",
+				"/test2/1",
+				"/test2/2",
+			},
+			wantedRemoteFiles: []string{
+				"/test/1",
+				"/test/2",
+				"/test2/1",
+				"/test2/2",
+			},
+		},
+		{
+			name: "MultipleDirsNested",
+			uploadDir: "/remotedir/nested",
+			localfiles: []string{
+				"/test/nested/1",
+				"/test/nested/2",
+				"/test/nested2/1",
+				"/other/1",
+				"/other/nest1/nest2/1",
+			},
+			wantedRemoteFiles: []string{
+				"/remotedir/nested/test/nested/1",
+				"/remotedir/nested/test/nested/2",
+				"/remotedir/nested/test/nested2/1",
+				"/remotedir/nested/other/1",
+				"/remotedir/nested/other/nest1/nest2/1",
+			},
+		},
 	}
 
-	for _, test := range tests {
-		name := "BlobFSUploadDir" + test.name
-		remotedir := test.remotedir
+	for _, tt := range tests {
+		test := tt
+		name := "UploadDir" + test.name
 		fixture.Run(t, name, timeout, location, func(t *testing.T, f fixture.F) {
-			checkBlobFSUploadDir(t, f, remotedir)
+			tdir, err := ioutil.TempDir("", "uploadDirTests")
+			assert.NoError(t, err)
+			defer func() {
+				assert.NoError(t, os.RemoveAll(tdir), "removing tmp dir")
+			}()
+			
+			for _, localfile := range test.localfiles {
+				content := fixture.NewUniqueName("random-content")
+				fullpath := filepath.Join(tdir, localfile)
+				basedir := filepath.Dir(fullpath)
+				assert.NoError(t, os.MkdirAll(basedir, 0644), "creating dir for local file")
+				assert.NoError(t, ioutil.WriteFile(
+						fullpath,
+						[]byte(content),
+						0644,
+					),
+					"writing local test file",
+				)
+			}
+			
+			fs := setupFS()
+			fs.UploadDir(t, f, test.uploadDir, tdir)
+			
+			getEquivalentLocalFile := func(remotefile string) string {
+				return filepath.Join(tdir, strings.TrimPrefix(remotefile, test.uploadDir))
+			}
+			
+			for _, wantedRemoteFile := range test.wantedRemoteFiles {
+				equivalentLocalFile := getEquivalentLocalFile(wantedRemoteFile)
+				wantedContentRaw, err := ioutil.ReadFile(equivalentLocalFile)
+				assert.NoError(t, err, "reading local file")
+				
+				wantedContent := string(wantedContentRaw)
+				
+				gotContent := fs.Download(t, f, wantedRemoteFile)
+				
+				if wantedContent != gotContent {
+					t.Fatalf(
+						"remote file[%s] contents[%s] != local file[%s] contents[%s]",
+						wantedRemoteFile,
+						gotContent,
+						equivalentLocalFile,
+						wantedContent,
+					)
+				}
+				
+			}
 		})
 	}
 
