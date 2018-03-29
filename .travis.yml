@@ -3,8 +3,7 @@ dist: trusty
 sudo: required
 
 before_script:
-  - travis_wait 60 make image
+  - travis_wait 130 make image
 
-# TODO: Run all tests not only storage
 script:
-  - travis_wait 120 make test-integration logger=stdout run=TestBlobFS
+  - travis_wait 130 make test-integration logger=stdout
