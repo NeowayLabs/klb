@@ -1,21 +1,19 @@
 FROM ubuntu:16.04
 
 RUN apt-get update && \
-    apt-get install -y curl
+	apt-get install -y curl && \
+	curl -sL https://deb.nodesource.com/setup_6.x | bash - && \
+	apt-get install -y nodejs=6.14.1-1nodesource1
 
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+RUN apt-get update && \
+    apt-get install -y \
+    	nodejs libffi-dev openssh-server \
+    	libffi-dev libssl-dev wget jq python-pip
+    
+RUN pip install -U pip
 
-RUN apt-get install -y nodejs python3 python3-pip libffi-dev openssh-server
-
-RUN rm -f /usr/bin/python &&\
-    ln -s /usr/bin/python3 /usr/bin/python
-
-RUN apt-get install -y libffi-dev libssl-dev wget jq
-
-RUN pip3 install -U pip
-
-RUN pip3 install azure-cli==2.0.28 && \
-    pip3 install awscli==1.11.107 && \
+RUN pip install azure-cli==2.0.28 && \
+    pip install awscli==1.11.107 && \
     npm install --no-optional -g azure-cli@0.10.14
 
 ENV NASH_VERSION=v0.6

@@ -15,7 +15,7 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	timeout := 10 * time.Minute
+	timeout := 30 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
