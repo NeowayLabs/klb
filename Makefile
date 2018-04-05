@@ -21,10 +21,6 @@ image:
 	export TERMINFO=""
 	docker build . -t neowaylabs/klb:$(version)
 
-imagedev: image
-	export TERMINFO=""
-	docker build . -f ./hack/Dockerfile -t neowaylabs/klbdev:$(version)
-
 credentials: image guard-sh guard-subscription guard-service-principal guard-service-secret
 	docker run -ti --rm -v `pwd`:/credentials -w /credentials neowaylabs/klbdev:$(version) \
 		/credentials/tools/azure/getcredentials.sh \
@@ -36,7 +32,7 @@ createsp: image guard-subscription-id guard-service-principal guard-service-secr
 		"$(subscription-id)" "$(service-principal)" "$(service-secret)"
 
 shell: image
-	./hack/run-tty.sh /usr/bin/nash
+	./hack/run-tty.sh nash
 
 example-%: image
 	./hack/run-tty.sh ./examples/azure/$*/build.sh
@@ -55,29 +51,27 @@ install: guard-NASHPATH
 	@cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	@cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-integration_timeout=50m
-examples_timeout=90m
-all_timeout=90m
+timeout=120m
 logger=file
 parallel=20 #Explore I/O parallelization
-cpu=10
+cpu=10 # Force threads to be created
 gotest=go test -v ./tests/azure -parallel $(parallel) -cpu $(cpu)
 gotestargs=-args -logger $(logger)
 
-test: imagedev
+test: image
 	./hack/run.sh nash ./azure/vm_test.sh
 
-test-integration: imagedev
-	./hack/run.sh $(gotest) -timeout $(integration_timeout) -run=$(run) ./... $(gotestargs)
+test-integration: image
+	./hack/run.sh $(gotest) -timeout $(timeout) -run=$(run) ./... $(gotestargs)
 
-test-examples: imagedev
-	./hack/run.sh $(gotest) -timeout $(examples_timeout) -tags=examples -run=TestExamples $(gotestargs)
+test-examples: image
+	./hack/run.sh $(gotest) -timeout $(timeout) -tags=examples -run=TestExamples $(gotestargs)
 
 # It is recommended to use this locally. It takes too much time for the CI
-test-all: imagedev
-	./hack/run.sh $(gotest) -timeout $(all_timeout) -tags=examples $(gotestargs)
+test-all: image
+	./hack/run.sh $(gotest) -timeout $(timeout) -tags=examples $(gotestargs)
 
-cleanup: imagedev
+cleanup: image
 	./hack/run-tty.sh ./tools/azure/cleanup.sh
 
 testhost:

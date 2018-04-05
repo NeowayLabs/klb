@@ -15,7 +15,7 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	timeout := 25 * time.Minute
+	timeout := 30 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
@@ -64,25 +64,19 @@ func TestStorage(t *testing.T) {
 func testStorageAccountCreateBLOBHot(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	tier := "Hot"
-	//WHY: Because Azure is awesome
-	expectedTier := "Standard"
-	kind := "BlobStorage"
 	name := genStorageAccountName()
 
 	createStorageAccountBLOB(f, name, sku, tier)
-	checkStorageAccount(t, f, name, sku, expectedTier, kind)
+	checkStorageBlobAccount(t, f, name, sku, tier)
 }
 
 func testStorageAccountCreateBLOBCold(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
 	tier := "Cool"
-	//WHY: Because Azure is awesome
-	expectedTier := "Standard"
-	kind := "BlobStorage"
 	name := genStorageAccountName()
 
 	createStorageAccountBLOB(f, name, sku, tier)
-	checkStorageAccount(t, f, name, sku, expectedTier, kind)
+	checkStorageBlobAccount(t, f, name, sku, tier)
 }
 
 func testStorageAccountCreateStandardLRS(t *testing.T, f fixture.F) {
@@ -91,7 +85,7 @@ func testStorageAccountCreateStandardLRS(t *testing.T, f fixture.F) {
 	name := genStorageAccountName()
 
 	createStorageAccount(f, name, sku)
-	checkStorageAccount(t, f, name, sku, "Standard", kind)
+	checkStorageAccount(t, f, name, sku, kind)
 }
 
 func testStorageAccountCreatePremiumLRS(t *testing.T, f fixture.F) {
@@ -100,47 +94,62 @@ func testStorageAccountCreatePremiumLRS(t *testing.T, f fixture.F) {
 	name := genStorageAccountName()
 
 	createStorageAccount(f, name, sku)
-	checkStorageAccount(t, f, name, sku, "Premium", kind)
+	checkStorageAccount(t, f, name, sku, kind)
+}
+
+type BlobStorageFixture struct {
+	sku             string
+	tier            string
+	account         string
+	container       string
+	testfile        string
+	testfileContent string
+}
+
+func setupBlobStorageFixture(t *testing.T, f fixture.F, sku string, tier string) (BlobStorageFixture, func()) {
+	container := fixture.NewUniqueName("container")
+
+	expectedContent := fixture.NewUniqueName("random-content")
+	localfile, cleanup := setupTestFile(t, expectedContent)
+
+	account := genStorageAccountName()
+	return BlobStorageFixture{
+		sku:             sku,
+		tier:            tier,
+		account:         account,
+		container:       container,
+		testfile:        localfile,
+		testfileContent: expectedContent,
+	}, cleanup
 }
 
 func testStorageAccountUploadFiles(t *testing.T, f fixture.F) {
-	sku := "Standard_LRS"
-	kind := "BlobStorage"
-	tier := "Cool"
-	//WHY: Because Azure is awesome
-	expectedTier := "Standard"
-	accountname := genStorageAccountName()
-	containerName := "klb-test-container"
 
-	createStorageAccountBLOB(f, accountname, sku, tier)
-	checkStorageAccount(t, f, accountname, sku, expectedTier, kind)
-
-	createStorageAccountContainer(f, accountname, containerName)
-
-	expectedContents := fixture.NewUniqueName("random-contents")
-	expectedPath := "/test/uploadedFile"
-	localfile, cleanup := setupTestFile(t, expectedContents)
+	sf, cleanup := setupBlobStorageFixture(t, f, "Standard_LRS", "Cool")
 	defer cleanup()
 
-	uploadFileBLOB(t, f, accountname, containerName, expectedPath, localfile)
-	contents := downloadFileBLOB(t, f, accountname, containerName, expectedPath)
+	createStorageAccountBLOB(f, sf.account, sf.sku, sf.tier)
+	checkStorageBlobAccount(t, f, sf.account, sf.sku, sf.tier)
 
-	assert.EqualStrings(t, expectedContents, contents, "downloading BLOB")
+	createStorageAccountContainer(f, sf.account, sf.container)
+
+	expectedPath := "/account/file"
+	uploadFileBLOB(t, f, sf.account, sf.container, expectedPath, sf.testfile)
+	contents := downloadFileBLOB(t, f, sf.account, sf.container, expectedPath)
+
+	assert.EqualStrings(t, sf.testfileContent, contents, "downloading BLOB")
 }
 
 func testStorageAccountCheckResourcesExistence(t *testing.T, f fixture.F) {
 	sku := "Standard_LRS"
-	kind := "BlobStorage"
 	tier := "Cool"
-	//WHY: Because Azure is awesome
-	expectedTier := "Standard"
 	accountname := genStorageAccountName()
 
 	//WHY: Testing multiple things on one test is bad but
 	//     building the context to run tests is too expensive on the cloud
 	testStorageAccountDontExist(t, f, accountname)
 	createStorageAccountBLOB(f, accountname, sku, tier)
-	checkStorageAccount(t, f, accountname, sku, expectedTier, kind)
+	checkStorageBlobAccount(t, f, accountname, sku, tier)
 	testStorageAccountExists(t, f, accountname)
 
 	containerName := "klb-test-container-exists"
@@ -361,7 +370,6 @@ func checkStorageAccount(
 	f fixture.F,
 	name string,
 	sku string,
-	tier string,
 	kind string,
 ) {
 	accounts := azure.NewStorageAccounts(f)
@@ -371,5 +379,21 @@ func checkStorageAccount(
 	assert.EqualStrings(t, f.Location, account.Location, "checking location")
 	assert.EqualStrings(t, sku, account.Sku, "checking SKU")
 	assert.EqualStrings(t, kind, account.Kind, "checking kind")
-	assert.EqualStrings(t, tier, account.Tier, "checking tier")
+}
+
+func checkStorageBlobAccount(
+	t *testing.T,
+	f fixture.F,
+	name string,
+	sku string,
+	tier string,
+) {
+	accounts := azure.NewStorageAccounts(f)
+	account := accounts.Account(t, name)
+
+	assert.EqualStrings(t, name, account.Name, "checking name")
+	assert.EqualStrings(t, f.Location, account.Location, "checking location")
+	assert.EqualStrings(t, "BlobStorage", account.Kind, "checking kind")
+	assert.EqualStrings(t, sku, account.Sku, "checking SKU")
+	assert.EqualStrings(t, tier, account.AccessTier, "checking tier")
 }

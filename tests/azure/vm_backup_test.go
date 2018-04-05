@@ -12,7 +12,7 @@ import (
 func TestVMBackup(t *testing.T) {
 	t.Parallel()
 
-	vmtesttimeout := 45 * time.Minute
+	vmtesttimeout := 60 * time.Minute
 
 	fixture.Run(t, "VMBackupOsDiskOnly", vmtesttimeout, location, testVMBackupOsDiskOnly)
 	fixture.Run(t, "VMBackupOneDataDisk", vmtesttimeout, location, testVMBackupOneDataDisk)

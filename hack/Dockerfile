@@ -9,3 +9,11 @@ RUN cd /tmp && \
     tar -xf go$GO_VERSION.linux-amd64.tar.gz && \
     mkdir -p $GOROOT && \
     mv ./go/* $GOROOT
+
+COPY ./tools/azure/createsp.sh ${NASHPATH}/bin/azure-createsp.sh
+COPY ./tools/azure/getcredentials.sh ${NASHPATH}/bin/azure-getcredentials.sh
+
+COPY ./aws ${NASHPATH}/lib/klb/aws
+COPY ./azure ${NASHPATH}/lib/klb/azure
+
+ENV PATH $PATH:${NASHPATH}/bin

@@ -39,18 +39,7 @@ fn create_subnet(name, cidr) {
 	azure_route_table_route_create($route)
 }
 
-fn new_vm_nodisk(name, subnet) {
-	# create ssh key
-	accessdir = "/tmp/.config/ssh/"
-	accesskey = $accessdir+"id_rsa-"+$name
-
-	-test -e $accesskey
-
-	if $status != "0" {
-		mkdir -p $accessdir
-		ssh-keygen -f $accesskey -P ""
-	}
-
+fn new_vm_base_vm(name, subnet) {
 	# create nic
 	nic <= azure_nic_new($name, $group, $location)
 	nic <= azure_nic_set_vnet($nic, $vnet)
@@ -63,12 +52,10 @@ fn new_vm_nodisk(name, subnet) {
 
 	vm   <= azure_vm_new($name, $group, $location)
 	vm   <= azure_vm_set_vmsize($vm, $vm_size)
-	vm   <= azure_vm_set_username($vm, $vm_username)
 
 	nics = ($name)
 
 	vm   <= azure_vm_set_nics($vm, $nics)
-	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
 
 	echo "returning new VM instance"
 	return $vm
@@ -76,9 +63,21 @@ fn new_vm_nodisk(name, subnet) {
 
 fn create_vm(name, subnet) {
 	# create ssh key
-	vm   <= new_vm_nodisk($name, $subnet)
+	vm   <= new_vm_base_vm($name, $subnet)
 	vm   <= azure_vm_set_osdiskname($vm, $name)
 	vm   <= azure_vm_set_imageurn($vm, $vm_image_urn)
+	# create ssh key
+	accessdir = "/tmp/.config/ssh/"
+	accesskey = $accessdir+"id_rsa-"+$name
+
+	-test -e $accesskey
+
+	if $status != "0" {
+		mkdir -p $accessdir
+		ssh-keygen -f $accesskey -P ""
+	}
+	vm   <= azure_vm_set_publickeyfile($vm, $accesskey+".pub")
+	vm   <= azure_vm_set_username($vm, $vm_username)
 
 	azure_vm_create($vm)
 }
@@ -146,11 +145,10 @@ for bkup in $backups {
 }
 
 echo
-echo "creating backup VM info"
-backupvm <= new_vm_nodisk($backup_vm_name, $subnet_name)
+echo "creating backup VM"
+backupvm <= new_vm_base_vm($backup_vm_name, $subnet_name)
 backupvm <= azure_vm_set_ostype($backupvm, "linux")
 echo "restoring backup"
-
 azure_vm_backup_recover($backupvm, "Premium_LRS", "None", $backups[0])
 echo "finished with success"
 
