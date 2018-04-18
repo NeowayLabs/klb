@@ -14,7 +14,7 @@ import (
 )
 
 func TestBlobFS(t *testing.T) {
-	timeout := 60 * time.Minute
+	timeout := 10 * time.Minute
 	t.Parallel()
 	fixture.Run(
 		t,
@@ -644,6 +644,16 @@ func testBlobFSDownloadDir(
 
 	tests := []TestCase{
 		{
+			name: "OneFile",
+			remoteFiles: []string{
+				"/one/test1",
+			},
+			downloadDir: "/one",
+			wantedFiles: []string{
+				"/test1",
+			},
+		},
+		{
 			name: "Root",
 			remoteFiles: []string{
 				"/test1",
@@ -667,8 +677,8 @@ func testBlobFSDownloadDir(
 			},
 			downloadDir: "/dir",
 			wantedFiles: []string{
-				"/dir/test1",
-				"/dir/test2",
+				"/test1",
+				"/test2",
 			},
 		},
 		{
@@ -683,8 +693,26 @@ func testBlobFSDownloadDir(
 			},
 			downloadDir: "/dir/dir2",
 			wantedFiles: []string{
+				"/test1",
+				"/test2",
+			},
+		},
+		{
+			name: "SubdirsAreDownloaded",
+			remoteFiles: []string{
+				"/test1",
+				"/test2",
+				"/dir/test1",
+				"/dir/test2",
 				"/dir/dir2/test1",
 				"/dir/dir2/test2",
+			},
+			downloadDir: "/dir",
+			wantedFiles: []string{
+				"/test1",
+				"/test2",
+				"/dir2/test1",
+				"/dir2/test2",
 			},
 		},
 	}
@@ -702,38 +730,11 @@ func testBlobFSDownloadDir(
 			checkStorageBlobAccount(t, f, fs.account, fs.sku, fs.tier)
 			createStorageAccountContainer(f, fs.account, fs.container)
 
-			wantedFilesContents := map[string]string{}
-
+  			// TODO: validate file contents
 			for _, remoteFile := range remoteFiles {
-				expectedContent := fixture.NewUniqueName("random-content")
-				localFile, cleanup := setupTestFile(t, expectedContent)
+				localFile, cleanup := setupTestFile(t, remoteFile)
 				fs.Upload(t, f, remoteFile, localFile)
 				cleanup()
-
-				for _, wantedFile := range wantedFiles {
-					if wantedFile == remoteFile {
-						wantedFilesContents[wantedFile] = expectedContent
-					}
-				}
-			}
-
-			if len(wantedFilesContents) != len(wantedFiles) {
-				t.Fatalf(
-					"wanted files [%s] is not a subset of remote files [%s]",
-					wantedFiles,
-					remoteFiles,
-				)
-			}
-
-			for _, wantedFile := range wantedFiles {
-				if _, ok := wantedFilesContents[wantedFile]; !ok {
-					t.Errorf("wanted file [%s] was not uploaded", wantedFile)
-					t.Fatalf(
-						"wanted files [%s] is not a subset of remote files [%s]",
-						wantedFiles,
-						remoteFiles,
-					)
-				}
 			}
 
 			tmpdir, err := ioutil.TempDir("", "az-download-dir")
@@ -759,32 +760,39 @@ func testBlobFSDownloadDir(
 			assert.NoError(t, err)
 
 			if len(wantedFiles) != len(gotFiles) {
+				t.Errorf("wanted files and got files len don't match")
 				t.Fatalf("want files[%s] got[%s]", wantedFiles, gotFiles)
 			}
+			
+			removeFilePrefix := func(path string) string {
+				return strings.TrimPrefix(path, tmpdir)
+			}
+			
+			removeFilesPrefix := func(paths []string) []string {
+				trimmed := make([]string, len(paths))
+				for i, path := range paths {
+					trimmed[i] = removeFilePrefix(path)
+				}
+				return trimmed
+			}
 
-			for wantedFile, wantedFileContents := range wantedFilesContents {
+			for _, wantedFile := range wantedFiles {
 
 				got := false
 				for _, gotFile := range gotFiles {
 
-					gotFileRelative := strings.TrimPrefix(gotFile, tmpdir)
+					gotFileRelative := removeFilePrefix(gotFile)
 					if gotFileRelative == wantedFile {
 						got = true
-						gotContentRaw, err := ioutil.ReadFile(gotFile)
-						assert.NoError(t, err)
-						gotContent := string(gotContentRaw)
-						if wantedFileContents != gotContent {
-							t.Fatalf(
-								"found wanted file[%s] but expected content[%s] != [%s]",
-								wantedFile,
-								wantedFileContents,
-								gotContent,
-							)
-						}
+						// TODO: file content validation
 					}
 				}
 				if !got {
-					t.Fatalf("wanted files[%s] got[%s]", wantedFiles, gotFiles)
+					t.Fatalf(
+						"wanted files[%s] != got[%s]",
+						wantedFiles,
+						removeFilesPrefix(gotFiles),
+					)
 				}
 			}
 		})
