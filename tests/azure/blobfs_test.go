@@ -23,7 +23,6 @@ func TestBlobFS(t *testing.T) {
 		location,
 		testBlobFSUploadsWhenAccountAndContainerExists,
 	)
-
 	testBlobFSDownloadDir(t, timeout, location)
 	testBlobFSUploadDir(t, timeout, location)
 	testBlobFSListFiles(t, timeout, location)
@@ -730,7 +729,6 @@ func testBlobFSDownloadDir(
 			checkStorageBlobAccount(t, f, fs.account, fs.sku, fs.tier)
 			createStorageAccountContainer(f, fs.account, fs.container)
 
-  			// TODO: validate file contents
 			for _, remoteFile := range remoteFiles {
 				localFile, cleanup := setupTestFile(t, remoteFile)
 				fs.Upload(t, f, remoteFile, localFile)
@@ -775,6 +773,12 @@ func testBlobFSDownloadDir(
 				}
 				return trimmed
 			}
+			
+			expectedContent := func(path string) string {
+				// WHY: we use the original remote file path as
+				// the content itself (this way the content is unique for each file).
+				return filepath.Join(downloadDir, path)
+			}
 
 			for _, wantedFile := range wantedFiles {
 
@@ -782,10 +786,30 @@ func testBlobFSDownloadDir(
 				for _, gotFile := range gotFiles {
 
 					gotFileRelative := removeFilePrefix(gotFile)
-					if gotFileRelative == wantedFile {
-						got = true
-						// TODO: file content validation
+					if gotFileRelative != wantedFile {
+						continue
 					}
+					
+					got = true
+					f, err := os.Open(gotFile)
+					assert.NoError(t, err, "opening file")
+					defer f.Close()
+						
+					contentsr, err := ioutil.ReadAll(f)
+					assert.NoError(t, err, "reading file")
+						
+					contents := string(contentsr)
+					wantedContents := expectedContent(wantedFile)
+						
+					if contents != wantedContents {
+						t.Fatalf(
+							"wanted file[%s] contents[%s] got[%s]",
+							wantedFile,
+							wantedContents,
+							contents,
+						)
+					}
+					
 				}
 				if !got {
 					t.Fatalf(
