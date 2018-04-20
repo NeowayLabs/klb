@@ -22,12 +22,12 @@ image:
 	docker build . -t neowaylabs/klb:$(version)
 
 credentials: image guard-sh guard-subscription guard-service-principal guard-service-secret
-	docker run -ti --rm -v `pwd`:/credentials -w /credentials neowaylabs/klbdev:$(version) \
+	docker run -ti --rm -v `pwd`:/credentials -w /credentials neowaylabs/klb:$(version) \
 		/credentials/tools/azure/getcredentials.sh \
 		$(sh) "$(subscription)" "$(service-principal)" "$(service-secret)"
 
 createsp: image guard-subscription-id guard-service-principal guard-service-secret
-	docker run -ti --rm -v `pwd`:/createsp -w /createsp neowaylabs/klbdev:$(version) \
+	docker run -ti --rm -v `pwd`:/createsp -w /createsp neowaylabs/klb:$(version) \
 		/createsp/tools/azure/createsp.sh \
 		"$(subscription-id)" "$(service-principal)" "$(service-secret)"
 
