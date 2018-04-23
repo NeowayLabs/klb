@@ -20,7 +20,11 @@ fn azure_login() {
 	clientID       = $AZURE_CLIENT_ID
 	secretID       = $AZURE_CLIENT_SECRET
 	username       = $AZURE_SERVICE_PRINCIPAL
+	
+	azure_login_credentials($subscriptionID, $tenantID, $clientID, $secretID, $username)
+}
 
+fn azure_login_credentials(subscriptionID, tenantID, clientID, secretID, username) {
 	# azure cli 2.0
 	az account clear
 	az login --service-principal -u $username -p $secretID --tenant $tenantID --output table

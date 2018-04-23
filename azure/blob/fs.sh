@@ -17,8 +17,7 @@ import klb/azure/storage
 # on the azure container will be a file named "1".
 #
 # This was the moment when we started to realize that we had been screwed
-# by Azure (again). We never tested the download-batch command supposing that
-# it will behave equally bad (maintaining only the basename of files).
+# by Azure (again). The download-batch command has other quirks and stupidities too.
 #
 # AWS S3 is also flat, but the aws tools and API's provides a proper directory
 # illusion, you can copy directories pretty much the same way you work with
@@ -118,17 +117,41 @@ fn azure_blob_fs_download(fs, localpath, remotepath) {
 
 # Downloads a remote dir to a local dir.
 # It will not create the remote dir on the local dir, only its
-# contents (including other dirs, recursively).
+# contents (including other dirs inside the  remote dir, recursively).
 #
-# For example, downloading the remote dir /klb to the local dir /test
-# will copy all contents of /klb to /test, like /test/file1 and /test/dir1/file1
-# but it will not create a "klb" directory inside the local dir.
+# For example, lets say you have these files at azure blob storage:
+#
+# /foo/bar/file1
+# /foo/bar/file2
+# /foo/bar/goo/file1
+#
+# Calling azure_blob_fs_download_dir($fs, "/test", "/foo/bar") will create
+# these files on your filesystem:
+#
+# /test/file1
+# /test/file2
+# /test/goo/file1
 #
 # This is the behavior of Plan9 dircp (http://man.cat-v.org/plan_9/1/tar)
 # and it seems more intuitive than the cp -r behavior of creating only the
-# base dir of the source path at the target path if it does not exists
-# and to copy only the contents you need the hack of regex expansion:
+# base dir of the source path (this case the remote path)
+# at the target path if it does not exists
+# and to copy only the contents you need the hack of regex expansion like:
+#
 # cp -r /srcdir/* /targetdir.
+#
+# An curiosity is that the az tool actually introduces a third behavior with
+# download-batch which is to reproduce the entire directory path of the remote
+# path on the local path. The example above according to azure would result in:
+#
+# /test/foo/bar/file1
+# /test/foo/bar/file2
+# /test/foo/bar/goo/file1
+#
+# Which is the only approach who seems to have no upside AT ALL =D.
+# This fs layers does it best to shield you from this kind of nonsense.
+#
+# If localdir does not exists this function will attempt to create it for you.
 #
 # This function returns an error string if it fails and "" if it succeeds.
 fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
@@ -141,19 +164,45 @@ fn azure_blob_fs_download_dir(fs, localdir, remotedir) {
 	}
 
 	# TODO: use timeout, right now az cli does not provide timeout for download-batch
-	remotedir = $remotedir + "*"
+	pattern = $remotedir + "*"
 	container <= azure_blob_fs_container($fs)
+	
+	mkdir -p $localdir
+	tmplocal <= mktemp -d
+	
+	fn cleanup() {
+		rm -rf $tmplocal
+	}
+	
 	out, status <= (
 		az storage blob download-batch
-			--destination $localdir
+			--destination $tmplocal
 			--source $container
 			--account-name $account
 			--account-key $accountkey
-			--pattern $remotedir
+			--pattern $pattern
 	)
+	
 	if $status != "0" {
+		cleanup()
 		return format("error[%s] downloading dir[%s] to[%s]", $out, $remotedir, $localdir)
 	}
+	
+	# WHY GOD WHY ?
+	srcdir <= format("%s/%s", $tmplocal, $remotedir)
+	srcpaths <= ls $srcdir
+	srcpaths <= split($srcpaths, "\n")
+
+	for srcpath in $srcpaths {
+		srcpath <= format("%s/%s", $srcdir, $srcpath)
+		out, status <= cp -r $srcpath $localdir	
+		if $status != "0" {
+			cleanup()
+			return format("error copying: %s", $out)
+		}
+	}
+	
+	cleanup()	
 	return ""
 }
 
