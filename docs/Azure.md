@@ -13,8 +13,15 @@ to make your life easier.
 
 ### Creating a service principal
 
-Before anything, you must be logged before creating a service principal,
-so run:
+Before anything, you must be logged before creating a service principal.
+If you want to avoid installing all the depencies to work with azure on
+your host just run:
+
+```
+make shell
+```
+
+And inside the provided shell run:
 
 ```
 azure login
@@ -29,11 +36,11 @@ To know which subscriptions are available for your user run:
 azure account list
 ```
 
-You will need the **ID** of the subscription for the next step.
-When you have the subscription **ID** just run:
+You will need the **name** of the subscription for the next step.
+When you have the subscription **name** just run:
 
 ```sh
-./tools/azure/createsp.sh <subscription-id> <service-principal-name> <password>
+./tools/azure/createsp.sh <subscription-name> <service-principal-name> <password>
 ```
 
 If it executes with success you will have a valid service principal
