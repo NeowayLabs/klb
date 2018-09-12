@@ -2,9 +2,19 @@
 
 # LB functions
 
+fn azure_lb_create_standard(name, group, location) {
+	sku = "Standard"
+	_azure_lb_create($name, $group, $location, $sku)
+}
+
 fn azure_lb_create(name, group, location) {
+	sku = "Basic"
+	_azure_lb_create($name, $group, $location, $sku)
+}
+
+fn _azure_lb_create(name, group, location, sku) {
 	(
-		azure network lb create --name $name --resource-group $group --location $location
+		azure network lb create --name $name --resource-group $group --location $location --sku $sku
 	)
 }
 
