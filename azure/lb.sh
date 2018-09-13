@@ -2,19 +2,26 @@
 
 # LB functions
 
-fn azure_lb_create_standard(name, group, location) {
+fn azure_lb_create_standard(name, group, location, subnetid, private_ip, backend_pool_name, frontend_ip_name) {
 	sku = "Standard"
-	_azure_lb_create($name, $group, $location, $sku)
-}
-
-fn azure_lb_create(name, group, location) {
-	sku = "Basic"
-	_azure_lb_create($name, $group, $location, $sku)
-}
-
-fn _azure_lb_create(name, group, location, sku) {
+	frontend_ip_zone = "1"
 	(
-		azure network lb create --name $name --resource-group $group --location $location --sku $sku
+		az network lb create 
+				--name $name
+				--resource-group $group
+				--location $location
+				--sku $sku
+				--frontend-ip-zone $frontend_ip_zone
+				--subnet $subnetid
+				--private-ip-address $private_ip
+				--backend-pool-name $backend_pool_name
+				--frontend-ip-name $frontend_ip_name
+	)
+}
+
+fn azure_lb_create(name, group, location, sku) {
+	(
+		az network lb create --name $name --resource-group $group --location $location
 	)
 }
 
@@ -229,7 +236,7 @@ fn azure_lb_rule_set_sessionpersistence(instance, sessionpersistence) {
 }
 
 fn azure_lb_rule_create(instance) {
-	(azure network lb rule create $instance)
+	(az network lb rule create $instance)
 }
 
 fn azure_lb_rule_delete(name, group, lbname) {
@@ -294,7 +301,7 @@ fn azure_lb_probe_set_path(instance, path) {
 }
 
 fn azure_lb_probe_create(instance) {
-	azure network lb probe create $instance
+	az network lb probe create $instance
 }
 
 fn azure_lb_probe_delete(name, group, lbname) {
