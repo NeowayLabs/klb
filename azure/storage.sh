@@ -6,18 +6,16 @@
 # `location` is the azure region
 # `sku` is the SKU name
 fn azure_storage_account_create_storage(name, group, location, sku) {
-	output, status <= (az storage account create
-		--name $name
-		--resource-group $group
-		--location $location
-		--sku $sku
-		--kind "Storage"
-		>[2=1]
-	)
-	if $status != "0" {
-		return format("error[%s]", $output)
-	}
-	return ""
+    return _azure_storage_account_create_storage($name, $group, $location, $sku, "Storage")
+}
+
+# azure_store_account_create_storagev2 creates a new `storage account` of kind StorageV2.
+# `name` is the storage account name
+# `group` is the resource group name
+# `location` is the azure region
+# `sku` is the SKU name
+fn azure_storage_account_create_storagev2(name, group, location, sku) {
+	return _azure_storage_account_create_storage($name, $group, $location, $sku, "StorageV2")
 }
 
 # azure_storage_account_exists checks if a storage account exists.
@@ -447,4 +445,19 @@ fn _azure_storage_account_get_key_value(accountname, resgroup) {
 		$accountname,
 		$resgroup,
 	)
+}
+
+fn _azure_storage_account_create_storage(name, group, location, sku, kind) {
+	output, status <= (az storage account create
+		--name $name
+		--resource-group $group
+		--location $location
+		--sku $sku
+		--kind $kind
+		>[2=1]
+	)
+	if $status != "0" {
+		return format("error[%s]", $output)
+	}
+	return ""
 }
