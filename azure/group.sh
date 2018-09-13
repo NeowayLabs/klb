@@ -32,3 +32,17 @@ fn azure_group_exists(name) {
 
 	return "1"
 }
+
+# azure_group_location gets the location of a given resgroup.
+#
+# It returns two values, the location and an empty error string on success or
+# an empty string and an error string if something goes wrong.
+fn azure_group_location(name) {
+    out, status <= az group show --name $name >[2=1]
+    if $status != "0" {
+        return "", format("error loading resgroup[%s] location: %s", $name, $out)
+    }
+
+    location <= echo $out | jq -r ".location"
+    return $location, ""
+}
