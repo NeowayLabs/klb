@@ -139,21 +139,25 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
     }
 
     fn err_cleanup() {
+        log("error ocurred, deleting all temporary resources and resource group")
         cleanup()
         azure_group_delete($resgroup)
+        log("error cleanup succeeded")
     }
 
     if $err != "" {
         err_cleanup()
-        return format("error creating temporary storage account: %s", $err)
+        return (), format("error creating temporary storage account: %s", $err)
     }
 
     log("created temporary storage account with success, account key:[%s]", $tmp_acckey)
 
+    tmp_blobs = ()
+
     for snapshot_id_sas in $snapshots_ids_sas {
         if len($snapshot_id_sas) != "2" {
              err_cleanup()
-             return format("error: expected pair (snapshotid, snapshot_sas) but got [%s]", $snapshot_id_sas)
+             return (), format("error: expected pair (snapshotid, snapshot_sas) but got [%s]", $snapshot_id_sas)
         }
 
         snapshot_id = $snapshot_id_sas[0]
@@ -163,26 +167,55 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
         snapshot_name, err <= azure_snapshot_name($snapshot_id)
         if $err != "" {
             err_cleanup()
-            return format("error getting snapshot[%s] name: %s", $snapshot_id, $err)
+            return (), format("error getting snapshot[%s] name: %s", $snapshot_id, $err)
         }
-        tmpblob <= _azure_snapshot_add_suffix($snapshot_name)
+        tmpblob <= _azure_snapshot_add_suffix($snapshot_name + "-")
         log("generated unique blob name[%s] for snapshot named[%s] with id[%s]", $tmpblob, $snapshot_name, $snapshot_id)
 
         copyid, err <= azure_storage_blob_copy_start($tmp_storage_acc, $tmp_acckey, $tmp_container, $tmpblob, $snapshot_sas)
 
         if $err != "" {
             err_cleanup()
-            return format("error starting snapshot async copy to another location: %s", $err)
+            return (), format("error starting snapshot async copy to another location: %s", $err)
         }
 
         log("started async copy to another location with success, op id[%s]", $copyid)
+        # FIXME: CANT FIND THE URL ANYWHERE =/
+        tmpblob_url <= format("https://%s.blob.core.windows.net/%s/%s", $tmp_storage_acc, $tmp_container, $tmpblob)
+        log("generated temporary blob url: [%s]", $tmpblob_url)
+
+        tmp_blobs <= append($tmp_blobs, ($tmpblob $tmpblob_url $copyid $snapshot_name))
+    }
+
+    err <= _azure_snapshot_wait_blobs_copy($tmp_storage_acc, $tmp_acckey, $tmp_container, $tmp_blobs)
+    if $err != "" {
+        err_cleanup()
+        return (), format("error waiting for blobs to finish copying: %s", $err)
+    }
+
+    log("copied all snapshots to desired location, starting to create snapshots")
+
+    res = ()
+
+    for tmp_blob in $tmp_blobs {
+        blob_name = $tmp_blob[0]
+        blob_url  = $tmp_blob[1]
+        snapshot_name = $tmp_blob[3]
+ 
+        log("creating new snapshot[%s] at location[%s] from blob[%s] url[%s]", $snapshot_name, $location, $blob_name, $blob_url)
+
+        # TODO: we need to change snapshot creation function to not abort x_x
+        # TODO: use the same sku of the original snapshot
+        copied_snapshot_id <= azure_snapshot_create($snapshot_name, $resgroup, $blob_url, $tmp_sku)
+        log("copied snapshot id: [%s]", $copied_snapshot_id)
+        res <= append($res, $copied_snapshot_id)
     }
 
     log("copied snapshots with success, cleaning up temporary storage account")
     cleanup()
     log("done")
 
-    return (), "not implemented"
+    return $res, ""
 }
 
 fn azure_snapshot_name(snapshot_id) {
@@ -221,6 +254,51 @@ fn azure_snapshot_grant_access(snapshots_ids, sas_timeout_sec) {
     }
 
     return $res, ""
+}
+
+fn _azure_snapshot_wait_blobs_copy(account, acckey, container, blobs) {
+
+    # TODO: could avoid this loggers duplication with a logger creation function
+    fn log(msg, args...) {
+        print("_azure_snapshot_wait_blobs_copy:%s\n", format($msg, $args...))
+    }
+
+    # WHY: because all good algorithms starts with a while true :D
+    # FIXME: seriously though, it would be good to have a timeout here x_x
+    for {
+        completed = ()
+
+        for blob in $blobs {
+            blob_name = $blob[0]
+            copyid = $blob[2]
+
+            output, status <= az storage blob show --container-name $container --name $blob_name --account-key $acckey --account-name $account
+
+            if $status != "0" {
+                return format("error getting status of blob[%s] copy operation", $blob_name)
+            }
+
+            copystatus <= echo $output | jq -r ".properties.copy.status"
+            copyprogress <= echo $output | jq -r ".properties.copy.progress"
+            got_copyid <= echo $output | jq -r ".properties.copy.id"
+
+            if $got_copyid != $copyid {
+                return format("expected copyid[%s] but got[%s] copying blob[%s]", $copyid, $got_copyid, $blob_name)
+            }
+
+            log("blob[%s] progress[%s] status[%s]", $blob_name, $copyprogress, $copystatus)
+            if $copystatus == "success" {
+                completed <= append($completed, $blob_name)
+            }
+        }
+
+        if len($completed) == len($blobs) {
+            return ""
+        }
+
+        log("there are still copies going on, blobs completed: [%s]", $completed)
+    }
+
 }
 
 fn _azure_snapshot_create_storage_acc(acc, resgroup, location, sku, container) {
