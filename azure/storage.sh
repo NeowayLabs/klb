@@ -50,7 +50,7 @@ fn azure_storage_account_create_blob(name, group, location, sku, tier) {
 	# The access tier used for billing StandardBlob accounts.
 	# Cannot be set for StandardLRS, StandardGRS, StandardRAGRS, or
 	# PremiumLRS account types. It is required for StandardBlob
-        # accounts during creation.  Allowed values: Cool, Hot. 
+    # accounts during creation.  Allowed values: Cool, Hot. 
 
 	output, status <= (az storage account create 
 		--name $name
@@ -65,6 +65,20 @@ fn azure_storage_account_create_blob(name, group, location, sku, tier) {
 		return format("error[%s]", $output)
 	}
 	return ""
+}
+
+# azure_storage_blob_copy_start starts an async copy operation to a blob storage.
+# On success it returns the id of the copy operation and an empty error message.
+# Otherwise it will return an empty id and the error message.
+fn azure_storage_blob_copy_start(account, accountkey, container, blobname, source_uri) {
+    output, status <= az storage blob copy start --destination-blob $blobname --destination-container $container --account-name $account --account-key $accountkey --source-uri $source_uri
+
+    if $status != "0" {
+        return "", format("error starting copy operation: %s", $output)
+    }
+
+    operationid <= echo $output | jq -r ".id"
+    return $operationid, ""
 }
 
 # azure_storage_account_delete deletes a exit `storage account`.

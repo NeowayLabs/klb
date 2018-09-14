@@ -111,6 +111,13 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
         print("azure_snapshot_copy:%s\n", format($msg, $args...))
     }
 
+    log("getting access rights to the snapshots")
+    sas_timeout_sec = "3600"
+    snapshots_ids_sas, err <= azure_snapshot_grant_access($snapshots_ids, $sas_timeout_sec)
+    if $err != "" {
+        return (), format("error granting access to snapshots: %s", $err)
+    } 
+
     log("creating resgroup[%s]", $resgroup)
     azure_group_create($resgroup, $location)
     log("created resgroup with success")
@@ -120,7 +127,7 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
     tmp_sku = "Premium_LRS"
 
     log("creating temporary storage account")
-    err, storage_cleanup <= _azure_snapshot_create_storage_acc($tmp_storage_acc, $resgroup, $location, $tmp_sku, $tmp_container)
+    tmp_acckey, storage_cleanup, err <= _azure_snapshot_create_storage_acc($tmp_storage_acc, $resgroup, $location, $tmp_sku, $tmp_container)
 
     fn cleanup() {
         err <= $storage_cleanup()
@@ -141,11 +148,79 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
         return format("error creating temporary storage account: %s", $err)
     }
 
+    log("created temporary storage account with success, account key:[%s]", $tmp_acckey)
+
+    for snapshot_id_sas in $snapshots_ids_sas {
+        if len($snapshot_id_sas) != "2" {
+             err_cleanup()
+             return format("error: expected pair (snapshotid, snapshot_sas) but got [%s]", $snapshot_id_sas)
+        }
+
+        snapshot_id = $snapshot_id_sas[0]
+        snapshot_sas = $snapshot_id_sas[1]
+        log("starting copy of snapshot[%s] sas[%s]", $snapshot_id, $snapshot_sas)
+
+        snapshot_name, err <= azure_snapshot_name($snapshot_id)
+        if $err != "" {
+            err_cleanup()
+            return format("error getting snapshot[%s] name: %s", $snapshot_id, $err)
+        }
+        tmpblob <= _azure_snapshot_add_suffix($snapshot_name)
+        log("generated unique blob name[%s] for snapshot named[%s] with id[%s]", $tmpblob, $snapshot_name, $snapshot_id)
+
+        copyid, err <= azure_storage_blob_copy_start($tmp_storage_acc, $tmp_acckey, $tmp_container, $tmpblob, $snapshot_sas)
+
+        if $err != "" {
+            err_cleanup()
+            return format("error starting snapshot async copy to another location: %s", $err)
+        }
+
+        log("started async copy to another location with success, op id[%s]", $copyid)
+    }
+
     log("copied snapshots with success, cleaning up temporary storage account")
     cleanup()
     log("done")
 
     return (), "not implemented"
+}
+
+fn azure_snapshot_name(snapshot_id) {
+    out, status <= az snapshot show --ids $snapshot_id
+    if $status != "0" {
+        return "", format("error getting snapshot name: %s", $out)
+    }
+    name <= echo $out | jq -r ".name"
+    return $name, ""
+}
+
+# azure_snapshot_grant_access will get a list of snapshot ids and will return a
+# list of pairs of (snapshot_id snapshot_sas) where the sas is the read access
+# that has been granted to read the snapshot (useful for operations like a
+# blob storage copy).
+#
+# In success it return the list and an empty error string, otherwise it
+# returns an empty list and the error message.
+fn azure_snapshot_grant_access(snapshots_ids, sas_timeout_sec) {
+    
+    fn log(msg, args...) {
+        print("azure_snapshot_grant_access:%s\n", format($msg, $args...))
+    }
+
+    res = ()
+
+    for snapshot_id in $snapshots_ids {
+        sas, status <= az snapshot grant-access --ids $snapshot_id --duration-in-seconds $sas_timeout_sec --query "[accessSas]" -o tsv
+        
+        if $status != "0" {
+            return (), format("error granting read access to snapshot[%s]: %s", $snapshot_id, $sas)
+        }
+    
+        log("got read access granted with sas[%s] for snapshot id [%s]", $sas, $snapshot_id)
+        res <= append($res, ($snapshot_id $sas))
+    }
+
+    return $res, ""
 }
 
 fn _azure_snapshot_create_storage_acc(acc, resgroup, location, sku, container) {
@@ -159,7 +234,7 @@ fn _azure_snapshot_create_storage_acc(acc, resgroup, location, sku, container) {
     log("creating storage account: [%s] location: [%s]", $acc, $location)
     err <= azure_storage_account_create_storagev2($acc, $resgroup, $location, $sku)
     if $err != "" {
-        return format("error creating storage account: %s",$err), $nop
+        return "", $nop, format("error creating storage account: %s",$err)
     }
     log("created storage account with success")
 
@@ -170,16 +245,16 @@ fn _azure_snapshot_create_storage_acc(acc, resgroup, location, sku, container) {
     log("getting storage account key")
     keys, err <= azure_storage_account_get_keys($acc, $resgroup)
     if $err != "" {
-        return format("error getting storage account keys: %s", $err), $cleanup
+        return "", $cleanup, format("error getting storage account keys: %s", $err)
     }
 
     if len($keys) == "0" {
-        return format("error: unexpected empty keys when getting keys for account[%s]", $acc), $cleanup 
+        return "", $cleanup, format("error: unexpected empty keys when getting keys for account[%s]", $acc)
     }
     acc_triple = $keys[0]
 
     if len($acc_triple) != "3" {
-        return format("error: returned account key is not a triple, instead it is: [%s]", $acc_triple), $cleanup
+        return "", $cleanup, format("error: returned account key is not a triple, instead it is: [%s]", $acc_triple)
     }   
 
     acckey = $acc_triple[1]
@@ -190,11 +265,11 @@ fn _azure_snapshot_create_storage_acc(acc, resgroup, location, sku, container) {
     err <= azure_storage_container_create($container, $acc, $acckey)
 
     if $err != "" {
-        return format("error creating container on storage account[%s]: %s", $acc, $err), $cleanup
+        return "", $cleanup, format("error creating container on storage account[%s]: %s", $acc, $err)
     }
 
     log("successfully created storage account")
-    return "", $cleanup
+    return $acckey, $cleanup, ""
 }
 
 fn _azure_snapshot_add_suffix(name) {
