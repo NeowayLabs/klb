@@ -108,12 +108,7 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
     }
 
     fn log(msg, args...) {
-        if len($args) == "0" {
-            m = $msg
-        } else {
-            m <= format($msg, $args)
-        }
-        print("azure_snapshot_copy:%s\n", $m)
+        print("azure_snapshot_copy:%s\n", format($msg, $args...))
     }
 
     log("creating resgroup[%s]", $resgroup)
@@ -131,6 +126,8 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
         err <= $storage_cleanup()
         if $err != "" {
             log("WARNING: error[%s] cleaning up storage account, resources may be leaked !!!", $err)
+        } else {
+            log("removed temporary storage account with success")
         }
     }
 
@@ -156,12 +153,7 @@ fn _azure_snapshot_create_storage_acc(acc, resgroup, location, sku, container) {
     fn nop() { return "" }
 
     fn log(msg, args...) {
-        if len($args) == "0" {
-            m = $msg
-        } else {
-            m <= format($msg, $args)
-        }
-        print("_azure_snapshot_create_storage_acc:%s\n", $m)
+        print("_azure_snapshot_create_storage_acc:%s\n", format($msg, $args...))
     }
 
     log("creating storage account: [%s] location: [%s]", $acc, $location)
