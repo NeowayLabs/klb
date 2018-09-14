@@ -74,7 +74,7 @@ for resgroup in $filtered {
 		}
 	} else {
 		echo "deleting resgroup: "+$resgroup
-		azure_group_delete($resgroup)
+		azure_group_delete_async($resgroup)
 	}
 }
 
