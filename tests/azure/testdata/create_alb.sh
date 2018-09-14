@@ -33,12 +33,13 @@ if $err != "" {
 	exit("1")
 }
 
-azure_lb_create($lbname, $resgroup, $location)
-
-frontip <= azure_lb_frontend_ip_new($frontendip_name, $resgroup)
-frontip <= azure_lb_frontend_ip_set_lbname($frontip, $lbname)
-frontip <= azure_lb_frontend_ip_set_subnet_id($frontip, $subnetid)
-frontip <= azure_lb_frontend_ip_set_private_ip($frontip, $frontendip_private_ip)
-
-azure_lb_frontend_ip_create($frontip)
-azure_lb_addresspool_create($addrpoolname, $resgroup, $lbname)
+albtest <= azure_lb_new($lbname, $resgroup, $location)
+albtest <= azure_lb_set_subnetid($albtest, $subnetid)
+alb_sku = "Standard" 
+albtest <= azure_lb_set_sku($albtest, $alb_sku)
+frontend_ip_zone = "1"
+albtest <= azure_lb_set_frontend_ip_zone($albtest, $frontend_ip_zone)
+albtest <= azure_lb_set_private_ip_address($albtest, $frontendip_private_ip)
+albtest <= azure_lb_set_backend_pool_name($albtest, $addrpoolname)
+albtest <= azure_lb_set_frontend_ip_name($albtest, $frontendip_name)
+azure_lb_create($albtest)
