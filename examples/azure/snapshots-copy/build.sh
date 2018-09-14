@@ -52,9 +52,9 @@ snapshot2 <= addsuffix("snapshot2")
 snapshot1_id <= azure_snapshot_create($snapshot1, $group, $disk1, $sku)
 snapshot2_id <= azure_snapshot_create($snapshot2, $group, $disk2, $sku)
 
-log(format("creates snapshots: [%s] [%s]", $snapshot1_id, $snapshot2_id))
+log(format("created snapshots: [%s] [%s]", $snapshot1_id, $snapshot2_id))
 
-copied_snapshots_ids, err <= azure_snapshot_copy($other_group, ($snapshot1_id $snapshot2_id))
+copied_snapshots_ids, err <= azure_snapshot_copy($other_group, $other_location, ($snapshot1_id $snapshot2_id))
 
 if $err != "" {
     log(format("error[%s] copying snapshots between regions", $err))

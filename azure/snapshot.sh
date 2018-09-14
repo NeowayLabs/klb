@@ -69,3 +69,32 @@ fn azure_snapshot_list(resgroup) {
 
 	return $ids_names, ""
 }
+
+# azure_snapshot_copy will copy the given list of snapshots ids
+# to the resource group and location informed.
+#
+# This function is intended to be used to copy snapshots to a
+# different location from the original snapshots and to do so
+# it will do a lot of work that can take some time.
+#
+# At the time this is being written there is not support to
+# copying or generating snapshots from a disk to a location different
+# from the original disk/snapshot:
+#
+# - https://stackoverflow.com/questions/47759200/creating-a-managed-disk-from-snapshot-in-different-region-azure
+# - https://docs.microsoft.com/en-us/azure/virtual-machines/scripts/virtual-machines-linux-cli-sample-copy-snapshot-to-storage-account
+#
+# This function will do this job for you. On success it returns a list of
+# the created snapshots and an empty error. On failure it will return an empty
+# list and a string error with details.
+#
+# Auxiliary temporary storage accounts will be created to do the work,
+# we do our best to avoid leaking these resources in the case of
+# failures but azure is too awesome for us to guarantee that nothing
+# will ever be leaked, so in case of errors it may be necessary
+# to check if no resource has been leaked.
+#
+# All temporary resources starts with the name "klb-tmp-sn".
+fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
+    return (), "not implemented"
+}
