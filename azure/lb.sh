@@ -2,26 +2,51 @@
 
 # LB functions
 
-fn azure_lb_create_standard(name, group, location, subnetid, private_ip, backend_pool_name, frontend_ip_name) {
-	sku = "Standard"
-	frontend_ip_zone = "1"
-	(
-		az network lb create 
-				--name $name
-				--resource-group $group
-				--location $location
-				--sku $sku
-				--frontend-ip-zone $frontend_ip_zone
-				--subnet $subnetid
-				--private-ip-address $private_ip
-				--backend-pool-name $backend_pool_name
-				--frontend-ip-name $frontend_ip_name
-	)
+
+fn azure_lb_new(name, group, location){
+	instance = ("--name" $name "--resource-group" $group "--location" $location)
+	return $instance
 }
 
-fn azure_lb_create(name, group, location, sku) {
+fn azure_lb_set_subnetid(instance, subnetid) {
+	instance <= append($instance, "--subnet")
+	instance <= append($instance, $subnetid)
+	return $instance
+}
+
+fn azure_lb_set_sku(instance, sku) {
+	instance <= append($instance, "--sku")
+	instance <= append($instance, $sku)
+	return $instance
+}
+
+fn azure_lb_set_frontend_ip_zone(instance, frontend-ip-zone) {
+	instance <= append($instance, "--frontend-ip-zone")
+	instance <= append($instance, $frontend-ip-zone)
+	return $instance
+}
+
+fn azure_lb_set_private_ip_address(instance, private_ip_address) {
+	instance <= append($instance, "--private-ip-address")
+	instance <= append($instance, $private_ip_address)
+	return $instance
+}
+
+fn azure_lb_set_backend_pool_name(instance, backend_pool_name) {
+	instance <= append($instance, "--backend-pool-name")
+	instance <= append($instance, $backend_pool_name)
+	return $instance
+}
+
+fn azure_lb_set_frontend_ip_name(instance, frontend_ip_name) {
+	instance <= append($instance, "--frontend-ip-name")
+	instance <= append($instance, $frontend_ip_name)
+	return $instance
+}
+
+fn azure_lb_create(instance) {
 	(
-		az network lb create --name $name --resource-group $group --location $location
+		az network lb create $instance
 	)
 }
 
@@ -211,9 +236,9 @@ fn azure_lb_rule_set_frontendipname(instance, frontendipname) {
 	return $instance
 }
 
-fn azure_lb_rule_set_addresspoolname(instance, addresspoolname) {
-	instance <= append($instance, "--backend-address-pool-name")
-	instance <= append($instance, $addresspoolname)
+fn azure_lb_rule_set_backend_pool_name(instance, backend_pool_name) {
+	instance <= append($instance, "--backend-pool-name")
+	instance <= append($instance, $backend_pool_name)
 
 	return $instance
 }
