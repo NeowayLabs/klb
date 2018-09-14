@@ -40,20 +40,23 @@ azure_login()
 echo "creating resource groups"
 
 azure_group_create($group, $location)
-azure_group_create($other_group, $other_location)
 
-
+log("creating disk 1")
 disk1 <= new_disk($group, $location)
+
+log("creating disk 2")
 disk2 <= new_disk($group, $location)
 
 snapshot1 <= addsuffix("snapshot1")
 snapshot2 <= addsuffix("snapshot2")
 
+log("created disks, creating snapshots")
 snapshot1_id <= azure_snapshot_create($snapshot1, $group, $disk1, $sku)
 snapshot2_id <= azure_snapshot_create($snapshot2, $group, $disk2, $sku)
 
 log(format("created snapshots: [%s] [%s]", $snapshot1_id, $snapshot2_id))
 
+other_group <= addsuffix($group)
 copied_snapshots_ids, err <= azure_snapshot_copy($other_group, $other_location, ($snapshot1_id $snapshot2_id))
 
 if $err != "" {

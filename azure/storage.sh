@@ -67,11 +67,15 @@ fn azure_storage_account_create_blob(name, group, location, sku, tier) {
 	return ""
 }
 
-# azure_store_account_delete deletes a exit `storage account`.
+# azure_storage_account_delete deletes a exit `storage account`.
 # `name` is the storage account name
 # `group` is the resource group name
 fn azure_storage_account_delete(name, group) {
-	azure storage account delete --quiet --resource-group $group $name
+	out, status <= az storage account delete --yes -n $name -g $group
+    if $status != "0" {
+        return format("error deleting account [%s] group[%s]: %s", $name, $group, $out)
+    }
+    return ""
 }
 
 # azure_storage_account_get_keys gets all keys of the given storage account
