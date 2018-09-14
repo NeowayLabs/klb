@@ -526,7 +526,7 @@ fn azure_vm_start(vmname, resgroup) {
 #
 # <year>.<month>.<day>.<hour>
 #
-# Calling: azure_vm_backup_create("test", "testgroup", "staging", "eastus2", "Standard_LRS")
+# Calling: azure_vm_backup_create("test", "testgroup", "staging", "Standard_LRS")
 #
 # Would (timestamp may vary) create the resource group:
 #
@@ -557,10 +557,27 @@ fn azure_vm_start(vmname, resgroup) {
 # be 60 characters total (including the timestamp).
 # So avoid long names for VM's and namespaces.
 #
+# You can't set the location where the backup will be saved because
+# Azure does not allow snapshots to be created at a different
+# location than the disks:
+#
+# - https://stackoverflow.com/questions/47759200/creating-a-managed-disk-from-snapshot-in-different-region-azure
+# - https://docs.microsoft.com/en-us/azure/virtual-machines/scripts/virtual-machines-linux-cli-sample-copy-snapshot-to-storage-account
+#
+# So you are limited to create the backup first at the same location
+# and copying it later with the azure_vm_backup_copy function that
+# will do the strenuous job of copying the snapshots between different locations.
+#
 # On success it will return the name of the created resource group and
 # an empty string as error. On error it will return an empty string as resource
 # group and a non-empty error string with details on the failure.
-fn azure_vm_backup_create(vmname, resgroup, namespace, location, storage_sku) {
+fn azure_vm_backup_create(vmname, resgroup, namespace, storage_sku) {
+
+    location, err <= azure_group_location($resgroup)
+    if $err != "" {
+        return "", format("error[%s] getting location of resgroup[%s]", $err, $resgroup)
+    }
+
 	timestamp <= date "+%Y.%m.%d.%H%M"
 
 	# WHY: We need some chars for the lock names,
@@ -581,6 +598,7 @@ fn azure_vm_backup_create(vmname, resgroup, namespace, location, storage_sku) {
 	echo "vm.backup.create: getting VM disks IDs"
 	echo "vm.backup.create: vm name: "+$vmname
 	echo "vm.backup.create: resgroup: "+$resgroup
+    echo "vm.backup.create: location: "+$location
 
 	osdiskid, err <= azure_vm_get_osdisk_id($vmname, $resgroup)
 

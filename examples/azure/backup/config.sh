@@ -20,5 +20,4 @@ vm_disks_count  = "4"
 vm_disks_size   = "50"
 
 backup_prefix   = "klb-ex"
-backup_location = "westus"
 backup_vm_name  = "backup-vm"

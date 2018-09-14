@@ -278,7 +278,6 @@ func backupVM(
 			vmname,
 			f.ResGroupName,
 			namespace,
-			f.Location,
 			sku,
 			output,
 		)
