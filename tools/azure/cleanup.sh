@@ -66,17 +66,19 @@ leaked = ()
 for resgroup in $filtered {
 
 	out, status <= echo $resgroup | grep -- "-bkp-"
+	err = ""
+
 	if $status == "0" {
 		echo "seems like a backup, deleting it"
 		err <= azure_vm_backup_delete($resgroup)
-		if $err != "" {
-			echo "ERROR: deleting backup: " + $err
-			echo "ERROR: this backup will continue to leak resources"
-		}
-		leaked <= append($leaked, $resgroup)
 	} else {
 		echo "deleting resgroup: "+$resgroup
-		azure_group_delete_async($resgroup)
+		err <= azure_group_delete_async($resgroup)
+	}
+
+	if $err != "" {
+		echo "ERROR: deleting resgroup: " + $err
+		leaked <= append($leaked, $resgroup)
 	}
 }
 
