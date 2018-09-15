@@ -651,25 +651,28 @@ fn azure_vm_backup_create(vmname, resgroup, namespace, storage_sku) {
 }
 
 # azure_vm_backup_copy will attempt to create a copy of the given
-# @source_backup. The name of the resource group will be generated
+# @source_backup. The name of the @backup_copy resource group should be generated
 # using the given @source_backup as basis (so it is easy to trace
-# the origin of a copy) and it will be copied to the given @copy_location
-# and with the given @copy_sku
-fn azure_vm_backup_copy(source_backup, copy_location, copy_sku) {
+# the origin of a copy) so it will be easier to understand the origin of the backup.
+#
+# But you can use whatever name you want, the only restriction is that @backup_copy
+# MUST not exist (even an empty resource group will result in failure).
+#
+# On success it returns an empty error string, on error returns the error string with details.
+fn azure_vm_backup_copy(source_backup, backup_copy, copy_location, copy_sku) {
 
     fn log(msg, args...) {
         print("azure_vm_backup_copy:%s\n", format($msg, $args...))
     }
 
-    backup_copy <= format("%s-cp-%s", $source_backup, $copy_location)
     err <= _azure_vm_backup_check_name($backup_copy)
     if $err != "" {
-        return "", $err
+        return $err
     }
 
     snapshots_ids_names, err <= azure_snapshot_list($source_backup)
 	if $err != "" {
-		return "", format("error loading snapshots from backup[%s]: %s", $source_backup, $err)
+		return format("error loading snapshots from backup[%s]: %s", $source_backup, $err)
 	}
 
     snapshots = ()
@@ -680,7 +683,7 @@ fn azure_vm_backup_copy(source_backup, copy_location, copy_sku) {
     log("removing locks from source backup (required to copy, don't ask me why)")
     err <= _azure_vm_backup_delete_locks($source_backup)
 	if $err != "" {
-		return "", format("error removing lock from source backup: %s", $err)
+		return format("error removing lock from source backup: %s", $err)
 	}
 
 	log("loaded snapshots:[%s] and removed locks, starting copy", $snapshots)
@@ -691,14 +694,14 @@ fn azure_vm_backup_copy(source_backup, copy_location, copy_sku) {
     log("restored locks on original backup")
     
     if $err != "" {
-        return "", format("error copying snapshot to different location: %s", $err)
+        return format("error copying snapshot to different location: %s", $err)
     }
 
     log("copied backup with success, creating locks")
     _azure_vm_backup_create_locks($backup_copy)
     log("created locks, success")
 
-    return $backup_copy, ""
+    return ""
 }
 
 # azure_vm_backup_list returns the list of all backups
