@@ -69,8 +69,8 @@ for resgroup in $filtered {
 		echo "seems like a backup, deleting it"
 		err <= azure_vm_backup_delete($resgroup)
 		if $err != "" {
-			echo "error deleting backup: " + $err
-			exit ("1")
+			echo "ERROR: deleting backup: " + $err
+			echo "ERROR: this backup will continue to leak resources"
 		}
 	} else {
 		echo "deleting resgroup: "+$resgroup

@@ -764,9 +764,7 @@ fn azure_vm_backup_delete(backup_resgroup) {
 	}
 
 	echo "backup delete: locks removed, deleting resource group: "+$backup_resgroup
-	azure_group_delete($backup_resgroup)
-
-	return ""
+	return azure_group_delete_async($backup_resgroup)
 }
 
 # azure_vm_backup_exists returns an empty string on success
