@@ -126,7 +126,7 @@ log("created backup: "+$backup)
 log("now lets create a copy of the backup on another location")
 log(format("source location[%s] target location[%s]", $location, $backup_location))
 
-backkup_copy <= format("%s-%s", $backup, $backup_location)
+backup_copy <= format("%s-%s", $backup, $backup_location)
 err <= azure_vm_backup_copy($backup, $backup_copy, $backup_location, "Standard_LRS")
 if $err != "" {
 	echo $err
