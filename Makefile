@@ -53,8 +53,8 @@ install: guard-NASHPATH
 
 timeout?=90m
 logger?=file
-parallel=20 # Explore I/O parallelization
-cpu=10 # Force threads to be created
+parallel?=20 # Explore I/O parallelization
+cpu?=10 # Force threads to be created
 gotest=go test -v ./tests/azure -parallel $(parallel) -cpu $(cpu)
 gotestargs=-args -logger $(logger)
 
