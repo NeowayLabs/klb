@@ -1,3 +1,4 @@
+import klb/azure/storage
 # snapshot related functions
 
 # azure_snapshot_create creates a new snapshot from the given
