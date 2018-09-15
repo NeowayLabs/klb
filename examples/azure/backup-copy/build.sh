@@ -7,11 +7,9 @@ import klb/azure/subnet
 import klb/azure/vm
 import klb/azure/availset
 import klb/azure/storage
-import klb/azure/disk
 import klb/azure/vnet
 import klb/azure/nsg
 import klb/azure/route
-import klb/azure/snapshot
 
 import config.sh
 
@@ -28,7 +26,7 @@ fn addsuffix(name) {
 	return $name+"-"+$s
 }
 
-fn create_subnet(name, cidr) {
+fn create_subnet(group, name, cidr, location) {
 	azure_nsg_create($name, $group, $location)
 	azure_subnet_create($name, $group, $vnet, $cidr, $name)
 	azure_route_table_create($name, $group, $location)
@@ -40,7 +38,7 @@ fn create_subnet(name, cidr) {
 	azure_route_table_route_create($route)
 }
 
-fn new_vm_base_vm(name, subnet) {
+fn new_vm_base_vm(name, group, subnet, location) {
 	# create nic
 	nic <= azure_nic_new($name, $group, $location)
 	nic <= azure_nic_set_vnet($nic, $vnet)
@@ -64,7 +62,7 @@ fn new_vm_base_vm(name, subnet) {
 
 fn create_vm(name, subnet) {
 	# create ssh key
-	vm   <= new_vm_base_vm($name, $subnet)
+	vm   <= new_vm_base_vm($name, $group, $subnet, $location)
 	vm   <= azure_vm_set_osdiskname($vm, $name)
 	vm   <= azure_vm_set_imageurn($vm, $vm_image_urn)
 	# create ssh key
@@ -88,14 +86,17 @@ azure_login()
 echo "creating new resource group"
 
 azure_group_create($group, $location)
+azure_group_create($backup_group, $backup_location)
 
 echo "creating VNET"
 
 azure_vnet_create($vnet, $group, $location, $vnet_cidr, $vnet_dns_servers)
+azure_vnet_create($vnet, $backup_group, $backup_location, $vnet_cidr, $vnet_dns_servers)
 
 echo "creating subnet"
 
-create_subnet($subnet_name, $subnet_cidr)
+create_subnet($group, $subnet_name, $subnet_cidr, $location)
+create_subnet($backup_group, $subnet_name, $subnet_cidr, $backup_location)
 
 echo "creating virtual machine"
 
@@ -122,34 +123,24 @@ if $err != "" {
 }
 
 log("created backup: "+$backup)
-log("creating second backup")
+log("now lets create a copy of the backup on another location")
+log(format("source location[%s] target location[%s]", $location, $backup_location))
 
-azure_vm_stop($vm_name, $group)
-otherbackup, err  <= azure_vm_backup_create($vm_name, $group, $backup_prefix, "Premium_LRS")
+backup_copy <= format("%s-%s", $backup, $backup_location)
+err <= azure_vm_backup_copy($backup, $backup_copy, $backup_location, "Standard_LRS")
 if $err != "" {
 	echo $err
 	exit("1")
 }
 
-log("created second backup: "+$otherbackup)
-log("starting VM")
-
-azure_vm_start($vm_name, $group)
-
-backups <= azure_vm_backup_list($vm_name, $backup_prefix)
-
-echo "listing all created backups"
-echo
-
-for bkup in $backups {
-	echo "backup: " + $bkup
-}
+log(format("created backup copy: [%s]", $backup_copy))
 
 echo
 echo "creating backup VM"
-backupvm <= new_vm_base_vm($backup_vm_name, $subnet_name)
+backupvm <= new_vm_base_vm($backup_vm_name, $backup_group, $subnet_name, $backup_location)
 backupvm <= azure_vm_set_ostype($backupvm, "linux")
+
 echo "restoring backup"
-azure_vm_backup_recover($backupvm, "Premium_LRS", "None", $backups[0])
+azure_vm_backup_recover($backupvm, "Premium_LRS", "None", $backup_copy)
 echo "finished with success"
 

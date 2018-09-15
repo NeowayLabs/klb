@@ -61,21 +61,34 @@ if $res != "Y" {
 }
 
 echo "deleting resource groups, may the odds be at your favor"
+leaked = ()
 
 for resgroup in $filtered {
 
 	out, status <= echo $resgroup | grep -- "-bkp-"
+	err = ""
+
 	if $status == "0" {
 		echo "seems like a backup, deleting it"
 		err <= azure_vm_backup_delete($resgroup)
-		if $err != "" {
-			echo "error deleting backup: " + $err
-			exit ("1")
-		}
 	} else {
 		echo "deleting resgroup: "+$resgroup
-		azure_group_delete($resgroup)
+		err <= azure_group_delete_async($resgroup)
+	}
+
+	if $err != "" {
+		echo "ERROR: deleting resgroup: " + $err
+		leaked <= append($leaked, $resgroup)
 	}
 }
 
-echo "done"
+echo
+echo "finished"
+echo
+
+if len($leaked) != "0" {
+    echo "the following resource groups could not be deleted"
+    for l in $leaked {
+        echo $l
+    }
+}

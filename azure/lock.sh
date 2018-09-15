@@ -47,7 +47,8 @@ fn _azure_lock_delete(lockname, resgroup, trycount) {
 
 	out, status <= az lock list | grep $lockname
 	if $status == "0" {
-		log(format("lock[%s] still exists, trying again", $lockname))
+		log(format("lock[%s] still exists, output: %s", $lockname, $out))
+		log(format("trying again"))
 		pollingtimesec = "1"
 		trycount <= expr $trycount "+" "1"
 		sleep $pollingtimesec

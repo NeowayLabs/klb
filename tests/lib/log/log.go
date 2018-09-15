@@ -3,6 +3,7 @@ package log
 import (
 	"flag"
 	"log"
+    "fmt"
 	"os"
 	"strings"
 	"testing"
@@ -65,6 +66,7 @@ func init() {
 	flag.StringVar(&logger, "logger", "file", "test logger, valid values: 'stdout' 'file'")
 	flag.Parse()
 
+    fmt.Printf("klb integration tests logger: [%s]\n", logger)
 	logbuilders = map[string]loggerBuilder{
 		"file":   newFile,
 		"stdout": newStdout,
