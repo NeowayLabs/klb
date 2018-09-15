@@ -62,7 +62,7 @@ test: image
 	./hack/run.sh nash ./azure/vm_test.sh
 
 test-integration: image
-	./hack/run.sh $(gotest) -timeout $(timeout) -run=$(run) ./... $(gotestargs)
+	./hack/run.sh $(gotest) -timeout $(timeout) -run=$(run) $(gotestargs)
 
 test-examples: image
 	./hack/run.sh $(gotest) -timeout $(timeout) -tags=examples -run=TestExamples $(gotestargs)
