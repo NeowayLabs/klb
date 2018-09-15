@@ -1,3 +1,4 @@
+import klb/azure/group
 import klb/azure/storage
 # snapshot related functions
 
