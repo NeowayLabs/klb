@@ -579,18 +579,13 @@ fn azure_vm_backup_create(vmname, resgroup, namespace, storage_sku) {
     }
 
 	timestamp <= date "+%Y.%m.%d.%H%M"
-
-	# WHY: We need some chars for the lock names,
-	# based on the resgroup name.
-	max_resgroup_size = "60"
 	bkp_resgroup      = $namespace+"-bkp-"+$timestamp+"-"+$vmname
 
-	bkp_resgroup_len  <= len($bkp_resgroup)
-	_, err            <= test $max_resgroup_size -gt $bkp_resgroup_len
+    err <= _azure_vm_backup_check_name($bkp_resgroup)
+    if $err != "" {
+        return "", $err
+    }
 
-	if $err != "0" {
-		return "", format("error: resgroup name %q is too bigger than %q", $bkp_resgroup, $max_resgroup_size)
-	}
 	if azure_group_exists($bkp_resgroup) == "0" {
 		return "", format("error: resource group already exists: %q", $bkp_resgroup)
 	}
@@ -621,7 +616,11 @@ fn azure_vm_backup_create(vmname, resgroup, namespace, storage_sku) {
 
 	echo "vm.backup.create: creating OS disk snapshot: "+$snapshot_name+" from disk id: "+$osdiskid
 
-	snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid, $storage_sku)
+	snapshotid, err <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $osdiskid, $storage_sku)
+    if $err != "" {
+        azure_group_delete($bkp_resgroup)
+        return "", format("error creating osdisk snapshot: %s", $err)
+    }
 
 	echo "vm.backup.create: created snapshot id: "+$snapshotid
 
@@ -635,24 +634,71 @@ fn azure_vm_backup_create(vmname, resgroup, namespace, storage_sku) {
 
 		echo "vm.backup.create: creating datadisk snapshot: "+$snapshot_name+" from disk id: "+$id
 
-		snapshotid <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id, $storage_sku)
+		snapshotid, err <= azure_snapshot_create($snapshot_name, $bkp_resgroup, $id, $storage_sku)
+        if $err != "" {
+            azure_group_delete($bkp_resgroup)
+            return "", format("error creating disk snapshot: %s", $err)
+        }
 
 		echo "vm.backup.create: created snapshot id: "+$snapshotid
 	}
 
-	echo "vm.backup.create: backup finished with success, creating lock"
-
-	nodelete <= _azure_vm_backup_get_nodelete_lock($bkp_resgroup)
-
-	azure_lock_create($nodelete, "CanNotDelete", $bkp_resgroup)
-
-	readonly <= _azure_vm_backup_get_readonly_lock($bkp_resgroup)
-
-	azure_lock_create($readonly, "ReadOnly", $bkp_resgroup)
-
+	echo "vm.backup.create: backup finished with success, creating locks"
+    _azure_vm_backup_create_locks($bkp_resgroup)
 	echo "vm.backup.create: created lock, finished with success"
 
 	return $bkp_resgroup, ""
+}
+
+# azure_vm_backup_copy will attempt to create a copy of the given
+# @source_backup. The name of the resource group will be generated
+# using the given @source_backup as basis (so it is easy to trace
+# the origin of a copy) and it will be copied to the given @copy_location
+# and with the given @copy_sku
+fn azure_vm_backup_copy(source_backup, copy_location, copy_sku) {
+
+    fn log(msg, args...) {
+        print("azure_vm_backup_copy:%s\n", format($msg, $args...))
+    }
+
+    backup_copy <= format("%s-cp-%s", $source_backup, $copy_location)
+    err <= _azure_vm_backup_check_name($backup_copy)
+    if $err != "" {
+        return "", $err
+    }
+
+    snapshots_ids_names, err <= azure_snapshot_list($source_backup)
+	if $err != "" {
+		return "", format("error loading snapshots from backup[%s]: %s", $source_backup, $err)
+	}
+
+    snapshots = ()
+    for snapshot_id_name in $snapshots_ids_names {
+        snapshots <= append($snapshots, $snapshot_id_name[0])
+    }
+
+    log("removing locks from source backup (required to copy, don't ask me why)")
+    err <= _azure_vm_backup_delete_locks($source_backup)
+	if $err != "" {
+		return "", format("error removing lock from source backup: %s", $err)
+	}
+
+	log("loaded snapshots:[%s] and removed locks, starting copy", $snapshots)
+    _, err <= azure_snapshot_copy($backup_copy, $copy_location, $copy_sku, $snapshots)
+
+    log("restoring locks on original backup")
+    _azure_vm_backup_create_locks($source_backup)
+    log("restored locks on original backup")
+    
+    if $err != "" {
+        return "", format("error copying snapshot to different location: %s", $err)
+    }
+
+    log("copied backup with success, creating locks")
+    _azure_vm_backup_create_locks($backup_copy)
+    log("created locks, success")
+
+    return $backup_copy, ""
 }
 
 # azure_vm_backup_list returns the list of all backups
@@ -705,28 +751,16 @@ fn azure_vm_backup_list_all(namespace) {
 # azure_vm_backup_delete deletes a backup. This function
 # will also remove the locks that prevents backups deletion.
 fn azure_vm_backup_delete(backup_resgroup) {
-	dellock  <= _azure_vm_backup_get_nodelete_lock($backup_resgroup)
-	readlock <= _azure_vm_backup_get_readonly_lock($backup_resgroup)
 
 	echo "backup delete: resource group: "+$backup_resgroup
-	echo "backup delete: removing delete lock: "+$dellock
+	echo "backup delete: removing locks"
 
-	err <= azure_lock_delete($dellock, $backup_resgroup)
-
+	err <= _azure_vm_backup_delete_locks($backup_resgroup)
 	if $err != "" {
-		return "azure_vm_backup_delete: error deleting delete lock: "+$err
-	}
-
-	echo "backup delete: removing read lock: "+$readlock
-
-	err <= azure_lock_delete($readlock, $backup_resgroup)
-
-	if $err != "" {
-		return "azure_vm_backup_delete: error deleting read lock: "+$err
+		return $err
 	}
 
 	echo "backup delete: locks removed, deleting resource group: "+$backup_resgroup
-
 	azure_group_delete($backup_resgroup)
 
 	return ""
@@ -1029,4 +1063,44 @@ fn _azure_vm_backup_check_invalid_params(instance, params...) {
         }
 
         return $err
+}
+
+fn _azure_vm_backup_check_name(bkp_resgroup) {
+    # WHY: We need some chars for the lock names,
+	# based on the resgroup name.
+	max_resgroup_size = "60"
+
+	bkp_resgroup_len  <= len($bkp_resgroup)
+	_, err            <= test $max_resgroup_size -gt $bkp_resgroup_len
+
+	if $err != "0" {
+		return format("error: resgroup name %q is too bigger than %q", $bkp_resgroup, $max_resgroup_size)
+	}
+    return ""
+}
+
+fn _azure_vm_backup_create_locks(bkp_resgroup) {
+   
+	nodelete <= _azure_vm_backup_get_nodelete_lock($bkp_resgroup)
+	azure_lock_create($nodelete, "CanNotDelete", $bkp_resgroup)
+
+	readonly <= _azure_vm_backup_get_readonly_lock($bkp_resgroup)
+	azure_lock_create($readonly, "ReadOnly", $bkp_resgroup)
+}
+
+fn _azure_vm_backup_delete_locks(backup_resgroup) {
+    dellock  <= _azure_vm_backup_get_nodelete_lock($backup_resgroup)
+	readlock <= _azure_vm_backup_get_readonly_lock($backup_resgroup)
+
+	err <= azure_lock_delete($dellock, $backup_resgroup)
+	if $err != "" {
+		return "error deleting delete lock: "+$err
+	}
+
+	err <= azure_lock_delete($readlock, $backup_resgroup)
+	if $err != "" {
+		return "error deleting read lock: "+$err
+	}
+
+    return ""
 }

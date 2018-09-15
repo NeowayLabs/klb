@@ -10,16 +10,20 @@
 # On success, returns the ID of the created snapshot.
 # On failure it will explode in your face.
 fn azure_snapshot_create(name, resgroup, srcid, sku) {
-	res <= (
+	out, status <= (
 		az snapshot create
 				-g $resgroup
 				-n $name
 				--sku $sku
-				--source $srcid |
-		jq -r ".id"
+				--source $srcid
 	)
 
-	return $res
+    if $status != "0" {
+        return "", format("error creating snapshot: %s", $out)
+    }
+
+    res <= echo $out | jq -r ".id"
+	return $res, ""
 }
 
 # azure_snapshot_list lists all available snapshots on
@@ -101,7 +105,7 @@ fn azure_snapshot_list(resgroup) {
 # to check if no resource has been leaked.
 #
 # The temporary storage account starts with the name "klbtmpsn".
-fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
+fn azure_snapshot_copy(resgroup, location, sku, snapshots_ids) {
 
     if azure_group_exists($resgroup) == "0" {
         return (), format("resgroup[%s] already exists", $resgroup)
@@ -124,10 +128,9 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
 
     tmp_storage_acc <= _azure_snapshot_add_suffix("klbtmpsn")
     tmp_container = "klb-tmp-snapshot-copy"
-    tmp_sku = "Premium_LRS"
 
     log("creating temporary storage account")
-    tmp_acckey, storage_cleanup, err <= _azure_snapshot_create_storage_acc($tmp_storage_acc, $resgroup, $location, $tmp_sku, $tmp_container)
+    tmp_acckey, storage_cleanup, err <= _azure_snapshot_create_storage_acc($tmp_storage_acc, $resgroup, $location, $sku, $tmp_container)
 
     fn cleanup() {
         err <= $storage_cleanup()
@@ -204,9 +207,11 @@ fn azure_snapshot_copy(resgroup, location, snapshots_ids) {
  
         log("creating new snapshot[%s] at location[%s] from blob[%s] url[%s]", $snapshot_name, $location, $blob_name, $blob_url)
 
-        # TODO: we need to change snapshot creation function to not abort x_x
-        # TODO: use the same sku of the original snapshot
-        copied_snapshot_id <= azure_snapshot_create($snapshot_name, $resgroup, $blob_url, $tmp_sku)
+        copied_snapshot_id, err <= azure_snapshot_create($snapshot_name, $resgroup, $blob_url, $sku)
+        if $err != "" {
+            err_cleanup()
+            return "", format("error copying snapshot: %s", $err)
+        }
         log("copied snapshot id: [%s]", $copied_snapshot_id)
         res <= append($res, $copied_snapshot_id)
     }
