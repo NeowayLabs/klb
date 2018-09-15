@@ -1,3 +1,8 @@
+# Release 0.12.2
+
+This release fixes a bug where dependencies where missing
+on the snapshot package.
+
 # Release 0.12.1
 
 This release just increases the timeout of the read
