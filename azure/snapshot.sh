@@ -116,7 +116,8 @@ fn azure_snapshot_copy(resgroup, location, sku, snapshots_ids) {
     }
 
     log("getting access rights to the snapshots")
-    sas_timeout_sec = "3600"
+    # Supposing it wont take more than a day to copy snapshots
+    sas_timeout_sec = "86400"
     snapshots_ids_sas, err <= azure_snapshot_grant_access($snapshots_ids, $sas_timeout_sec)
     if $err != "" {
         return (), format("error granting access to snapshots: %s", $err)

@@ -1,3 +1,9 @@
+# Release 0.12.1
+
+This release just increases the timeout of the read
+grant access when copying snapshots to guarantee we won't
+have problems with copying big snapshots.
+
 # Release 0.12.0
 
 This release breaks compatibility of the vm package.
