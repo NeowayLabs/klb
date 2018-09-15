@@ -61,6 +61,7 @@ if $res != "Y" {
 }
 
 echo "deleting resource groups, may the odds be at your favor"
+leaked = ()
 
 for resgroup in $filtered {
 
@@ -72,10 +73,20 @@ for resgroup in $filtered {
 			echo "ERROR: deleting backup: " + $err
 			echo "ERROR: this backup will continue to leak resources"
 		}
+		leaked <= append($leaked, $resgroup)
 	} else {
 		echo "deleting resgroup: "+$resgroup
 		azure_group_delete_async($resgroup)
 	}
 }
 
-echo "done"
+echo
+echo "finished"
+echo
+
+if len($leaked) != "0" {
+    echo "the following resource groups could not be deleted"
+    for l in $leaked {
+        echo $l
+    }
+}
