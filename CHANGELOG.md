@@ -1,4 +1,4 @@
-# Release 0.11.0
+# Release 0.12.0
 
 This release breaks compatibility of the vm package.
 
