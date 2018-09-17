@@ -8,7 +8,7 @@ rulename        = $ARGS[2]
 lbname          = $ARGS[3]
 probename       = $ARGS[4]
 frontendipname  = $ARGS[5]
-addresspoolname = $ARGS[6]
+backendpoolname = $ARGS[6]
 protocol        = $ARGS[7]
 frontendport    = $ARGS[8]
 backendport     = $ARGS[9]
@@ -22,6 +22,6 @@ rule <= azure_lb_rule_set_frontendipname($rule, $frontendipname)
 rule <= azure_lb_rule_set_frontendport($rule, $frontendport)
 rule <= azure_lb_rule_set_backendport($rule, $backendport)
 rule <= azure_lb_rule_set_protocol($rule, $protocol)
-rule <= azure_lb_rule_set_addresspoolname($rule, $addresspoolname)
+rule <= azure_lb_rule_set_backend_pool_name($rule, $backendpoolname)
 
 azure_lb_rule_create($rule)
