@@ -20,9 +20,9 @@ fn azure_lb_set_sku(instance, sku) {
 	return $instance
 }
 
-fn azure_lb_set_frontend_ip_zone(instance, frontend-ip-zone) {
+fn azure_lb_set_frontend_ip_zone(instance, frontend_ip_zone) {
 	instance <= append($instance, "--frontend-ip-zone")
-	instance <= append($instance, $frontend-ip-zone)
+	instance <= append($instance, $frontend_ip_zone)
 	return $instance
 }
 
