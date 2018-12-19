@@ -1,7 +1,7 @@
 #!/usr/bin/env nash
 
 ## Resource Group Settings
-group    = "klb-examples-backup"
+group    = "klb-examples-backup-copy"
 location = "eastus2"
 
 ## Vnet Settings
@@ -16,8 +16,10 @@ vm_name         = "vm"
 vm_size         = "Standard_DS15_v2"
 vm_username     = "core"
 vm_image_urn    = "CoreOS:CoreOS:Stable:1298.6.0"
-vm_disks_count  = "4"
+vm_disks_count  = "2"
 vm_disks_size   = "50"
 
-backup_prefix   = "klb-ex"
+backup_prefix   = "klb-excp"
 backup_vm_name  = "backup-vm"
+backup_location = "westus"
+backup_group    = $group + "-" + $backup_location

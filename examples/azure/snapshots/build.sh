@@ -120,7 +120,7 @@ for id in $ids {
 
 	log("creating snapshot: "+$snapshot_name+" from id: "+$id)
 
-	snapshotid <= azure_snapshot_create($snapshot_name, $snapshots_group, $id, $snapshots_sku)
+	snapshotid, _ <= azure_snapshot_create($snapshot_name, $snapshots_group, $id, $snapshots_sku)
 
 	log("created snapshot id: "+$snapshotid)
 

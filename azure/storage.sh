@@ -6,18 +6,16 @@
 # `location` is the azure region
 # `sku` is the SKU name
 fn azure_storage_account_create_storage(name, group, location, sku) {
-	output, status <= (az storage account create
-		--name $name
-		--resource-group $group
-		--location $location
-		--sku $sku
-		--kind "Storage"
-		>[2=1]
-	)
-	if $status != "0" {
-		return format("error[%s]", $output)
-	}
-	return ""
+    return _azure_storage_account_create_storage($name, $group, $location, $sku, "Storage")
+}
+
+# azure_store_account_create_storagev2 creates a new `storage account` of kind StorageV2.
+# `name` is the storage account name
+# `group` is the resource group name
+# `location` is the azure region
+# `sku` is the SKU name
+fn azure_storage_account_create_storagev2(name, group, location, sku) {
+	return _azure_storage_account_create_storage($name, $group, $location, $sku, "StorageV2")
 }
 
 # azure_storage_account_exists checks if a storage account exists.
@@ -52,7 +50,7 @@ fn azure_storage_account_create_blob(name, group, location, sku, tier) {
 	# The access tier used for billing StandardBlob accounts.
 	# Cannot be set for StandardLRS, StandardGRS, StandardRAGRS, or
 	# PremiumLRS account types. It is required for StandardBlob
-        # accounts during creation.  Allowed values: Cool, Hot. 
+    # accounts during creation.  Allowed values: Cool, Hot. 
 
 	output, status <= (az storage account create 
 		--name $name
@@ -69,11 +67,29 @@ fn azure_storage_account_create_blob(name, group, location, sku, tier) {
 	return ""
 }
 
-# azure_store_account_delete deletes a exit `storage account`.
+# azure_storage_blob_copy_start starts an async copy operation to a blob storage.
+# On success it returns the id of the copy operation and an empty error message.
+# Otherwise it will return an empty id and the error message.
+fn azure_storage_blob_copy_start(account, accountkey, container, blobname, source_uri) {
+    output, status <= az storage blob copy start --destination-blob $blobname --destination-container $container --account-name $account --account-key $accountkey --source-uri $source_uri
+
+    if $status != "0" {
+        return "", format("error starting copy operation: %s", $output)
+    }
+
+    operationid <= echo $output | jq -r ".id"
+    return $operationid, ""
+}
+
+# azure_storage_account_delete deletes a exit `storage account`.
 # `name` is the storage account name
 # `group` is the resource group name
 fn azure_storage_account_delete(name, group) {
-	azure storage account delete --quiet --resource-group $group $name
+	out, status <= az storage account delete --yes -n $name -g $group
+    if $status != "0" {
+        return format("error deleting account [%s] group[%s]: %s", $name, $group, $out)
+    }
+    return ""
 }
 
 # azure_storage_account_get_keys gets all keys of the given storage account
@@ -447,4 +463,19 @@ fn _azure_storage_account_get_key_value(accountname, resgroup) {
 		$accountname,
 		$resgroup,
 	)
+}
+
+fn _azure_storage_account_create_storage(name, group, location, sku, kind) {
+	output, status <= (az storage account create
+		--name $name
+		--resource-group $group
+		--location $location
+		--sku $sku
+		--kind $kind
+		>[2=1]
+	)
+	if $status != "0" {
+		return format("error[%s]", $output)
+	}
+	return ""
 }

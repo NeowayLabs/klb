@@ -25,7 +25,11 @@ for id in $ids {
 
 	echo "creating snapshot: "+$snapshot_name+" from id: "+$id
 
-	snapshotid <= azure_snapshot_create($snapshot_name, $resgroup, $id, $sku)
+	snapshotid, err <= azure_snapshot_create($snapshot_name, $resgroup, $id, $sku)
+    if $err != "" {
+        echo "error creating snapshot: " + $err
+        exit("1")
+    }
 
 	echo "created snapshot id: "+$snapshotid
 

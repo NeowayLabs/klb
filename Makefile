@@ -51,10 +51,10 @@ install: guard-NASHPATH
 	@cp -pr ./tools/azure/getcredentials.sh $(bindir)/azure-credentials.sh
 	@cp -pr ./tools/azure/createsp.sh $(bindir)/createsp.sh
 
-timeout=120m
-logger=file
-parallel=20 #Explore I/O parallelization
-cpu=10 # Force threads to be created
+timeout?=90m
+logger?=file
+parallel?=10 # Explore I/O parallelization
+cpu?=5       # Force threads to be created
 gotest=go test -v ./tests/azure -parallel $(parallel) -cpu $(cpu)
 gotestargs=-args -logger $(logger)
 
@@ -62,7 +62,7 @@ test: image
 	./hack/run.sh nash ./azure/vm_test.sh
 
 test-integration: image
-	./hack/run.sh $(gotest) -timeout $(timeout) -run=$(run) ./... $(gotestargs)
+	./hack/run.sh $(gotest) -timeout $(timeout) -run=$(run) $(gotestargs)
 
 test-examples: image
 	./hack/run.sh $(gotest) -timeout $(timeout) -tags=examples -run=TestExamples $(gotestargs)

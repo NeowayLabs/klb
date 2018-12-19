@@ -1,3 +1,35 @@
+# Release 0.12.2
+
+This release fixes a bug where dependencies where missing
+on the snapshot package.
+
+# Release 0.12.1
+
+This release just increases the timeout of the read
+grant access when copying snapshots to guarantee we won't
+have problems with copying big snapshots.
+
+# Release 0.12.0
+
+This release breaks compatibility of the vm package.
+
+The functions that have changed are:
+
+* azure_vm_backup_create
+* azure_snapshot_create
+
+To be more compatible with azure behavior of not allowing snapshots to
+be on a different location than the source disks used to generate them.
+
+We also added new functionality to enable backups to be copied through
+different locations, check the functions:
+
+* azure_vm_backup_copy
+* azure_snapshot_copy
+
+There are examples provided on the project for both functionalities.
+
+
 # Release 0.10.0
 
 This release breaks compatibility of the storage package to

@@ -6,4 +6,5 @@ before_script:
   - travis_wait 130 make image
 
 script:
+  - make image
   - travis_wait 130 make test-integration logger=stdout
