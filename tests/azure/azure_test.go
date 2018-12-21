@@ -3,6 +3,6 @@ package azure_test
 import "time"
 
 const (
-	location = "eastus"
+	location = "eastus2"
 	timeout  = 30 * time.Minute
 )
