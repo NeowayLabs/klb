@@ -85,19 +85,20 @@ if $err != "" {
         exit("1")
 }
 
-azure_lb_create($lb_name, $lb_group, $location)
-
-frontip <= azure_lb_frontend_ip_new($frontendip_name, $lb_group)
-frontip <= azure_lb_frontend_ip_set_lbname($frontip, $lb_name)
-frontip <= azure_lb_frontend_ip_set_subnet_id($frontip, $subnetid)
-frontip <= azure_lb_frontend_ip_set_private_ip($frontip, $frontendip_private_ip)
-
-azure_lb_frontend_ip_create($frontip)
-azure_lb_addresspool_create($lb_address_pool_name, $lb_group, $lb_name)
+alb <= azure_lb_new($lb_name, $lb_group, $location)
+alb <= azure_lb_set_subnetid($alb, $subnetid)
+alb_sku = "Standard" 
+alb <= azure_lb_set_sku($alb, $alb_sku)
+frontend_ip_zone_avail = "1"
+alb <= azure_lb_set_frontend_ip_zone($alb, $frontend_ip_zone_avail)
+alb <= azure_lb_set_private_ip_address($alb, $frontendip_private_ip)
+alb <= azure_lb_set_backend_pool_name($alb, $lb_backend_pool_name)
+alb <= azure_lb_set_frontend_ip_name($alb, $frontendip_name)
+azure_lb_create($alb)
 
 echo "adding NIC to load balancer address pool"
 nic_name = $vm_name
-addrpool_id, err <= azure_lb_addresspool_get_id($lb_address_pool_name, $lb_group, $lb_name)
+addrpool_id, err <= azure_lb_addresspool_get_id($lb_backend_pool_name, $lb_group, $lb_name)
 if $err != "" {
 	print("error[%s] getting address pool ID\n", $err)
 	exit("1")

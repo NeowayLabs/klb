@@ -10,6 +10,7 @@ import (
 
 func TestLoadBalancer(t *testing.T) {
 	t.Parallel()
+	location := "eastus2"
 	fixture.Run(t, "LoadBalancer", timeout, location, testLoadBalancer)
 }
 

@@ -22,6 +22,6 @@ vm_image_urn   = "CoreOS:CoreOS:Stable:1353.7.0"
 ## Our scenario uses load balancers on different resource groups
 lb_group = "klb-examples-loadbalancer2"
 lb_name = "AwesomeLoadBalancer"
-lb_address_pool_name = "AwesomeAddressPool"
+lb_backend_pool_name = "AwesomeBackendAddressPool"
 frontendip_name = "AwesomeFrontendIp"
 frontendip_private_ip = "10.51.1.100"

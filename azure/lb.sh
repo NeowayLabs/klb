@@ -2,9 +2,51 @@
 
 # LB functions
 
-fn azure_lb_create(name, group, location) {
+
+fn azure_lb_new(name, group, location){
+	instance = ("--name" $name "--resource-group" $group "--location" $location)
+	return $instance
+}
+
+fn azure_lb_set_subnetid(instance, subnetid) {
+	instance <= append($instance, "--subnet")
+	instance <= append($instance, $subnetid)
+	return $instance
+}
+
+fn azure_lb_set_sku(instance, sku) {
+	instance <= append($instance, "--sku")
+	instance <= append($instance, $sku)
+	return $instance
+}
+
+fn azure_lb_set_frontend_ip_zone(instance, frontend_ip_zone) {
+	instance <= append($instance, "--frontend-ip-zone")
+	instance <= append($instance, $frontend_ip_zone)
+	return $instance
+}
+
+fn azure_lb_set_private_ip_address(instance, private_ip_address) {
+	instance <= append($instance, "--private-ip-address")
+	instance <= append($instance, $private_ip_address)
+	return $instance
+}
+
+fn azure_lb_set_backend_pool_name(instance, backend_pool_name) {
+	instance <= append($instance, "--backend-pool-name")
+	instance <= append($instance, $backend_pool_name)
+	return $instance
+}
+
+fn azure_lb_set_frontend_ip_name(instance, frontend_ip_name) {
+	instance <= append($instance, "--frontend-ip-name")
+	instance <= append($instance, $frontend_ip_name)
+	return $instance
+}
+
+fn azure_lb_create(instance) {
 	(
-		azure network lb create --name $name --resource-group $group --location $location
+		az network lb create $instance
 	)
 }
 
@@ -194,9 +236,9 @@ fn azure_lb_rule_set_frontendipname(instance, frontendipname) {
 	return $instance
 }
 
-fn azure_lb_rule_set_addresspoolname(instance, addresspoolname) {
-	instance <= append($instance, "--backend-address-pool-name")
-	instance <= append($instance, $addresspoolname)
+fn azure_lb_rule_set_backend_pool_name(instance, backend_pool_name) {
+	instance <= append($instance, "--backend-pool-name")
+	instance <= append($instance, $backend_pool_name)
 
 	return $instance
 }
@@ -219,7 +261,7 @@ fn azure_lb_rule_set_sessionpersistence(instance, sessionpersistence) {
 }
 
 fn azure_lb_rule_create(instance) {
-	(azure network lb rule create $instance)
+	(az network lb rule create $instance)
 }
 
 fn azure_lb_rule_delete(name, group, lbname) {
@@ -284,7 +326,7 @@ fn azure_lb_probe_set_path(instance, path) {
 }
 
 fn azure_lb_probe_create(instance) {
-	azure network lb probe create $instance
+	az network lb probe create $instance
 }
 
 fn azure_lb_probe_delete(name, group, lbname) {
