@@ -1,3 +1,10 @@
+# Release 0.13.0
+
+This release add support to new Azure Load Balancer API. Now Azure have two Load Balancer types: Basic and Standard. More information about Azure Load Balancer [here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-overview)
+
+Full example to how use this load balancer package [here](https://github.com/NeowayLabs/klb/blob/master/examples/azure/loadbalancer/build.sh#L88)
+
+
 # Release 0.12.2
 
 This release fixes a bug where dependencies where missing
