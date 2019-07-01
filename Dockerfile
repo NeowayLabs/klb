@@ -20,7 +20,7 @@ ENV NASH_VERSION=v0.6
 ENV NASHPATH=/root/nash
 ENV NASHROOT=/root/nashroot
 ENV PATH=${PATH}:${NASHROOT}/bin
-RUN curl https://raw.githubusercontent.com/NeowayLabs/nash/master/hack/install/linux.sh | bash -s ${NASH_VERSION}
+RUN curl https://raw.githubusercontent.com/NeowayLabs/nash/master/hack/install/unix.sh | bash -s ${NASH_VERSION}
 
 # Go is not required by klb itself on runtime, but having multiple
 # Dockerfiles introduced space for bugs involving differences
